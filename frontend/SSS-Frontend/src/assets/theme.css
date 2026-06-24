@@ -1,0 +1,36 @@
+:root {
+
+  /* Primary Colors */
+
+  --primary: #1E3A8A;
+  --primary-light: #2563EB;
+
+  /* Background */
+
+  --bg: #F8FAFC;
+  --card-bg: #FFFFFF;
+
+  /* Text */
+
+  --text-dark: #1F2937;
+  --text-light: #6B7280;
+
+  /* Status */
+
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+
+  /* Border */
+
+  --border: #E5E7EB;
+
+  /* Shadow */
+
+  --shadow:
+      0 10px 25px rgba(0,0,0,0.08);
+
+  /* Radius */
+
+  --radius: 16px;
+}
