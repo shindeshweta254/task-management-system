@@ -1,138 +1,62 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Layout from "../../Components/Layout/Layout";
 import "./AddTask.css";
 
 function AddTask() {
   const navigate = useNavigate();
 
   const [task, setTask] = useState({
-    assignedBy: "",
-    assignedTo: "",
-    department: "",
-    taskName: "",
-    description: "",
-    workingHours: "",
+    title: "",
+    employee: "",
     priority: "Medium",
-    startDate: "",
     dueDate: "",
-    status: "Pending"
+    description: "",
+    status: "Pending",
   });
-
-  const handleChange = (e) => {
-    setTask({
-      ...task,
-      [e.target.name]: e.target.value,
-    });
-  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const existingTasks =
-      JSON.parse(localStorage.getItem("tasks")) || [];
+    const oldTasks = JSON.parse(localStorage.getItem("tasks")) || [];
 
     const newTask = {
       id: Date.now(),
       ...task,
+      createdAt: new Date().toLocaleDateString(),
     };
 
-    existingTasks.push(newTask);
+    localStorage.setItem("tasks", JSON.stringify([newTask, ...oldTasks]));
 
-    localStorage.setItem(
-      "tasks",
-      JSON.stringify(existingTasks)
-    );
-
-    alert("✅ Task Assigned Successfully!");
-
-    setTask({
-      assignedBy: "",
-      assignedTo: "",
-      department: "",
-      taskName: "",
-      description: "",
-      workingHours: "",
-      priority: "Medium",
-      startDate: "",
-      dueDate: "",
-      status: "Pending",
-    });
-
-    // Dashboard par redirect
-    navigate("/dashboard");
+    alert("Task assigned successfully!");
+    navigate("/tasks");
   };
 
   return (
-    <div className="add-task-page">
-      <div className="task-container">
+    <Layout title="Assign Task">
+      <div className="add-task-card">
+        <h2>Assign New Task</h2>
 
-        <div className="top-bar">
-  <button
-    className="back-btn"
-    onClick={() => navigate("/dashboard")}
-  >
-    ←
-  </button>
-</div>
-        <h1>Create New Task</h1>
-
-        <form className="task-form" onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit}>
           <input
             type="text"
-            name="assignedBy"
-            placeholder="Assigned By"
-            value={task.assignedBy}
-            onChange={handleChange}
+            placeholder="Task Title"
+            value={task.title}
+            onChange={(e) => setTask({ ...task, title: e.target.value })}
             required
           />
 
           <input
             type="text"
-            name="assignedTo"
-            placeholder="Assigned To"
-            value={task.assignedTo}
-            onChange={handleChange}
-            required
-          />
-
-          <input
-            type="text"
-            name="department"
-            placeholder="Department"
-            value={task.department}
-            onChange={handleChange}
-            required
-          />
-
-          <input
-            type="text"
-            name="taskName"
-            placeholder="Task Name"
-            value={task.taskName}
-            onChange={handleChange}
+            placeholder="Employee Name"
+            value={task.employee}
+            onChange={(e) => setTask({ ...task, employee: e.target.value })}
             required
           />
 
           <select
-            name="workingHours"
-            value={task.workingHours}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Select Working Hours</option>
-            <option>1 Hour</option>
-            <option>2 Hours</option>
-            <option>3 Hours</option>
-            <option>4 Hours</option>
-            <option>5 Hours</option>
-            <option>6 Hours</option>
-            <option>8 Hours</option>
-          </select>
-
-          <select
-            name="priority"
             value={task.priority}
-            onChange={handleChange}
+            onChange={(e) => setTask({ ...task, priority: e.target.value })}
           >
             <option>High</option>
             <option>Medium</option>
@@ -141,70 +65,21 @@ function AddTask() {
 
           <input
             type="date"
-            name="startDate"
-            value={task.startDate}
-            onChange={handleChange}
-            required
-          />
-
-          <input
-            type="date"
-            name="dueDate"
             value={task.dueDate}
-            onChange={handleChange}
+            onChange={(e) => setTask({ ...task, dueDate: e.target.value })}
             required
           />
-
-          <select
-            name="status"
-            value={task.status}
-            onChange={handleChange}
-          >
-            <option>Pending</option>
-            <option>In Progress</option>
-            <option>Completed</option>
-          </select>
 
           <textarea
-            name="description"
             placeholder="Task Description"
             value={task.description}
-            onChange={handleChange}
-            required
+            onChange={(e) => setTask({ ...task, description: e.target.value })}
           />
 
-          <div className="button-group">
-            <button
-              type="button"
-              className="cancel-btn"
-              onClick={() =>
-                setTask({
-                  assignedBy: "",
-                  assignedTo: "",
-                  department: "",
-                  taskName: "",
-                  description: "",
-                  workingHours: "",
-                  priority: "Medium",
-                  startDate: "",
-                  dueDate: "",
-                  status: "Pending",
-                })
-              }
-            >
-              Cancel
-            </button>
-
-            <button
-              type="submit"
-              className="save-btn"
-            >
-              Save Task
-            </button>
-          </div>
+          <button type="submit">Assign Task</button>
         </form>
       </div>
-    </div>
+    </Layout>
   );
 }
 

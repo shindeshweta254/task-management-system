@@ -1,26 +1,27 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Attendance from "./Pages/Attendance/Attendance";
-import Splash from "./Pages/Splash/Splash";
-import Login from "./Pages/Login/Login";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "./Pages/Dashboard/Dashboard";
-import AddTask from "./Pages/AddTask/AddTask";
-import Tasklist from "./Pages/Tasklist/Tasklist";
 import Checklist from "./Pages/Checklist/Checklist";
-import CalendarPage from "./Pages/Calender/calender";
+import Attendance from "./Pages/Attendance/Attendance";
+import Calendar from "./Pages/Calender/Calendar";
+import Projects from "./Pages/Project/Project";
+import Team from "./Pages/Team/Team";
+import Reports from "./Pages/Reports/Reports";
+import Profile from "./Pages/Profile/Profile";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Splash />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/add-task" element={<AddTask />} />
-          <Route path="/my-tasks" element={<Tasklist />} />
-          <Route path="/attendance" element={<Attendance />} /> 
-          <Route path="/checklist" element={<Checklist />} />
-<Route path="/calendar" element={<CalendarPage />} />        </Routes>
-    </BrowserRouter>
+    <Routes>
+      <Route path="/" element={<Navigate to="/dashboard" />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/checklist" element={<Checklist />} />
+      <Route path="/attendance" element={<Attendance />} />
+      <Route path="/calendar" element={<Calendar />} />
+      <Route path="/projects" element={<Projects />} />
+      <Route path="/team" element={<Team />} />
+      <Route path="/reports" element={<Reports />} />
+      <Route path="/profile" element={<Profile />} />
+      <Route path="/tasks" element={<Tasks />} />
+    </Routes>
   );
 }
 

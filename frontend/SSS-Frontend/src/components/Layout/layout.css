@@ -1,0 +1,216 @@
+.app-layout {
+  min-height: 100vh;
+  background: #f5f7ff;
+}
+
+.sidebar {
+  width: 280px;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  background: linear-gradient(180deg, #100b45, #090d28);
+  color: white;
+  padding: 24px;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-box {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 32px;
+}
+
+.logo {
+  min-width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8b5cf6, #5b3df5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: yellow;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.logo-text h2 {
+  margin: 0;
+  font-size: 18px;
+  white-space: nowrap;
+}
+
+.logo-text p {
+  margin: 2px 0 0;
+  font-size: 14px;
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sidebar-menu a {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 15px;
+  color: white;
+  text-decoration: none;
+  border-radius: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sidebar-menu a:hover,
+.sidebar-menu a.active {
+  background: linear-gradient(135deg, #7c5cff, #5b4df7);
+}
+
+.user-card {
+  margin-top: auto;
+  background: rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-avatar,
+.profile-circle {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: #7657ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.user-card h4,
+.user-card p {
+  margin: 0;
+}
+
+.user-card p {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.main-content {
+  margin-left: 280px;
+  min-height: 100vh;
+  padding: 32px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 26px;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 38px;
+  color: #090d3d;
+}
+
+.top-actions {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.top-actions input {
+  width: 330px;
+  padding: 15px 20px;
+  border: none;
+  outline: none;
+  border-radius: 14px;
+  background: white;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+}
+
+.top-actions button {
+  width: 46px;
+  height: 46px;
+  border: none;
+  border-radius: 14px;
+  background: white;
+  color: #5b4df7;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+
+}
+.top-actions button {
+  width: 46px;
+  height: 46px;
+  border: none;
+  border-radius: 14px;
+  background: white;
+  color: #5b4df7;
+  cursor: pointer;
+}
+
+/* 👇 Yahin se paste karna hai */
+
+.notification-box {
+  position: relative;
+}
+
+.notification-dropdown {
+
+}
+.page-card {
+  background: white;
+  border-radius: 20px;
+  padding: 25px;
+  box-shadow: 0 10px 30px rgba(25,25,80,0.08);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th {
+  background: #6654f1;
+  color: white;
+  padding: 15px;
+  text-align: left;
+}
+
+.data-table td {
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.badge {
+  padding: 7px 13px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.green-badge {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.orange-badge {
+  background: #fff3df;
+  color: #ff9800;
+}
+
+.blue-badge {
+  background: #e0e7ff;
+  color: #4f46e5;
+  
+}

@@ -1,91 +1,148 @@
+import Layout from "../../Components/Layout/Layout";
 import "./Dashboard.css";
-import React, { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
+import { useState } from "react";
+import {
+  FaPlus,
+  FaClipboardList,
+  FaCheckCircle,
+  FaHourglassHalf,
+  FaFlag,
+  FaCalendarAlt,
+  FaChartBar,
+  FaUsers,
+} from "react-icons/fa";
 
 function Dashboard() {
-  const [tasks, setTasks] = useState([]);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const savedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
-    setTasks(savedTasks);
-  }, []);
-
-  const pendingTasks = tasks.filter((task) => task.status === "Pending").length;
-  const completedTasks = tasks.filter((task) => task.status === "Completed").length;
-
-  const monthlyScore =
-    tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
-
+  const [showForm, setShowForm] = useState(false);
   return (
-    <div className="dashboard">
-      <div className="sidebar">
-        <div className="logo">
-          <h2>Welcome</h2>
-        </div>
-
-        <ul className="menu">
-          <li className="active">Dashboard</li>
-          <li onClick={() => navigate("/my-tasks")}>Tasks</li>
-          <li>
-            <Link to="/checklist">Checklist</Link>
-          </li>
-          <li>Attendance</li>
-          <li>Calendar</li>
-          <li>Projects</li>
-          <li>Team</li>
-          <li>Reports</li>
-          <li>Profile</li>
-          <li>Settings</li>
-          <li className="logout">Logout</li>
-        </ul>
-      </div>
-
-      <div className="main-content">
-        <div className="navbar">
-          <h2>Dashboard</h2>
-          <input type="text" placeholder="Search..." className="search-box" />
-        </div>
-
-        <div className="welcome-box">
-          <h1>SSS Facility Services</h1>
-          <p>Here's what's happening today.</p>
-        </div>
-
-        <div className="top-actions">
-          <button className="plus-btn" onClick={() => navigate("/add-task")}>
-            + Add Task
+    <Layout title="Dashboard">
+      <section className="hero-card">
+        <div>
+          <h2>Welcome back, Harsh! 👋</h2>
+          <p>Here's what's happening with your tasks today.</p>
+          <button className="add-btn">
+            <FaPlus /> add plus
           </button>
         </div>
 
-        <div className="cards">
-          <div className="card">
-            <h2>{tasks.length}</h2>
+        <div className="hero-image">📊</div>
+      </section>
+
+      <section className="stats-grid">
+        <div className="stat-card purple">
+          <FaClipboardList />
+          <div>
+            <h2>12</h2>
             <p>Total Tasks</p>
-          </div>
-
-          <div className="card">
-            <h2>{pendingTasks}</h2>
-            <p>Pending Tasks</p>
-          </div>
-
-          <div className="card">
-            <h2>{completedTasks}</h2>
-            <p>Completed Tasks</p>
-          </div>
-
-          <div className="card">
-            <h2>0</h2>
-            <p>Deadlines</p>
-          </div>
-
-          <div className="card">
-            <h2>{monthlyScore}%</h2>
-            <p>Monthly Score</p>
+            <span>All assigned tasks</span>
           </div>
         </div>
-      </div>
-    </div>
+
+        <div className="stat-card orange">
+          <FaHourglassHalf />
+          <div>
+            <h2>5</h2>
+            <p>Pending Tasks</p>
+            <span>Tasks in progress</span>
+          </div>
+        </div>
+
+        <div className="stat-card green">
+          <FaCheckCircle />
+          <div>
+            <h2>7</h2>
+            <p>Completed Tasks</p>
+            <span>Tasks completed</span>
+          </div>
+        </div>
+
+        <div className="stat-card red">
+          <FaFlag />
+          <div>
+            <h2>2</h2>
+            <p>Deadlines</p>
+            <span>Pending deadlines</span>
+          </div>
+        </div>
+      </section>
+
+      <section className="bottom-grid">
+        <div className="page-card">
+          <h3>Task Overview</h3>
+          <div className="circle-progress">
+            <h2>60%</h2>
+            <p>Completed</p>
+          </div>
+        </div>
+
+        <div className="page-card">
+          <h3>Recent Tasks</h3>
+          <p>✅ Update Checklist - Completed</p>
+          <p>⏳ Prepare Monthly Report - Pending</p>
+          <p>📌 Employee Attendance - In Progress</p>
+        </div>
+      </section>
+
+      <section className="quick-access">
+        <h3>
+       <section className="quick-access">
+  <h3>
+    Quick
+    <br />
+    Access
+  </h3>
+
+  <NavLink to="/tasks">
+    <FaPlus /> Add Task
+  </NavLink>
+
+  <NavLink to="/checklist">
+    <FaClipboardList /> Checklist
+  </NavLink>
+
+  <NavLink to="/attendance">
+    <FaCalendarAlt /> Attendance
+  </NavLink>
+
+  <NavLink to="/calendar">
+    <FaCalendarAlt /> Calendar
+  </NavLink>
+
+  <NavLink to="/reports">
+    <FaChartBar /> Reports
+  </NavLink>
+
+  <NavLink to="/team">
+    <FaUsers /> Team
+  </NavLink>
+</section>
+        </h3>
+
+        <button className="add-btn" onClick={() => setShowForm(true)}>
+  <FaPlus /> Add Task
+</button>
+        <button>
+          <FaClipboardList /> Checklist
+        </button>
+
+        <button>
+          <FaCalendarAlt /> Attendance
+        </button>
+
+        <button>
+          <FaCalendarAlt /> Calendar
+        </button>
+
+        <button>
+          <FaChartBar /> Reports
+        </button>
+
+        <button>
+          <FaUsers /> Team
+        </button>
+      </section>
+    </Layout>
   );
 }
 

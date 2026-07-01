@@ -1,51 +1,100 @@
-.attendance-container {
-    padding: 30px;
-    background: #f5f6fa;
-    min-height: 100vh;
+.attendance-page {
+  display: grid;
+  gap: 25px;
 }
 
-.attendance-container h2 {
-    margin-bottom: 20px;
-    color: #333;
+.attendance-card {
+  background: white;
+  padding: 25px;
+  border-radius: 22px;
+  box-shadow: 0 10px 30px rgba(25,25,80,0.08);
+}
+
+.attendance-card h2 {
+  margin-top: 0;
+  color: #11133d;
+  text-align: center;
+}
+
+.camera-box {
+  display: flex;
+  justify-content: center;
+}
+
+.camera-box video {
+  width: 260px;
+  height: 190px;
+  border-radius: 18px;
+  background: #111;
+  object-fit: cover;
+}
+
+.selfie-img {
+  display: block;
+  width: 220px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 16px;
+  margin: 18px auto;
+  border: 3px solid #6654f1;
+}
+
+.attendance-actions {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.attendance-actions button {
+  border: none;
+  background: #6654f1;
+  color: white;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.attendance-actions button:hover {
+  background: #4f46e5;
+}
+
+.location-text {
+  text-align: center;
+  color: #11133d;
+  font-weight: bold;
 }
 
 .attendance-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: #fff;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  width: 100%;
+  border-collapse: collapse;
 }
 
 .attendance-table th {
-    background: #6C63FF;
-    color: white;
-    padding: 15px;
-    text-align: center;
+  background: #6654f1;
+  color: white;
+  padding: 14px;
+  text-align: left;
 }
 
 .attendance-table td {
-    padding: 15px;
-    text-align: center;
-    border-bottom: 1px solid #ddd;
+  padding: 14px;
+  border-bottom: 1px solid #eee;
 }
 
-.attendance-table tr:hover {
-    background: #f3f3f3;
+.present-badge {
+  background: #dcfce7;
+  color: #16a34a;
+  padding: 7px 14px;
+  border-radius: 20px;
+  font-weight: bold;
 }
 
-.present {
-    color: green;
-    font-weight: bold;
-}
-
-.absent {
-    color: red;
-    font-weight: bold;
-}
-
-.leave {
-    color: orange;
-    font-weight: bold;
+.table-img {
+  width: 55px;
+  height: 45px;
+  object-fit: cover;
+  border-radius: 10px;
 }
