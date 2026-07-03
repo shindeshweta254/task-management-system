@@ -111,6 +111,7 @@ function Login() {
               <option value="SUPERVISOR">Supervisor</option>
             </select>
           </div>
+          
 
           <div className="input-group">
             <label>Email</label>
@@ -169,7 +170,15 @@ function Login() {
         >
           Forgot Password?
         </a>
+        
+      <p className="signup-link">
+  New Employee?{" "}
+  <span onClick={() => navigate("/signup")}>
+    Create Account
+  </span>
+</p>
       </div>
+
     </div>
   );
 }

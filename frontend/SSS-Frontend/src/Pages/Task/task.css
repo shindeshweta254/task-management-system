@@ -1,18 +1,18 @@
-.tasks-page {
+.task-page {
   background: white;
   padding: 28px;
   border-radius: 22px;
   box-shadow: 0 10px 30px rgba(25, 25, 80, 0.08);
 }
 
-.tasks-header {
+.task-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 25px;
 }
 
-.tasks-header h2 {
+.task-header h2 {
   margin: 0;
   color: #11133d;
 }
@@ -30,19 +30,19 @@
   outline: none;
 }
 
-.tasks-table {
+.task-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.tasks-table th {
+.task-table th {
   background: #6654f1;
   color: white;
   padding: 15px;
   text-align: left;
 }
 
-.tasks-table td {
+.task-table td {
   padding: 15px;
   border-bottom: 1px solid #eee;
   color: #374151;

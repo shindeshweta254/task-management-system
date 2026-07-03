@@ -35,11 +35,13 @@ public class UserController {
 
 	@PostMapping("/login")
 	public User login(@RequestBody LoginRequest loginRequest) {
-
-		return userService.login(loginRequest.getEmail(), loginRequest.getPassword());
-
+	    return userService.login(
+	            loginRequest.getEmployeeId(),
+	            loginRequest.getEmail(),
+	            loginRequest.getPassword()
+	    );
 	}
-
+	
 	@PutMapping("/resign/{userId}")
 	public User resignEmployee(@PathVariable Long userId) {
 

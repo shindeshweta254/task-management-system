@@ -33,6 +33,14 @@ const Sidebar = () => {
           </NavLink>
         </li>
 
+        
+        <li>
+          <NavLink to="/Task">
+            <FaTachometerAlt />
+            <span>Task</span>
+          </NavLink>
+        </li>
+
         <li>
        <NavLink to="/checklist">Checklist</NavLink>
   

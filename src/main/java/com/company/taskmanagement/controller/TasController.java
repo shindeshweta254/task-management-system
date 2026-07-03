@@ -25,7 +25,6 @@ public class TasController {
 
 	@Autowired
 	TaskService taskService;
-	private TaskService service;
 
 	@PostMapping
 	public Task saveTask(@RequestBody Task task) {
@@ -78,12 +77,11 @@ public class TasController {
 
 		return taskService.updateProgress(taskId, progress);
 	}
-
 	@GetMapping("/deadline-today")
 	public long deadlineToday() {
-		return service.getTodayDeadlineTasks();
+	    return taskService.getTodayDeadlineTasks();
 	}
-
+	
 	@GetMapping("/available")
 	public List<Task> getAvailableTasks() {
 
@@ -118,5 +116,33 @@ public class TasController {
 	public List<User> getWatchers(@PathVariable Long taskId) {
 
 		return taskService.getWatchers(taskId);
+	}
+	
+	@GetMapping("/dashboard/{userId}/total")
+	public long employeeTotal(@PathVariable Long userId){
+
+	    return taskService.getEmployeeTotalTasks(userId);
+
+	}
+
+	@GetMapping("/dashboard/{userId}/pending")
+	public long employeePending(@PathVariable Long userId){
+
+	    return taskService.getEmployeePendingTasks(userId);
+
+	}
+
+	@GetMapping("/dashboard/{userId}/completed")
+	public long employeeCompleted(@PathVariable Long userId){
+
+	    return taskService.getEmployeeCompletedTasks(userId);
+
+	}
+
+	@GetMapping("/dashboard/{userId}/deadline")
+	public long employeeDeadline(@PathVariable Long userId){
+
+	    return taskService.getEmployeeDeadlineTasks(userId);
+
 	}
 }

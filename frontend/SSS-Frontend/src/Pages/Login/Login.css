@@ -221,6 +221,22 @@ font-weight:600;
 .forgot-link:hover{
 text-decoration:underline;
 }
+.signup-link{
+    margin-top:20px;
+    text-align:center;
+    color:#64748b;
+    font-size:14px;
+}
+
+.signup-link span{
+    color:#2563eb;
+    cursor:pointer;
+    font-weight:700;
+}
+
+.signup-link span:hover{
+    text-decoration:underline;
+}
 
 @media(max-width:500px){
 

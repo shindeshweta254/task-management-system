@@ -2,8 +2,9 @@ import { NavLink } from "react-router-dom";
 import { useState } from "react";
 import "./Layout.css";
 
+
 import {
-  FaTasks,
+  FaTask,
   FaClipboardList,
   FaCalendarAlt,
   FaUser,
@@ -17,6 +18,18 @@ import {
 function Layout({ title, children }) {
   const [showNotifications, setShowNotifications] = useState(false);
 
+  const user = JSON.parse(localStorage.getItem("user")) || {};
+
+  const userName = user.name || "Employee";
+  const role = user.role?.roleName || "EMPLOYEE";
+
+  const nameParts = userName.trim().split(" ");
+
+  const initials =
+    nameParts.length > 1
+      ? (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
+      : nameParts[0][0].toUpperCase();
+
   return (
     <div className="app-layout">
       <aside className="sidebar">
@@ -29,22 +42,49 @@ function Layout({ title, children }) {
         </div>
 
         <nav className="sidebar-menu">
-          <NavLink to="/dashboard"><FaChartBar /> Dashboard</NavLink>
-          <NavLink to="/tasks"><FaTasks /> Tasks</NavLink>
-          <NavLink to="/checklist"><FaClipboardList /> Checklist</NavLink>
-          <NavLink to="/attendance"><FaCalendarAlt /> Attendance</NavLink>
-          <NavLink to="/calendar"><FaCalendarAlt /> Calendar</NavLink>
-          <NavLink to="/projects"><FaProjectDiagram /> Projects</NavLink>
-          <NavLink to="/team"><FaUsers /> Team</NavLink>
-          <NavLink to="/reports"><FaChartBar /> Reports</NavLink>
-          <NavLink to="/profile"><FaUser /> Profile</NavLink>
+          <NavLink to="/dashboard">
+            <FaChartBar /> Dashboard
+          </NavLink>
+
+          <NavLink to="/task">
+            <FaTask /> Task
+          </NavLink>
+
+          <NavLink to="/checklist">
+            <FaClipboardList /> Checklist
+          </NavLink>
+
+          <NavLink to="/attendance">
+            <FaCalendarAlt /> Attendance
+          </NavLink>
+
+          <NavLink to="/calendar">
+            <FaCalendarAlt /> Calendar
+          </NavLink>
+
+          <NavLink to="/projects">
+            <FaProjectDiagram /> Projects
+          </NavLink>
+
+          <NavLink to="/team">
+            <FaUsers /> Team
+          </NavLink>
+
+          <NavLink to="/reports">
+            <FaChartBar /> Reports
+          </NavLink>
+
+          <NavLink to="/profile">
+            <FaUser /> Profile
+          </NavLink>
         </nav>
 
         <div className="user-card">
-          <div className="user-avatar">H</div>
+          <div className="user-avatar">{initials}</div>
+
           <div>
-            <h4>Harsh Sharma</h4>
-            <p>Admin</p>
+            <h4>{userName}</h4>
+            <p>{role}</p>
           </div>
         </div>
       </aside>
@@ -71,8 +111,9 @@ function Layout({ title, children }) {
               )}
             </div>
 
-            <button><FaMoon /></button>
-            <div className="profile-circle">H</div>
+            <button>
+              <FaMoon />
+            </button>
           </div>
         </header>
 

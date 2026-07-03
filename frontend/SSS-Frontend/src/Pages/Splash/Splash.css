@@ -1,40 +1,129 @@
-.splash-container{
-  height:100vh;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  background:#081b4b;
-  color:white;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-.logo-circle{
-  width:200px;
-  height:200px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  animation:spin 3s linear infinite;
+.splash-container {
+  width: 100%;
+  height: 100vh;
+  background: #081b4b;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
 }
 
-.logo{
-  width:180px;
+.splash-logo {
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+  animation: rotateLogo 2s linear infinite, zoomIn 1s ease;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
 }
 
-.splash-container h1{
-  margin-top:20px;
-  font-size:32px;
+.splash-container h1 {
+  color: #ffffff;
+  margin-top: 28px;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  animation: fadeUp 1s ease;
 }
 
-.splash-container p{
-  margin-top:10px;
+.splash-container p {
+  color: #d8e4ff;
+  margin-top: 10px;
+  font-size: 17px;
+  animation: fadeUp 1.2s ease;
 }
 
-@keyframes spin{
-  from{
-    transform:rotate(0deg);
+.loading-dots {
+  display: flex;
+  gap: 8px;
+  margin-top: 28px;
+}
+
+.loading-dots span {
+  width: 10px;
+  height: 10px;
+  background: #ffffff;
+  border-radius: 50%;
+  animation: bounce 1.2s infinite ease-in-out;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes rotateLogo {
+  from {
+    transform: rotate(0deg);
   }
-  to{
-    transform:rotate(360deg);
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0.7);
+    opacity: 0.5;
+  }
+
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 500px) {
+  .splash-logo {
+    width: 140px;
+    height: 140px;
+  }
+
+  .splash-container h1 {
+    font-size: 22px;
+    text-align: center;
+  }
+
+  .splash-container p {
+    font-size: 14px;
   }
 }

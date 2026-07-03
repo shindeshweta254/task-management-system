@@ -1,50 +1,59 @@
 import { useEffect, useState } from "react";
 import Layout from "../../Components/Layout/Layout";
-import "./Tasks.css";
+import "./task.css";
 
-function Tasks() {
-  const [tasks, setTasks] = useState([]);
+function Task() {
+  const [tasks, setTask] = useState([]);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("All");
+  const [filter, setFilter] = useState("ALL");
+
+  const loadTask = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/api/task");
+      const data = await response.json();
+      setTasks(data);
+    } catch (error) {
+      console.log("Task load error:", error);
+    }
+  };
 
   useEffect(() => {
-    const savedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
-    setTasks(savedTasks);
+    loadTask();
   }, []);
 
-  const updateTasks = (updatedTasks) => {
-    setTasks(updatedTasks);
-    localStorage.setItem("tasks", JSON.stringify(updatedTasks));
+  const markComplete = async (id) => {
+    await fetch(`http://localhost:8080/api/task/${id}/COMPLETED`, {
+      method: "PUT",
+    });
+    loadTask();
   };
 
-  const markComplete = (id) => {
-    const updatedTasks = tasks.map((task) =>
-      task.id === id ? { ...task, status: "Completed" } : task
-    );
-
-    updateTasks(updatedTasks);
+  const deleteTask = async (id) => {
+    await fetch(`http://localhost:8080/api/task/${id}`, {
+      method: "DELETE",
+    });
+    loadTask();
   };
 
-  const deleteTask = (id) => {
-    const updatedTasks = tasks.filter((task) => task.id !== id);
-    updateTasks(updatedTasks);
-  };
+  const filteredTasks = task.filter((task) => {
+    const taskTitle = task.taskTitle || "";
+    const employeeName = task.assignedTo?.name || "";
+    const taskStatus = task.status || "";
 
-  const filteredTasks = tasks.filter((task) => {
     const matchesSearch =
-      task.title.toLowerCase().includes(search.toLowerCase()) ||
-      task.employee.toLowerCase().includes(search.toLowerCase());
+      taskTitle.toLowerCase().includes(search.toLowerCase()) ||
+      employeeName.toLowerCase().includes(search.toLowerCase());
 
-    const matchesFilter = filter === "All" || task.status === filter;
+    const matchesFilter = filter === "ALL" || taskStatus === filter;
 
     return matchesSearch && matchesFilter;
   });
 
   return (
-    <Layout title="Tasks">
-      <div className="tasks-page">
-        <div className="tasks-header">
-          <h2>Assigned Tasks</h2>
+    <Layout title="Task">
+      <div className="task-page">
+        <div className="task-header">
+          <h2>All Assigned Tasks</h2>
 
           <div className="task-controls">
             <input
@@ -55,9 +64,10 @@ function Tasks() {
             />
 
             <select value={filter} onChange={(e) => setFilter(e.target.value)}>
-              <option>All</option>
-              <option>Pending</option>
-              <option>Completed</option>
+              <option value="ALL">All</option>
+              <option value="PENDING">Pending</option>
+              <option value="IN_PROGRESS">In Progress</option>
+              <option value="COMPLETED">Completed</option>
             </select>
           </div>
         </div>
@@ -65,10 +75,10 @@ function Tasks() {
         {filteredTasks.length === 0 ? (
           <div className="empty-task">
             <h3>No tasks found</h3>
-            <p>Add task from Dashboard → Add Task</p>
+            <p>Create task from Dashboard → Add Task</p>
           </div>
         ) : (
-          <table className="tasks-table">
+          <table className="task-table">
             <thead>
               <tr>
                 <th>Task</th>
@@ -84,29 +94,24 @@ function Tasks() {
             <tbody>
               {filteredTasks.map((task) => (
                 <tr key={task.id}>
-                  <td>{task.title}</td>
-                  <td>{task.employee}</td>
+                  <td>{task.taskTitle}</td>
                   <td>
-                    <span className={`priority ${task.priority.toLowerCase()}`}>
+                    {task.assignedTo?.name || "-"} <br />
+                    <small>{task.assignedTo?.employeeId || ""}</small>
+                  </td>
+                  <td>
+                    <span className={`priority ${(task.priority || "").toLowerCase()}`}>
                       {task.priority}
                     </span>
                   </td>
                   <td>{task.dueDate || "-"}</td>
                   <td>
-                    <span
-                      className={
-                        task.status === "Completed"
-                          ? "status completed"
-                          : "status pending"
-                      }
-                    >
-                      {task.status}
-                    </span>
+                    <span className="status pending">{task.status}</span>
                   </td>
-                  <td>{task.description || "-"}</td>
+                  <td>{task.taskDescription || "-"}</td>
                   <td>
                     <div className="task-actions">
-                      {task.status !== "Completed" && (
+                      {task.status !== "COMPLETED" && (
                         <button
                           className="complete-btn"
                           onClick={() => markComplete(task.id)}
@@ -133,4 +138,4 @@ function Tasks() {
   );
 }
 
-export default Tasks;
+export default Task;

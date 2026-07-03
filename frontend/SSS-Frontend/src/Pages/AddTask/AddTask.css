@@ -1,44 +1,93 @@
+.add-task-page {
+  padding: 10px;
+}
+
 .add-task-card {
-  max-width: 650px;
-  background: white;
+  background: #ffffff;
+  border-radius: 20px;
   padding: 30px;
-  border-radius: 22px;
-  box-shadow: 0 10px 30px rgba(25,25,80,0.08);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
 }
 
 .add-task-card h2 {
-  margin-top: 0;
-  color: #11133d;
-  text-align: center;
+  color: #0f172a;
+  margin-bottom: 6px;
 }
 
-.add-task-card form {
+.add-task-card p {
+  color: #64748b;
+  margin-bottom: 25px;
+}
+
+.form-group {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  margin-bottom: 18px;
 }
 
-.add-task-card input,
-.add-task-card select,
-.add-task-card textarea {
-  padding: 15px;
-  border: 1px solid #ddd;
-  border-radius: 14px;
+.form-group label {
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 14px;
+  border: 1px solid #dbe2ef;
+  border-radius: 12px;
   outline: none;
   font-size: 15px;
 }
 
-.add-task-card textarea {
-  min-height: 120px;
-  resize: none;
+.form-group textarea {
+  min-height: 110px;
+  resize: vertical;
 }
 
-.add-task-card button {
-  border: none;
-  background: #6654f1;
-  color: white;
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.create-task-btn {
+  width: 100%;
   padding: 15px;
-  border-radius: 14px;
-  font-weight: bold;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
   cursor: pointer;
+}
+
+.create-task-btn:hover {
+  background: #1d4ed8;
+}
+
+.task-message {
+  margin-top: 18px;
+  text-align: center;
+  font-weight: 700;
+  color: #16a34a;
+}
+
+@media (max-width: 700px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .add-task-card {
+    padding: 22px;
+  }
 }

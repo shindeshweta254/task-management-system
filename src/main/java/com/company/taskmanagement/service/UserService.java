@@ -33,17 +33,20 @@ public class UserService {
 		return userRepository.findAll();
 	}
 
-	public User login(String email, String password) {
+	public User login(String employeeId, String email, String password) {
 
-		User user = userRepository.findByEmail(email);
+	    User user = userRepository.findByEmployeeIdAndEmailAndPassword(
+	            employeeId.trim(),
+	            email.trim(),
+	            password.trim()
+	    );
 
-		if (user != null && user.getPassword().equals(password)) {
-			return user;
-		}
+	    if (user != null) {
+	        return user;
+	    }
 
-		throw new RuntimeException("Invalid Email or Password");
+	    throw new RuntimeException("Invalid Employee ID, Email or Password");
 	}
-	
 	public User resignEmployee(Long userId) {
 
 	    User user = userRepository.findById(userId)

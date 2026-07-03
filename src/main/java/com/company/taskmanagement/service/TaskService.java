@@ -104,4 +104,41 @@ public class TaskService {
 
 		return task.getWatchers();
 	}
+	
+	public long getEmployeeTotalTasks(Long userId){
+
+	    return taskRepository.countByAssignedToId(userId);
+
+	}
+
+	public long getEmployeePendingTasks(Long userId){
+
+	    return taskRepository.countByAssignedToIdAndStatus(
+	            userId,
+	            "PENDING"
+	    );
+
+	}
+
+	public long getEmployeeCompletedTasks(Long userId){
+
+	    return taskRepository.countByAssignedToIdAndStatus(
+	            userId,
+	            "COMPLETED"
+	    );
+
+	}
+
+	public long getEmployeeDeadlineTasks(Long userId){
+
+	    return taskRepository
+	            .findByAssignedToId(userId)
+	            .stream()
+	            .filter(task ->
+	                    task.getDueDate()!=null &&
+	                    task.getDueDate().isBefore(LocalDate.now()) &&
+	                    !"COMPLETED".equals(task.getStatus()))
+	            .count();
+
+	}
 }
