@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Dashboard from "./Pages/Dashboard/Dashboard";
 import Checklist from "./Pages/Checklist/Checklist";
 import Attendance from "./Pages/Attendance/Attendance";
@@ -18,6 +18,7 @@ function App() {
     <Routes>
       <Route path="/" element={<Splash />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/checklist" element={<Checklist />} />
       <Route path="/attendance" element={<Attendance />} />
@@ -26,7 +27,7 @@ function App() {
       <Route path="/team" element={<Team />} />
       <Route path="/reports" element={<Reports />} />
       <Route path="/profile" element={<Profile />} />
-      <Route path="/task" element={<Task/>} />
+      <Route path="/task" element={<Task />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/add-task" element={<AddTask />} />
     </Routes>

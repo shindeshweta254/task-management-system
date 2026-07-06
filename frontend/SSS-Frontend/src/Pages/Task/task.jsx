@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
-import Layout from "../../Components/Layout/Layout";
+import Layout from "../../components/Layout/Layout";
 import "./task.css";
 
 function Task() {
-  const [tasks, setTask] = useState([]);
+  const [tasks, setTasks] = useState([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("ALL");
 
   const loadTask = async () => {
     try {
-      const response = await fetch("http://localhost:8080/api/task");
+      const response = await fetch("http://localhost:8080/api/tasks");
       const data = await response.json();
       setTasks(data);
     } catch (error) {
@@ -22,20 +22,20 @@ function Task() {
   }, []);
 
   const markComplete = async (id) => {
-    await fetch(`http://localhost:8080/api/task/${id}/COMPLETED`, {
+    await fetch(`http://localhost:8080/api/tasks/${id}/COMPLETED`, {
       method: "PUT",
     });
     loadTask();
   };
 
   const deleteTask = async (id) => {
-    await fetch(`http://localhost:8080/api/task/${id}`, {
+    await fetch(`http://localhost:8080/api/tasks/${id}`, {
       method: "DELETE",
     });
     loadTask();
   };
 
-  const filteredTasks = task.filter((task) => {
+  const filteredTasks = tasks.filter((task) => {
     const taskTitle = task.taskTitle || "";
     const employeeName = task.assignedTo?.name || "";
     const taskStatus = task.status || "";

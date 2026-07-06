@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Layout from "../../Components/Layout/Layout";
+import Layout from "../../components/Layout/Layout";
 import "./Calendar.css";
 import { FaCalendarAlt, FaChevronLeft, FaChevronRight, FaPlus } from "react-icons/fa";
 

@@ -1,7 +1,8 @@
-import Layout from "../../Components/Layout/Layout";
+import Layout from "../../components/Layout/Layout";
 import "./Dashboard.css";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+
 import {
   FaPlus,
   FaClipboardList,
@@ -15,6 +16,7 @@ import {
 
 function Dashboard() {
   const navigate = useNavigate();
+
   const user = JSON.parse(localStorage.getItem("user")) || {};
 
   const userName = user.name || "Employee";
@@ -23,13 +25,12 @@ function Dashboard() {
   const roleName = user.role?.roleName || "EMPLOYEE";
 
   const nameParts = userName.trim().split(" ");
+  const initials =
+    nameParts.length > 1
+      ? (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
+      : nameParts[0]?.[0]?.toUpperCase() || "E";
 
-const initials =
-  nameParts.length > 1
-    ? (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
-    : nameParts[0][0].toUpperCase();
-
-     const [stats, setStats] = useState({
+  const [stats, setStats] = useState({
     total: 0,
     pending: 0,
     completed: 0,
@@ -39,24 +40,22 @@ const initials =
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const total = await fetch("http://localhost:8080/api/tasks/count/total").then(res => res.json());
-        const pending = await fetch("http://localhost:8080/api/tasks/count/pending").then(res => res.json());
-        const completed = await fetch("http://localhost:8080/api/tasks/count/completed").then(res => res.json());
-        const deadlines = await fetch("http://localhost:8080/api/tasks/deadline-today").then(res => res.json());
+        const total = await fetch("http://localhost:8080/api/tasks/count/total").then((res) => res.json());
+        const pending = await fetch("http://localhost:8080/api/tasks/count/pending").then((res) => res.json());
+        const completed = await fetch("http://localhost:8080/api/tasks/count/completed").then((res) => res.json());
+        const deadlines = await fetch("http://localhost:8080/api/tasks/deadline-today").then((res) => res.json());
 
-        setStats({
-          total,
-          pending,
-          completed,
-          deadlines,
-        });
+        setStats({ total, pending, completed, deadlines });
       } catch (err) {
-        console.error(err);
+        console.error("Dashboard stats error:", err);
       }
     };
 
     loadStats();
   }, []);
+
+  const progress =
+    stats.total === 0 ? 0 : Math.round((stats.completed / stats.total) * 100);
 
   return (
     <Layout title="Dashboard">
@@ -126,7 +125,7 @@ const initials =
         <div className="page-card">
           <h3>Task Overview</h3>
           <div className="circle-progress">
-            <h2>60%</h2>
+            <h2>{progress}%</h2>
             <p>Completed</p>
           </div>
         </div>
@@ -146,6 +145,9 @@ const initials =
           Access
         </h3>
 
+        <NavLink to="/add-task">
+          <FaPlus /> Add Task
+        </NavLink>
 
         <NavLink to="/checklist">
           <FaClipboardList /> Checklist

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import Layout from "../../Components/Layout/Layout";
+import Layout from "../../components/Layout/Layout";
 import "./Attendance.css";
 
 function Attendance() {

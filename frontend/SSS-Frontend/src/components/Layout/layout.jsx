@@ -1,10 +1,10 @@
-import { NavLink } from "react-router-dom";
-import { useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import "./Layout.css";
 
-
 import {
-  FaTask,
+  FaBars,
+  FaTasks,
   FaClipboardList,
   FaCalendarAlt,
   FaUser,
@@ -13,26 +13,63 @@ import {
   FaBell,
   FaMoon,
   FaProjectDiagram,
+  FaSearch,
 } from "react-icons/fa";
 
 function Layout({ title, children }) {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+  const navigate = useNavigate();
 
-  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+  const closeSidebar = () => setIsSidebarOpen(false);
+  const closeSearch = () => setTimeout(() => setSearchOpen(false), 150);
 
-  const userName = user.name || "Employee";
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark-theme", darkMode);
+  }, [darkMode]);
+
+  const parseLocalStorage = (key) => {
+    try {
+      return JSON.parse(localStorage.getItem(key));
+    } catch {
+      return null;
+    }
+  };
+
+  const user = parseLocalStorage("user") || {};
+  const userName = typeof user.name === "string" && user.name.trim() ? user.name : "Employee";
   const role = user.role?.roleName || "EMPLOYEE";
-
   const nameParts = userName.trim().split(" ");
 
+  const navItems = [
+    { label: "Dashboard", path: "/dashboard", icon: <FaChartBar /> },
+    { label: "Task", path: "/task", icon: <FaTasks /> },
+    { label: "Checklist", path: "/checklist", icon: <FaClipboardList /> },
+    { label: "Attendance", path: "/attendance", icon: <FaCalendarAlt /> },
+    { label: "Calendar", path: "/calendar", icon: <FaCalendarAlt /> },
+    { label: "Projects", path: "/projects", icon: <FaProjectDiagram /> },
+    { label: "Team", path: "/team", icon: <FaUsers /> },
+    { label: "Reports", path: "/reports", icon: <FaChartBar /> },
+    { label: "Profile", path: "/profile", icon: <FaUser /> },
+  ];
+
+  const searchResults = searchQuery.trim()
+    ? navItems.filter((item) =>
+        item.label.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : [];
   const initials =
     nameParts.length > 1
       ? (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
-      : nameParts[0][0].toUpperCase();
+      : nameParts[0]?.[0]?.toUpperCase() || "E";
 
   return (
-    <div className="app-layout">
-      <aside className="sidebar">
+    <div className={`app-layout ${isSidebarOpen ? "sidebar-open" : ""}`}>
+      <aside className={`layout-sidebar ${isSidebarOpen ? "open" : ""}`}>
         <div className="logo-box">
           <div className="logo">S</div>
           <div className="logo-text">
@@ -41,39 +78,31 @@ function Layout({ title, children }) {
           </div>
         </div>
 
-        <nav className="sidebar-menu">
+        <nav className="sidebar-menu" onClick={closeSidebar}>
           <NavLink to="/dashboard">
             <FaChartBar /> Dashboard
           </NavLink>
-
           <NavLink to="/task">
-            <FaTask /> Task
+            <FaTasks /> Task
           </NavLink>
-
           <NavLink to="/checklist">
             <FaClipboardList /> Checklist
           </NavLink>
-
           <NavLink to="/attendance">
             <FaCalendarAlt /> Attendance
           </NavLink>
-
           <NavLink to="/calendar">
             <FaCalendarAlt /> Calendar
           </NavLink>
-
           <NavLink to="/projects">
             <FaProjectDiagram /> Projects
           </NavLink>
-
           <NavLink to="/team">
             <FaUsers /> Team
           </NavLink>
-
           <NavLink to="/reports">
             <FaChartBar /> Reports
           </NavLink>
-
           <NavLink to="/profile">
             <FaUser /> Profile
           </NavLink>
@@ -81,7 +110,6 @@ function Layout({ title, children }) {
 
         <div className="user-card">
           <div className="user-avatar">{initials}</div>
-
           <div>
             <h4>{userName}</h4>
             <p>{role}</p>
@@ -89,29 +117,84 @@ function Layout({ title, children }) {
         </div>
       </aside>
 
-      <main className="main-content">
+      <div
+        className={`layout-overlay ${isSidebarOpen ? "visible" : ""}`}
+        onClick={closeSidebar}
+      />
+
+      <main className="layout-main-content">
         <header className="topbar">
+          <button
+            className="mobile-menu-btn"
+            type="button"
+            onClick={toggleSidebar}
+            aria-label="Toggle sidebar"
+          >
+            <FaBars />
+          </button>
+
           <h1>{title}</h1>
 
           <div className="top-actions">
-            <input type="text" placeholder="Search anything..." />
-
-            <div className="notification-box">
+            <div className="search-box">
+            <FaSearch className="search-icon" />
+            <input
+              type="text"
+              placeholder="Search anything..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setSearchOpen(true);
+              }}
+              onFocus={() => setSearchOpen(true)}
+              onBlur={closeSearch}
+            />
+            {searchOpen && (
+              <div className="search-dropdown">
+                {searchQuery.trim().length === 0 ? (
+                  <div className="search-empty">Type to search pages</div>
+                ) : searchResults.length > 0 ? (
+                  searchResults.map((item) => (
+                    <button
+                      key={item.path}
+                      type="button"
+                      className="search-result"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        navigate(item.path);
+                        setSearchQuery("");
+                        setSearchOpen(false);
+                      }}
+                    >
+                      <span className="search-result-icon">{item.icon}</span>
+                      {item.label}
+                    </button>
+                  ))
+                ) : (
+                  <div className="search-empty">No results found</div>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="notification-box">
               <button onClick={() => setShowNotifications(!showNotifications)}>
                 <FaBell />
               </button>
-
               {showNotifications && (
                 <div className="notification-dropdown">
                   <h4>Notifications</h4>
-                  <p>✅ Checklist Updated</p>
-                  <p>⏳ 5 Tasks Pending</p>
-                  <p>📌 Attendance Report Ready</p>
+                  <p>? Checklist Updated</p>
+                  <p>? 5 Tasks Pending</p>
+                  <p>?? Attendance Report Ready</p>
                 </div>
               )}
             </div>
-
-            <button>
+            <button
+              type="button"
+              className={darkMode ? "dark-toggle active" : "dark-toggle"}
+              onClick={() => setDarkMode((prev) => !prev)}
+              aria-label="Toggle dark mode"
+            >
               <FaMoon />
             </button>
           </div>

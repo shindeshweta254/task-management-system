@@ -1,4 +1,4 @@
-import Layout from "../../Components/Layout/Layout";
+import Layout from "../../components/Layout/Layout";
 import "./AddTask.css";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
