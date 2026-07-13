@@ -40,8 +40,8 @@ function Login() {
 
       const roleName = user.role?.roleName;
 
-      if (role && roleName && role !== roleName) {
-        setMessage("Selected role is wrong ❌");
+      if (role && roleName && role.toUpperCase() !== roleName.toUpperCase()) {
+        setMessage("Selected role does not match ❌");
         return;
       }
 
@@ -75,7 +75,7 @@ function Login() {
           <img src="/logo.png" alt="SSS Logo" className="logo" />
         </div>
 
-        <h1>SSS FACILITY SERVICES</h1>
+        <h1>SSS FMS Facility Services</h1>
 
         <p className="subtitle">Employee Task Management System</p>
 
@@ -84,14 +84,12 @@ function Login() {
         <form onSubmit={handleLogin}>
           <div className="input-group">
             <label>Employee ID</label>
-
             <input
               type="text"
               placeholder="Enter Employee ID"
               value={employeeId}
               onChange={(e) => setEmployeeId(e.target.value)}
               autoComplete="off"
-              required
             />
           </div>
 

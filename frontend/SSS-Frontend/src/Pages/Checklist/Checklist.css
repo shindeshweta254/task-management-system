@@ -294,6 +294,45 @@
   background: #111827;
 }
 
+.checklist-wrapper {
+  position: relative;
+  z-index: 1;
+}
+
+.checklist-sheet {
+  position: relative;
+  z-index: 2;
+}
+
+.checklist-actions {
+  position: relative;
+  z-index: 999;
+  pointer-events: auto;
+}
+
+.checklist-actions button {
+  position: relative;
+  z-index: 1000;
+  pointer-events: auto;
+}
+
+.checklist-actions button:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+.print-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.checklist-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
 @media print {
   .sidebar,
   .topbar,

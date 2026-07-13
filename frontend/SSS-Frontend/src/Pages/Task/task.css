@@ -3,6 +3,9 @@
   padding: 28px;
   border-radius: 22px;
   box-shadow: 0 10px 30px rgba(25, 25, 80, 0.08);
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .task-header {
@@ -30,9 +33,20 @@
   outline: none;
 }
 
+/* Table Wrapper for Mobile Scroll */
+.task-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
 .task-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: auto;
+  overflow-x: auto;
 }
 
 .task-table th {
@@ -113,4 +127,398 @@
 
 .empty-task h3 {
   color: #11133d;
+}
+
+/* Dropdown Menu Styles */
+.task-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.view-btn {
+  background: #4f46e5;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.view-btn:hover {
+  background: #4338ca;
+}
+
+.dropdown-container {
+  position: relative;
+}
+
+.dropdown-btn {
+  background: #6b7280;
+  color: white;
+  border: none;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dropdown-btn:hover {
+  background: #4b5563;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  min-width: 150px;
+  margin-top: 5px;
+}
+
+.dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: #374151;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.dropdown-item:hover {
+  background: #f3f4f6;
+}
+
+.dropdown-item.delete {
+  color: #ef4444;
+  border-top: 1px solid #e5e7eb;
+}
+
+.dropdown-item.delete:hover {
+  background: #fee2e2;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+.modal-close:hover {
+  color: #111827;
+}
+
+.modal-content h2 {
+  margin: 0;
+  padding: 24px 24px 0;
+  color: #111827;
+  font-size: 22px;
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.modal-field {
+  margin-bottom: 20px;
+}
+
+.modal-field label {
+  display: block;
+  color: #6b7280;
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.modal-field p {
+  margin: 0;
+  color: #111827;
+  font-size: 15px;
+}
+
+.modal-field small {
+  color: #9ca3af;
+}
+
+/* Status Filter Buttons */
+.status-filter {
+  display: flex;
+  gap: 10px;
+}
+
+.status-btn {
+  flex: 1;
+  padding: 10px 12px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  background: white;
+  color: #374151;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 13px;
+}
+
+.status-btn:hover {
+  border-color: #4f46e5;
+  color: #4f46e5;
+}
+
+.status-btn.active {
+  background: #4f46e5;
+  color: white;
+  border-color: #4f46e5;
+}
+
+/* Modal Actions */
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.save-btn,
+.cancel-btn {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.save-btn {
+  background: #4f46e5;
+  color: white;
+}
+
+.save-btn:hover {
+  background: #4338ca;
+}
+
+.cancel-btn {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.cancel-btn:hover {
+  background: #e5e7eb;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .task-page {
+    padding: 12px;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    margin-left: calc(-50vw + 50%);
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  .task-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .task-header h2 {
+    font-size: 20px;
+  }
+
+  .task-controls {
+    width: 100%;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .task-controls input,
+  .task-controls select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    font-size: 14px;
+  }
+
+  /* Table Container for Mobile */
+  .task-table {
+    font-size: 13px;
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .task-table th {
+    padding: 12px;
+    font-size: 12px;
+  }
+
+  .task-table td {
+    padding: 12px;
+    font-size: 12px;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+  }
+
+  .task-table small {
+    display: block;
+    font-size: 11px;
+  }
+
+  .task-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .view-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+    flex: 1;
+    min-width: 70px;
+  }
+
+  .dropdown-btn {
+    padding: 6px 8px;
+    font-size: 12px;
+    min-width: 36px;
+  }
+
+  .dropdown-menu {
+    right: -10px;
+    left: auto;
+    min-width: 140px;
+    z-index: 1000;
+  }
+
+  .dropdown-item {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .modal-content {
+    width: 95%;
+    max-width: 95%;
+  }
+
+  .status-filter {
+    flex-direction: column;
+  }
+
+  .status-btn {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-field p {
+    word-wrap: break-word;
+    word-break: break-word;
+  }
+}
+
+@media (max-width: 480px) {
+  .task-page {
+    padding: 10px;
+  }
+
+  .task-header h2 {
+    font-size: 18px;
+  }
+
+  .task-table {
+    font-size: 11px;
+  }
+
+  .task-table th {
+    padding: 10px 8px;
+    font-size: 11px;
+  }
+
+  .task-table td {
+    padding: 10px 8px;
+    font-size: 11px;
+  }
+
+  .view-btn {
+    padding: 5px 8px;
+    font-size: 11px;
+    min-width: 60px;
+  }
+
+  .dropdown-btn {
+    padding: 5px 6px;
+    font-size: 11px;
+  }
+
+  .status-btn {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .priority,
+  .status {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
 }

@@ -31,23 +31,36 @@ function Dashboard() {
       : nameParts[0]?.[0]?.toUpperCase() || "E";
 
   const [stats, setStats] = useState({
-    total: 0,
-    pending: 0,
-    completed: 0,
-    deadlines: 0,
+    totalEmployees: 0,
+    todayAttendance: 0,
+    pendingTasks: 0,
+    completedTasks: 0,
   });
 
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const total = await fetch("http://localhost:8080/api/tasks/count/total").then((res) => res.json());
-        const pending = await fetch("http://localhost:8080/api/tasks/count/pending").then((res) => res.json());
-        const completed = await fetch("http://localhost:8080/api/tasks/count/completed").then((res) => res.json());
-        const deadlines = await fetch("http://localhost:8080/api/tasks/deadline-today").then((res) => res.json());
+        const [totalEmployeesRes, pendingRes, completedRes, todayAttendanceRes] =
+          await Promise.all([
+            fetch("http://localhost:8080/api/dashboard/total-employees").then((res) => res.json()),
+            fetch("http://localhost:8080/api/tasks/count/pending").then((res) => res.json()),
+            fetch("http://localhost:8080/api/tasks/count/completed").then((res) => res.json()),
+            // If backend does not have this endpoint yet, it will fail and we fallback to 0.
+            fetch("http://localhost:8080/api/dashboard/todays-attendance")
+              .then((res) => res.json())
+              .catch(() => 0),
 
-        setStats({ total, pending, completed, deadlines });
+          ]);
+
+        setStats({
+          totalEmployees: totalEmployeesRes,
+          pendingTasks: pendingRes,
+          completedTasks: completedRes,
+          todayAttendance: todayAttendanceRes,
+        });
       } catch (err) {
         console.error("Dashboard stats error:", err);
+        // keep UI stable even if one endpoint fails
       }
     };
 
@@ -55,7 +68,12 @@ function Dashboard() {
   }, []);
 
   const progress =
-    stats.total === 0 ? 0 : Math.round((stats.completed / stats.total) * 100);
+    stats.pendingTasks + stats.completedTasks === 0
+      ? 0
+      : Math.round(
+          (stats.completedTasks / (stats.pendingTasks + stats.completedTasks)) * 100
+        );
+
 
   return (
     <Layout title="Dashboard">
@@ -77,49 +95,54 @@ function Dashboard() {
             >
               <FaPlus /> Add Task
             </button>
+
           </div>
         </div>
 
-        <div className="hero-image">📊</div>
+        <div className="hero-image">
+          <img src="/logo.png" alt="SSS Logo" className="dashboard-logo" />
+        </div>
       </section>
 
       <section className="stats-grid">
         <div className="stat-card purple">
-          <FaClipboardList />
+          <FaUsers />
           <div>
-            <h2>{stats.total}</h2>
-            <p>Total Tasks</p>
-            <span>All assigned tasks</span>
+            <h2>{stats.totalEmployees}</h2>
+            <p>Total Employees</p>
+            <span>Apni Site</span>
           </div>
         </div>
 
         <div className="stat-card orange">
+          <FaCalendarAlt />
+          <div>
+            <h2>{stats.todayAttendance}</h2>
+            <p>Today’s Attendance</p>
+            <span>Present today</span>
+          </div>
+        </div>
+
+        <div className="stat-card green">
           <FaHourglassHalf />
           <div>
-            <h2>{stats.pending}</h2>
+            <h2>{stats.pendingTasks}</h2>
             <p>Pending Tasks</p>
             <span>Tasks in progress</span>
           </div>
         </div>
 
-        <div className="stat-card green">
+        <div className="stat-card red">
           <FaCheckCircle />
           <div>
-            <h2>{stats.completed}</h2>
+            <h2>{stats.completedTasks}</h2>
             <p>Completed Tasks</p>
             <span>Tasks completed</span>
           </div>
         </div>
-
-        <div className="stat-card red">
-          <FaFlag />
-          <div>
-            <h2>{stats.deadlines}</h2>
-            <p>Deadlines</p>
-            <span>Pending deadlines</span>
-          </div>
-        </div>
       </section>
+
+
 
       <section className="bottom-grid">
         <div className="page-card">

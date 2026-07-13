@@ -3,6 +3,7 @@ import { NavLink } from "react-router-dom";
 import "./Sidebar.css";
 import { Link } from "react-router-dom";
 
+
 import {
   FaTachometerAlt,
   FaClipboardList,
@@ -21,7 +22,8 @@ const Sidebar = () => {
     <div className="sidebar">
 
       <div className="logo">
-        <h2>Task Management</h2>
+        <img src="/logo.png" alt="SSS Logo" className="sidebar-logo" />
+        <p className="sidebar-company-name">SSS FMS Facility Services</p>
       </div>
 
       <ul>

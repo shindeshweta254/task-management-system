@@ -1,7 +1,5 @@
 package com.company.taskmanagement.controller;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,8 +24,8 @@ public class ReviewController {
 	}
 
 	@GetMapping("/task/{taskId}")
-	public List<Review> getReviewsByTask(@PathVariable Long taskId) {
+	public Review getReviewsByTask(@PathVariable Long taskId) {
 
-		return (List<Review>) reviewService.getReviewsByTask(taskId);
+		return reviewService.getReviewsByTask(taskId);
 	}
 }

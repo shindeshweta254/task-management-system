@@ -9,6 +9,8 @@ import {
   FaCalendarAlt,
   FaUser,
   FaUsers,
+  FaUserPlus,
+  FaFileExcel,
   FaChartBar,
   FaBell,
   FaMoon,
@@ -55,10 +57,22 @@ function Layout({ title, children }) {
     { label: "Team", path: "/team", icon: <FaUsers /> },
     { label: "Reports", path: "/reports", icon: <FaChartBar /> },
     { label: "Profile", path: "/profile", icon: <FaUser /> },
+    { label: "Employees", path: "/director-dashboard?tab=employees", icon: <FaUsers />, directorOnly: true },
+    { label: "Add Employee", path: "/director-dashboard?tab=add-employee", icon: <FaUserPlus />, directorOnly: true },
+    { label: "Upload Excel", path: "/director-dashboard?tab=upload-excel", icon: <FaFileExcel />, directorOnly: true },
   ];
 
+  const isDirector = role === "DIRECTOR" || role === "director";
+
+  const filteredNavItems = navItems.filter((item) => {
+    if (item.directorOnly) return isDirector || role === "Owner/Admin";
+    if (role === "Owner/Admin" || isDirector) return true;
+    if (role === "Manager/Supervisor") return ["/dashboard", "/task", "/checklist", "/attendance", "/reports", "/team", "/calendar", "/projects"].includes(item.path);
+    return ["/dashboard", "/task", "/checklist", "/attendance", "/profile"].includes(item.path);
+  });
+
   const searchResults = searchQuery.trim()
-    ? navItems.filter((item) =>
+    ? filteredNavItems.filter((item) =>
         item.label.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : [];
@@ -71,41 +85,19 @@ function Layout({ title, children }) {
     <div className={`app-layout ${isSidebarOpen ? "sidebar-open" : ""}`}>
       <aside className={`layout-sidebar ${isSidebarOpen ? "open" : ""}`}>
         <div className="logo-box">
-          <div className="logo">S</div>
+          <img src="/logo.png" alt="SSS Logo" className="logo" />
           <div className="logo-text">
-            <h2>SSS Facility</h2>
+            <h2>SSS FMS Facility</h2>
             <p>Services</p>
           </div>
         </div>
 
         <nav className="sidebar-menu" onClick={closeSidebar}>
-          <NavLink to="/dashboard">
-            <FaChartBar /> Dashboard
-          </NavLink>
-          <NavLink to="/task">
-            <FaTasks /> Task
-          </NavLink>
-          <NavLink to="/checklist">
-            <FaClipboardList /> Checklist
-          </NavLink>
-          <NavLink to="/attendance">
-            <FaCalendarAlt /> Attendance
-          </NavLink>
-          <NavLink to="/calendar">
-            <FaCalendarAlt /> Calendar
-          </NavLink>
-          <NavLink to="/projects">
-            <FaProjectDiagram /> Projects
-          </NavLink>
-          <NavLink to="/team">
-            <FaUsers /> Team
-          </NavLink>
-          <NavLink to="/reports">
-            <FaChartBar /> Reports
-          </NavLink>
-          <NavLink to="/profile">
-            <FaUser /> Profile
-          </NavLink>
+          {filteredNavItems.map((item) => (
+            <NavLink key={item.path} to={item.path}>
+              {item.icon} {item.label}
+            </NavLink>
+          ))}
         </nav>
 
         <div className="user-card">

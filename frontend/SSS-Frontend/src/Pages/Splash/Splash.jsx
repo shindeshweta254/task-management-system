@@ -20,10 +20,10 @@ return () => clearTimeout(timer);
       <img
         src="/logo.png"
         alt="logo"
-        className="logo"
+        className="splash-logo"
       />
 
-      <h1>SSS FMS INDIA PVT LTD</h1>
+      <h1>SSS FMS Facility Services</h1>
       <p>Employee Task Management System</p>
 
     </div>

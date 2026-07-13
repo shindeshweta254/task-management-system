@@ -1,5 +1,6 @@
 package com.company.taskmanagement.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -11,10 +12,12 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "users")
 public class User {
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@Column(name = "employee_id", unique = true)
 	private String employeeId;
 
 	private String name;
@@ -26,6 +29,9 @@ public class User {
 	private String department;
 
 	private String status;
+
+	@Column(name = "contact_no", length = 20)
+	private String contactNo;
 
 	@ManyToOne
 	@JoinColumn(name = "role_id")
@@ -87,6 +93,14 @@ public class User {
 		this.status = status;
 	}
 
+	public String getContactNo() {
+		return contactNo;
+	}
+
+	public void setContactNo(String contactNo) {
+		this.contactNo = contactNo;
+	}
+
 	public Role getRole() {
 		return role;
 	}
@@ -94,5 +108,4 @@ public class User {
 	public void setRole(Role role) {
 		this.role = role;
 	}
-
 }

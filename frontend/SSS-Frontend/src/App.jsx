@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import Dashboard from "./Pages/Dashboard/Dashboard";
 import Checklist from "./Pages/Checklist/Checklist";
-import Attendance from "./Pages/Attendance/Attendance";
+import Attendance from "./Pages/Attendance/attendance";
 import Calendar from "./Pages/Calender/Calendar";
 import Projects from "./Pages/Project/Project";
 import Team from "./Pages/Team/Team";
@@ -12,6 +12,8 @@ import Login from "./Pages/Login/Login";
 import Splash from "./Pages/Splash/Splash";
 import Signup from "./Pages/Signup/Signup";
 import AddTask from "./Pages/AddTask/AddTask";
+import SupervisorDashboard from "./Pages/SupervisorDashboard/SupervisorDashboard";
+import DirectorDashboard from "./Pages/DirectorDashboard/DirectorDashboard";
 
 function App() {
   return (
@@ -30,6 +32,8 @@ function App() {
       <Route path="/task" element={<Task />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/add-task" element={<AddTask />} />
+      <Route path="/supervisor-dashboard" element={<SupervisorDashboard />} />
+      <Route path="/director-dashboard" element={<DirectorDashboard />} />
     </Routes>
   );
 }

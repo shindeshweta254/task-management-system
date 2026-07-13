@@ -17,7 +17,6 @@ import com.company.taskmanagement.entity.Task;
 import com.company.taskmanagement.entity.User;
 import com.company.taskmanagement.service.TaskService;
 
-import jakarta.validation.Valid;
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/tasks")
