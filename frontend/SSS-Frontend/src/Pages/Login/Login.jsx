@@ -1,23 +1,19 @@
 import "./Login.css";
 import { useState } from "react";
-import { t } from "../../i18n/translator";
 import { useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 function Login() {
   const navigate = useNavigate();
 
-  const [employeeId, setEmployeeId] = useState("");
   const [role, setRole] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setMessage("");
 
     try {
       const response = await fetch("http://localhost:8080/api/users/login", {
@@ -26,34 +22,34 @@ function Login() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          employeeId: employeeId.trim(),
-          email: email.trim(),
+          role: role,
+          email: email,
           password: password,
         }),
       });
 
-      if (!response.ok) {
-        setMessage("Invalid Employee ID, Email or Password ❌");
-        return;
+      if (response.ok) {
+        const user = await response.json();
+
+        localStorage.setItem("user", JSON.stringify(user));
+
+        setMessage("Login Successful ✅");
+
+        setTimeout(() => {
+          if (user.role === "employee") {
+            navigate("/dashboard");
+          } else if (user.role === "manager") {
+            navigate("/manager-dashboard");
+          } else if (user.role === "director") {
+            navigate("/director-dashboard");
+          } else {
+            navigate("/dashboard");
+          }
+        }, 1000);
+      } else {
+        setMessage("Invalid email or password ❌");
       }
-
-      const user = await response.json();
-
-      const roleName = user.role?.roleName;
-
-      if (role && roleName && role.toUpperCase() !== roleName.toUpperCase()) {
-        setMessage("Selected role does not match ❌");
-        return;
-      }
-
-      localStorage.setItem("user", JSON.stringify(user));
-      setMessage("Login Successful ✅");
-
-      setTimeout(() => {
-        navigate("/language");
-      }, 700);
     } catch (error) {
-      console.log(error);
       setMessage("Backend server not connected ❌");
     }
   };
@@ -65,40 +61,33 @@ function Login() {
           <img src="/logo.png" alt="SSS Logo" className="logo" />
         </div>
 
-        <h1>{t("login.heading")}</h1>
-        <p className="subtitle">{t("login.subtitle")}</p>
-        <p className="version">{t("login.version")}</p>
+        <h1>SSS FACILITY SERVICES</h1>
+
+        <p className="subtitle">Employee Task Management System</p>
+
+        <p className="version">Version 1.0</p>
 
         <form onSubmit={handleLogin}>
           <div className="input-group">
-            <label>{t("login.employeeId")}</label>
-            <input
-              type="text"
-              placeholder="Enter Employee ID"
-              value={employeeId}
-              onChange={(e) => setEmployeeId(e.target.value)}
-              autoComplete="off"
-            />
-          </div>
+            <label>Select Role</label>
 
-          <div className="input-group">
-            <label>{t("login.selectRole")}</label>
             <select
               className="role-select"
               value={role}
               onChange={(e) => setRole(e.target.value)}
               required
             >
-              <option value="">{t("login.selectRole")}</option>
-              <option value="EMPLOYEE">{t("login.roleEmployee")}</option>
-              <option value="MANAGER">{t("login.roleManager")}</option>
-              <option value="DIRECTOR">{t("login.roleDirector")}</option>
-              <option value="SUPERVISOR">{t("login.roleSupervisor")}</option>
+              <option value="">Select Role</option>
+              <option value="employee">Employee</option>
+              <option value="manager">Manager</option>
+              <option value="director">Director</option>
+               <option value="director">Site Supervisor</option>
             </select>
           </div>
 
           <div className="input-group">
-            <label>{t("login.email")}</label>
+            <label>Email</label>
+
             <input
               type="email"
               placeholder="Enter Email"
@@ -110,7 +99,8 @@ function Login() {
           </div>
 
           <div className="input-group">
-            <label>{t("login.password")}</label>
+            <label>Password</label>
+
             <div className="password-box">
               <input
                 type={showPassword ? "text" : "password"}
@@ -131,7 +121,7 @@ function Login() {
           </div>
 
           <button type="submit" className="login-btn">
-            {t("login.loginBtn")}
+            Login
           </button>
 
           {message && <p className="message">{message}</p>}
@@ -152,15 +142,9 @@ function Login() {
         >
           Forgot Password?
         </a>
-
-        <p className="signup-link">
-          New Employee?{" "}
-        <span onClick={() => navigate("/signup")}>Create Account</span>
-        </p>
       </div>
     </div>
   );
 }
 
 export default Login;
-
