@@ -2,6 +2,8 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import "./Layout.css";
 
+import { t } from "../../i18n/translator";
+
 import {
   FaBars,
   FaTasks,
@@ -19,6 +21,7 @@ import {
 } from "react-icons/fa";
 
 function Layout({ title, children }) {
+
   const [showNotifications, setShowNotifications] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -34,6 +37,15 @@ function Layout({ title, children }) {
     document.documentElement.classList.toggle("dark-theme", darkMode);
   }, [darkMode]);
 
+  useEffect(() => {
+    const handler = () => {
+      // re-render by triggering state change only in case future UI needs it
+    };
+    window.addEventListener("langchange", handler);
+    return () => window.removeEventListener("langchange", handler);
+  }, []);
+
+
   const parseLocalStorage = (key) => {
     try {
       return JSON.parse(localStorage.getItem(key));
@@ -48,18 +60,19 @@ function Layout({ title, children }) {
   const nameParts = userName.trim().split(" ");
 
   const navItems = [
-    { label: "Dashboard", path: "/dashboard", icon: <FaChartBar /> },
-    { label: "Task", path: "/task", icon: <FaTasks /> },
-    { label: "Checklist", path: "/checklist", icon: <FaClipboardList /> },
-    { label: "Attendance", path: "/attendance", icon: <FaCalendarAlt /> },
-    { label: "Calendar", path: "/calendar", icon: <FaCalendarAlt /> },
-    { label: "Projects", path: "/projects", icon: <FaProjectDiagram /> },
-    { label: "Team", path: "/team", icon: <FaUsers /> },
-    { label: "Reports", path: "/reports", icon: <FaChartBar /> },
-    { label: "Profile", path: "/profile", icon: <FaUser /> },
-    { label: "Employees", path: "/director-dashboard?tab=employees", icon: <FaUsers />, directorOnly: true },
-    { label: "Add Employee", path: "/director-dashboard?tab=add-employee", icon: <FaUserPlus />, directorOnly: true },
-    { label: "Upload Excel", path: "/director-dashboard?tab=upload-excel", icon: <FaFileExcel />, directorOnly: true },
+    { labelKey: "nav.dashboard", path: "/dashboard", icon: <FaChartBar /> },
+    { labelKey: "nav.task", path: "/task", icon: <FaTasks /> },
+    { labelKey: "nav.checklist", path: "/checklist", icon: <FaClipboardList /> },
+    { labelKey: "nav.attendance", path: "/attendance", icon: <FaCalendarAlt /> },
+    { labelKey: "nav.calendar", path: "/calendar", icon: <FaCalendarAlt /> },
+    { labelKey: "nav.projects", path: "/projects", icon: <FaProjectDiagram /> },
+    { labelKey: "nav.team", path: "/team", icon: <FaUsers /> },
+    { labelKey: "nav.reports", path: "/reports", icon: <FaChartBar /> },
+    { labelKey: "nav.profile", path: "/profile", icon: <FaUser /> },
+    { labelKey: "nav.addTask", path: "/add-task", icon: <FaUserPlus /> },
+    { labelKey: "nav.employees", path: "/director-dashboard?tab=employees", icon: <FaUsers />, directorOnly: true },
+    { labelKey: "nav.addEmployee", path: "/director-dashboard?tab=add-employee", icon: <FaUserPlus />, directorOnly: true },
+    { labelKey: "nav.uploadExcel", path: "/director-dashboard?tab=upload-excel", icon: <FaFileExcel />, directorOnly: true },
   ];
 
   const isDirector = role === "DIRECTOR" || role === "director";
@@ -67,15 +80,26 @@ function Layout({ title, children }) {
   const filteredNavItems = navItems.filter((item) => {
     if (item.directorOnly) return isDirector || role === "Owner/Admin";
     if (role === "Owner/Admin" || isDirector) return true;
-    if (role === "Manager/Supervisor") return ["/dashboard", "/task", "/checklist", "/attendance", "/reports", "/team", "/calendar", "/projects"].includes(item.path);
-    return ["/dashboard", "/task", "/checklist", "/attendance", "/profile"].includes(item.path);
+    if (role === "Manager/Supervisor") {
+      return [
+        "/dashboard",
+        "/add-task",
+        "/task",
+        "/checklist",
+        "/attendance",
+        "/reports",
+        "/team",
+        "/calendar",
+        "/projects",
+      ].includes(item.path);
+    }
+    return ["/dashboard", "/add-task", "/task", "/checklist", "/attendance", "/profile"].includes(item.path);
   });
 
   const searchResults = searchQuery.trim()
-    ? filteredNavItems.filter((item) =>
-        item.label.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+    ? filteredNavItems.filter((item) => t(item.labelKey).toLowerCase().includes(searchQuery.toLowerCase()))
     : [];
+
   const initials =
     nameParts.length > 1
       ? (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
@@ -95,7 +119,7 @@ function Layout({ title, children }) {
         <nav className="sidebar-menu" onClick={closeSidebar}>
           {filteredNavItems.map((item) => (
             <NavLink key={item.path} to={item.path}>
-              {item.icon} {item.label}
+              {item.icon} {t(item.labelKey)}
             </NavLink>
           ))}
         </nav>
@@ -109,10 +133,7 @@ function Layout({ title, children }) {
         </div>
       </aside>
 
-      <div
-        className={`layout-overlay ${isSidebarOpen ? "visible" : ""}`}
-        onClick={closeSidebar}
-      />
+      <div className={`layout-overlay ${isSidebarOpen ? "visible" : ""}`} onClick={closeSidebar} />
 
       <main className="layout-main-content">
         <header className="topbar">
@@ -127,60 +148,67 @@ function Layout({ title, children }) {
 
           <h1>{title}</h1>
 
+
           <div className="top-actions">
             <div className="search-box">
-            <FaSearch className="search-icon" />
-            <input
-              type="text"
-              placeholder="Search anything..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setSearchOpen(true);
-              }}
-              onFocus={() => setSearchOpen(true)}
-              onBlur={closeSearch}
-            />
-            {searchOpen && (
-              <div className="search-dropdown">
-                {searchQuery.trim().length === 0 ? (
-                  <div className="search-empty">Type to search pages</div>
-                ) : searchResults.length > 0 ? (
-                  searchResults.map((item) => (
-                    <button
-                      key={item.path}
-                      type="button"
-                      className="search-result"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => {
-                        navigate(item.path);
-                        setSearchQuery("");
-                        setSearchOpen(false);
-                      }}
-                    >
-                      <span className="search-result-icon">{item.icon}</span>
-                      {item.label}
-                    </button>
-                  ))
-                ) : (
-                  <div className="search-empty">No results found</div>
-                )}
-              </div>
-            )}
-          </div>
-          <div className="notification-box">
-              <button onClick={() => setShowNotifications(!showNotifications)}>
-                <FaBell />
-              </button>
-              {showNotifications && (
-                <div className="notification-dropdown">
-                  <h4>Notifications</h4>
-                  <p>? Checklist Updated</p>
-                  <p>? 5 Tasks Pending</p>
-                  <p>?? Attendance Report Ready</p>
+              <FaSearch className="search-icon" />
+              <input
+                type="text"
+                placeholder={t("top.searchPlaceholder")}
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setSearchOpen(true);
+                }}
+                onFocus={() => setSearchOpen(true)}
+                onBlur={closeSearch}
+              />
+              {searchOpen && (
+                <div className="search-dropdown">
+                  {searchQuery.trim().length === 0 ? (
+                    <div className="search-empty">{t("top.searchTypeToSearch")}</div>
+
+                  ) : searchResults.length > 0 ? (
+                    searchResults.map((item) => (
+                      <button
+                        key={item.path}
+                        type="button"
+                        className="search-result"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          navigate(item.path);
+                          setSearchQuery("");
+                          setSearchOpen(false);
+                        }}
+                      >
+                        <span className="search-result-icon">{item.icon}</span>
+                        {t(item.labelKey)}
+
+                      </button>
+                    ))
+                  ) : (
+                    <div className="search-empty">{t("top.searchNoResults")}</div>
+                  )}
+
                 </div>
               )}
             </div>
+
+            <div className="notification-box">
+              <button onClick={() => setShowNotifications(!showNotifications)}>
+                <FaBell />
+              </button>
+                  {showNotifications && (
+                <div className="notification-dropdown">
+                  <h4>{t("top.notifications")}</h4>
+                  <p>{t("top.notif.checklistUpdated")}</p>
+                  <p>{t("top.notif.tasksPending5")}</p>
+                  <p>{t("top.notif.attendanceReady")}</p>
+                </div>
+              )}
+
+            </div>
+
             <button
               type="button"
               className={darkMode ? "dark-toggle active" : "dark-toggle"}
@@ -199,3 +227,4 @@ function Layout({ title, children }) {
 }
 
 export default Layout;
+

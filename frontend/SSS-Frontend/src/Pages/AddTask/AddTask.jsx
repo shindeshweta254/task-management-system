@@ -1,82 +1,61 @@
 import Layout from "../../components/Layout/Layout";
 import "./AddTask.css";
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
+import { createTask } from "../../api/createTaskApi";
+import { useCreateTask } from "../../hooks/useCreateTask";
+import { getUserFromStorage } from "../../utils/userStorage";
 
 function AddTask() {
   const navigate = useNavigate();
 
-  const [employees, setEmployees] = useState([]);
-  const [message, setMessage] = useState("");
+  const user = getUserFromStorage("user");
 
-  const [task, setTask] = useState({
-    taskTitle: "",
-    taskDescription: "",
-    priority: "MEDIUM",
-    status: "PENDING",
-    progressPercentage: 0,
-    startDate: "",
-    dueDate: "",
-    assignedToId: "",
-    reviewerId: "",
-  });
+  const {
+    employees,
+    message,
+    setMessage,
+    task,
+    setTask,
+    init,
+    handleChange,
+  } = useCreateTask();
 
-  useEffect(() => {
-    fetch("http://localhost:8080/api/users")
-      .then((res) => res.json())
-      .then((data) => setEmployees(data))
-      .catch((err) => console.log(err));
-  }, []);
-
-  const handleChange = (e) => {
-    setTask({
-      ...task,
-      [e.target.name]: e.target.value,
-    });
-  };
+  // keep existing UI/behavior: load employees on mount
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  ;(function () {})();
+  // manual init with lazy pattern to avoid changing hook structure further
+  // (init is called right below using microtask)
+  Promise.resolve().then(() => init());
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const selectedEmployeeId = Number(task.assignedToId);
+    const reviewerUserId = task.reviewerId ? Number(task.reviewerId) : null;
 
     const requestBody = {
       taskTitle: task.taskTitle,
       taskDescription: task.taskDescription,
       priority: task.priority,
       status: task.status,
-      progressPercentage: Number(task.progressPercentage),
-      startDate: task.startDate,
-      dueDate: task.dueDate,
+      progressPercentage: Number(task.progressPercentage) || 0,
+      startDate: task.startDate ? task.startDate : null,
+      dueDate: task.dueDate ? task.dueDate : null,
       assignedTo: {
-        id: Number(task.assignedToId),
+        id: selectedEmployeeId,
       },
-      reviewer: task.reviewerId
-        ? {
-            id: Number(task.reviewerId),
-          }
-        : null,
+      reviewer: reviewerUserId ? { id: reviewerUserId } : null,
     };
 
     try {
-      const response = await fetch("http://localhost:8080/api/tasks", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      if (!response.ok) {
-        setMessage("Task create nahi hua ❌");
-        return;
-      }
-
+      await createTask(requestBody);
       setMessage("Task Created Successfully ✅");
 
       setTimeout(() => {
-        navigate("/dashboard");
+        navigate("/task");
       }, 1200);
     } catch (error) {
-      console.log(error);
       setMessage("Backend server not connected ❌");
     }
   };
@@ -212,3 +191,4 @@ function AddTask() {
 }
 
 export default AddTask;
+

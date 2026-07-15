@@ -1,50 +1,25 @@
-package com.company.taskmanagement.entity;
+package com.company.taskmanagement.controller;
 
 import java.time.LocalDate;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import org.springframework.web.multipart.MultipartFile;
 
-@Entity
-@Table(name = "reports")
-public class Report {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+/**
+ * Helper DTO for daily work proof upload.
+ */
+public class ReportUploadRequest {
 
     private String completedWork;
-
     private String pendingWork;
-
     private String issues;
-
     private LocalDate reportDate;
 
-    // Daily work proof + location
-    private String proofFileName;
-    private String proofFilePath;
     private Double latitude;
     private Double longitude;
     private String locationAddress;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
-
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
+    // Multipart proof file
+    private MultipartFile proof;
 
     public String getCompletedWork() {
         return completedWork;
@@ -78,22 +53,6 @@ public class Report {
         this.reportDate = reportDate;
     }
 
-    public String getProofFileName() {
-        return proofFileName;
-    }
-
-    public void setProofFileName(String proofFileName) {
-        this.proofFileName = proofFileName;
-    }
-
-    public String getProofFilePath() {
-        return proofFilePath;
-    }
-
-    public void setProofFilePath(String proofFilePath) {
-        this.proofFilePath = proofFilePath;
-    }
-
     public Double getLatitude() {
         return latitude;
     }
@@ -118,11 +77,12 @@ public class Report {
         this.locationAddress = locationAddress;
     }
 
-    public User getUser() {
-        return user;
+    public MultipartFile getProof() {
+        return proof;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setProof(MultipartFile proof) {
+        this.proof = proof;
     }
 }
+

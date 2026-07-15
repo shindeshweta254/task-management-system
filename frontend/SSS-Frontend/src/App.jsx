@@ -4,7 +4,7 @@ import Checklist from "./Pages/Checklist/Checklist";
 import Attendance from "./Pages/Attendance/attendance";
 import Calendar from "./Pages/Calender/Calendar";
 import Projects from "./Pages/Project/Project";
-import Team from "./Pages/Team/Team";
+import Team from "./Pages/Team/team";
 import Reports from "./Pages/Reports/Reports";
 import Profile from "./Pages/Profile/Profile";
 import Task from "./Pages/Task/task";
@@ -14,6 +14,8 @@ import Signup from "./Pages/Signup/Signup";
 import AddTask from "./Pages/AddTask/AddTask";
 import SupervisorDashboard from "./Pages/SupervisorDashboard/SupervisorDashboard";
 import DirectorDashboard from "./Pages/DirectorDashboard/DirectorDashboard";
+import Language from "./Pages/Language/Language";
+
 
 function App() {
   return (
@@ -21,6 +23,7 @@ function App() {
       <Route path="/" element={<Splash />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/language" element={<Language />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/checklist" element={<Checklist />} />
       <Route path="/attendance" element={<Attendance />} />

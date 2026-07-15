@@ -3,12 +3,13 @@ import "./Dashboard.css";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
+import { t } from "../../i18n/translator";
+
 import {
   FaPlus,
   FaClipboardList,
   FaCheckCircle,
   FaHourglassHalf,
-  FaFlag,
   FaCalendarAlt,
   FaChartBar,
   FaUsers,
@@ -21,6 +22,12 @@ function Dashboard() {
 
   const userName = user.name || "Employee";
   const employeeId = user.employeeId || "-";
+
+  // TasController expects Long userId (DB primary key). Some logins may store employeeId/code as strings,
+  // so guard against invalid values.
+  const userIdForApi = Number(user?.id);
+  const canFetchEmployeeStats = Number.isFinite(userIdForApi) && userIdForApi > 0;
+
   const department = user.department || "-";
   const roleName = user.role?.roleName || "EMPLOYEE";
 
@@ -43,13 +50,16 @@ function Dashboard() {
         const [totalEmployeesRes, pendingRes, completedRes, todayAttendanceRes] =
           await Promise.all([
             fetch("http://localhost:8080/api/dashboard/total-employees").then((res) => res.json()),
-            fetch("http://localhost:8080/api/tasks/count/pending").then((res) => res.json()),
-            fetch("http://localhost:8080/api/tasks/count/completed").then((res) => res.json()),
-            // If backend does not have this endpoint yet, it will fail and we fallback to 0.
+            // Employee-specific task counts
+            canFetchEmployeeStats
+              ? fetch(`http://localhost:8080/api/tasks/dashboard/${userIdForApi}/pending`).then((res) => res.json())
+              : Promise.resolve(0),
+            canFetchEmployeeStats
+              ? fetch(`http://localhost:8080/api/tasks/dashboard/${userIdForApi}/completed`).then((res) => res.json())
+              : Promise.resolve(0),
             fetch("http://localhost:8080/api/dashboard/todays-attendance")
               .then((res) => res.json())
               .catch(() => 0),
-
           ]);
 
         setStats({
@@ -70,10 +80,7 @@ function Dashboard() {
   const progress =
     stats.pendingTasks + stats.completedTasks === 0
       ? 0
-      : Math.round(
-          (stats.completedTasks / (stats.pendingTasks + stats.completedTasks)) * 100
-        );
-
+      : Math.round((stats.completedTasks / (stats.pendingTasks + stats.completedTasks)) * 100);
 
   return (
     <Layout title="Dashboard">
@@ -82,9 +89,11 @@ function Dashboard() {
           <div className="profile-circle">{initials}</div>
 
           <div>
-            <h2>Welcome back, {userName}! 👋</h2>
+            <h2>
+              {t("dashboard.titleWelcome")}, {userName}! 👋
+            </h2>
             <p>
-              Employee ID: {employeeId} | Department: {department} | Role:{" "}
+              {t("dashboard.employeeId")}: {employeeId} | {t("dashboard.department")}: {department} | {t("dashboard.role")}{" "}
               {roleName}
             </p>
 
@@ -93,9 +102,8 @@ function Dashboard() {
               className="add-btn"
               onClick={() => navigate("/add-task")}
             >
-              <FaPlus /> Add Task
+              <FaPlus /> {t("dashboard.addTask")}
             </button>
-
           </div>
         </div>
 
@@ -109,8 +117,8 @@ function Dashboard() {
           <FaUsers />
           <div>
             <h2>{stats.totalEmployees}</h2>
-            <p>Total Employees</p>
-            <span>Apni Site</span>
+            <p>{t("dashboard.totalEmployees")}</p>
+            <span>{t("dashboard.apniSite")}</span>
           </div>
         </div>
 
@@ -118,8 +126,8 @@ function Dashboard() {
           <FaCalendarAlt />
           <div>
             <h2>{stats.todayAttendance}</h2>
-            <p>Today’s Attendance</p>
-            <span>Present today</span>
+            <p>{t("dashboard.todayAttendance")}</p>
+            <span>{t("dashboard.presentToday")}</span>
           </div>
         </div>
 
@@ -127,8 +135,8 @@ function Dashboard() {
           <FaHourglassHalf />
           <div>
             <h2>{stats.pendingTasks}</h2>
-            <p>Pending Tasks</p>
-            <span>Tasks in progress</span>
+            <p>{t("dashboard.pendingTasks")}</p>
+            <span>{t("dashboard.tasksInProgress")}</span>
           </div>
         </div>
 
@@ -136,60 +144,58 @@ function Dashboard() {
           <FaCheckCircle />
           <div>
             <h2>{stats.completedTasks}</h2>
-            <p>Completed Tasks</p>
-            <span>Tasks completed</span>
+            <p>{t("dashboard.completedTasks")}</p>
+            <span>{t("dashboard.tasksCompleted")}</span>
           </div>
         </div>
       </section>
 
-
-
       <section className="bottom-grid">
         <div className="page-card">
-          <h3>Task Overview</h3>
+          <h3>{t("dashboard.taskOverview")}</h3>
           <div className="circle-progress">
             <h2>{progress}%</h2>
-            <p>Completed</p>
+            <p>{t("dashboard.completed")}</p>
           </div>
         </div>
 
         <div className="page-card">
-          <h3>Recent Tasks</h3>
-          <p>✅ Update Checklist - Completed</p>
-          <p>⏳ Prepare Monthly Report - Pending</p>
-          <p>📌 Employee Attendance - In Progress</p>
+          <h3>{t("dashboard.recentTasks")}</h3>
+          <p>{t("dashboard.recent1")}</p>
+          <p>{t("dashboard.recent2")}</p>
+          <p>{t("dashboard.recent3")}</p>
         </div>
       </section>
 
       <section className="quick-access">
         <h3>
-          Quick
+          {t("dashboard.quickAccess").split(" ")[0]}
           <br />
-          Access
+          {t("dashboard.quickAccess").split(" ").slice(1).join(" ")}
         </h3>
 
         <NavLink to="/add-task">
-          <FaPlus /> Add Task
+          <FaPlus /> {t("dashboard.addTask")}
         </NavLink>
 
         <NavLink to="/checklist">
-          <FaClipboardList /> Checklist
+          <FaClipboardList /> {t("nav.checklist")}
         </NavLink>
 
         <NavLink to="/attendance">
-          <FaCalendarAlt /> Attendance
+          <FaCalendarAlt /> {t("nav.attendance")}
         </NavLink>
 
         <NavLink to="/calendar">
-          <FaCalendarAlt /> Calendar
+          <FaCalendarAlt /> {t("nav.calendar")}
         </NavLink>
 
         <NavLink to="/reports">
-          <FaChartBar /> Reports
+          <FaChartBar /> {t("nav.reports")}
         </NavLink>
 
         <NavLink to="/team">
-          <FaUsers /> Team
+          <FaUsers /> {t("nav.team")}
         </NavLink>
       </section>
     </Layout>
@@ -197,3 +203,4 @@ function Dashboard() {
 }
 
 export default Dashboard;
+

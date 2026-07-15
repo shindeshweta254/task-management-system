@@ -63,4 +63,18 @@ public class UserController {
 	public User resignEmployee(@PathVariable Long userId) {
 		return userService.resignEmployee(userId);
 	}
+
+	// Update contact number (Team Edit + Save)
+	@PutMapping("/{id}")
+	public User updateContactNo(
+			@PathVariable Long id,
+			@RequestBody User user
+	) {
+
+		// Fetch existing user to avoid overwriting fields with null
+		User existing = userService.getUserById(id);
+		existing.setContactNo(user.getContactNo());
+
+		return userService.saveUser(existing);
+	}
 }

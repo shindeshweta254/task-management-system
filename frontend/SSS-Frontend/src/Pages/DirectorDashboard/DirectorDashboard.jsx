@@ -1,29 +1,35 @@
 import Layout from "../../components/Layout/Layout";
 import "./DirectorDashboard.css";
-import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   FaUsers, FaCalendarCheck, FaTasks,
   FaCheckCircle, FaHourglassHalf, FaFlag,
 } from "react-icons/fa";
 
+import { getUserFromStorage, getUserInitials } from "../../utils/userStorage";
+import { addUser, importProjectsFromExcel, importStaffFromExcel } from "../../api/directorDashboardApi";
+import { useDirectorDashboardData } from "../../hooks/useDirectorDashboardData";
+
 function DirectorDashboard() {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const activeSection = searchParams.get("tab") || "dashboard";
 
-  const user = JSON.parse(localStorage.getItem("user")) || {};
-  const userName = user.name || "Director";
-  const department = user.department || "-";
-  const employeeId = user.employeeId || "-";
-  const nameParts = userName.trim().split(" ");
-  const initials =
-    nameParts.length > 1
-      ? (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
-      : nameParts[0]?.[0]?.toUpperCase() || "D";
+  const user = getUserFromStorage("user");
+  const userName = user?.name || "Director";
+  const department = user?.department || "-";
+  const employeeId = user?.employeeId || "-";
+  const initials = getUserInitials(userName);
 
-  const [stats, setStats] = useState({ totalEmployees: 0, todayAttendance: 0, pendingTasks: 0, completedTasks: 0, totalTasks: 0, deadlines: 0 });
-  const [employees, setEmployees] = useState([]);
+  const {
+    stats,
+    tasks,
+    tasksLoading,
+    tasksError,
+    employees,
+    reload,
+  } = useDirectorDashboardData();
+
   const [newEmp, setNewEmp] = useState({ name: "", employeeId: "", email: "", department: "", role: "EMPLOYEE" });
   const [addMsg, setAddMsg] = useState("");
   const [excelFile, setExcelFile] = useState(null);
@@ -31,55 +37,34 @@ function DirectorDashboard() {
   const [projFile, setProjFile] = useState(null);
   const [projMsg, setProjMsg] = useState("");
 
-  useEffect(() => { loadAll(); }, []);
-
-  const loadAll = async () => {
-    try {
-      const [users, total, pending, completed, deadlines] = await Promise.all([
-        fetch("http://localhost:8080/api/users").then((r) => r.json()),
-        fetch("http://localhost:8080/api/tasks/count/total").then((r) => r.json()),
-        fetch("http://localhost:8080/api/tasks/count/pending").then((r) => r.json()),
-        fetch("http://localhost:8080/api/tasks/count/completed").then((r) => r.json()),
-        fetch("http://localhost:8080/api/tasks/deadline-today").then((r) => r.json()),
-      ]);
-      setEmployees(Array.isArray(users) ? users : []);
-      const attData = JSON.parse(localStorage.getItem("attendanceData")) || [];
-      const today = new Date().toLocaleDateString("en-IN");
-      const todayAtt = attData.filter((a) => a.date === today && a.punchIn).length;
-      setStats({ totalEmployees: Array.isArray(users) ? users.length : 0, todayAttendance: todayAtt, pendingTasks: pending || 0, completedTasks: completed || 0, totalTasks: total || 0, deadlines: deadlines || 0 });
-    } catch {
-      const attData = JSON.parse(localStorage.getItem("attendanceData")) || [];
-      const today = new Date().toLocaleDateString("en-IN");
-      const todayAtt = attData.filter((a) => a.date === today && a.punchIn).length;
-      setStats((p) => ({ ...p, todayAttendance: todayAtt }));
-    }
-  };
-
   const handleAddEmployee = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:8080/api/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...newEmp, role: { roleName: newEmp.role }, status: "ACTIVE", password: newEmp.employeeId + "@123" }),
+      await addUser({
+        ...newEmp,
+        role: { roleName: newEmp.role },
+        status: "ACTIVE",
+        password: newEmp.employeeId + "@123",
       });
-      if (!res.ok) throw new Error("Failed");
       setAddMsg("Employee added successfully ✅");
       setNewEmp({ name: "", employeeId: "", email: "", department: "", role: "EMPLOYEE" });
-      loadAll();
-    } catch { setAddMsg("Error adding employee ❌"); }
+      reload();
+    } catch {
+      setAddMsg("Error adding employee ❌");
+    }
   };
 
   const handleProjectExcelUpload = async (e) => {
     e.preventDefault();
-    if (!projFile) { setProjMsg("⚠️ Pehle file select karo"); return; }
+    if (!projFile) {
+      setProjMsg("⚠️ Pehle file select karo");
+      return;
+    }
     setProjMsg("Uploading... ⏳");
-    const formData = new FormData();
-    formData.append("file", projFile);
+
     try {
-      const res = await fetch("http://localhost:8080/api/projects/import", { method: "POST", body: formData });
-      const text = await res.text();
-      setProjMsg(res.ok ? "✅ " + text : "❌ " + text);
+      const text = await importProjectsFromExcel(projFile);
+      setProjMsg("✅ " + text);
     } catch (err) {
       setProjMsg("❌ Upload failed: " + err.message);
     }
@@ -87,19 +72,16 @@ function DirectorDashboard() {
 
   const handleExcelUpload = async (e) => {
     e.preventDefault();
-    if (!excelFile) { setExcelMsg("⚠️ Pehle file select karo"); return; }
+    if (!excelFile) {
+      setExcelMsg("⚠️ Pehle file select karo");
+      return;
+    }
     setExcelMsg("Uploading... ⏳");
-    const formData = new FormData();
-    formData.append("file", excelFile);
+
     try {
-      const res = await fetch("http://localhost:8080/api/users/import-staff", { method: "POST", body: formData });
-      const text = await res.text();
-      if (res.ok) {
-        setExcelMsg("✅ " + text);
-        loadAll();
-      } else {
-        setExcelMsg("❌ Error: " + text);
-      }
+      const text = await importStaffFromExcel(excelFile);
+      setExcelMsg("✅ " + text);
+      reload();
     } catch (err) {
       setExcelMsg("❌ Upload failed: " + err.message);
     }
@@ -113,6 +95,7 @@ function DirectorDashboard() {
         {activeSection === "dashboard" && (
           <>
             <section className="dir-hero">
+
               <div className="dir-hero-left">
                 <div className="dir-avatar">{initials}</div>
                 <div>
@@ -131,6 +114,52 @@ function DirectorDashboard() {
               <div className="dir-stat red"><FaFlag /><div><h2>{stats.deadlines}</h2><p>Today's Deadlines</p></div></div>
               <div className="dir-stat teal"><FaTasks /><div><h2>{stats.totalTasks}</h2><p>Total Tasks</p></div></div>
             </section>
+
+            {/* TASKS */}
+            <section className="dir-card">
+              <h2>Tasks</h2>
+              <div className="dir-table-wrap">
+                <table className="dir-table">
+                  <thead>
+                    <tr>
+                      <th>Task Title</th>
+                      <th>Assigned Employee</th>
+                      <th>Priority</th>
+                      <th>Status</th>
+                      <th>Due Date</th>
+                      <th>Progress</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tasksLoading ? (
+                      <tr>
+                        <td colSpan={6} className="dir-empty">Loading...</td>
+                      </tr>
+                    ) : tasksError ? (
+                      <tr>
+                        <td colSpan={6} className="dir-empty">{tasksError}</td>
+                      </tr>
+                    ) : tasks.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="dir-empty">No tasks found</td>
+                      </tr>
+                    ) : (
+                      tasks.map((task) => (
+                        <tr key={task.id}>
+                          <td>{task.taskTitle || "-"}</td>
+                          <td>{task.assignedTo?.name || "-"}</td>
+                          <td>{task.priority || "-"}</td>
+                          <td>{task.status || "-"}</td>
+                          <td>{task.dueDate || "-"}</td>
+                          <td>{typeof task.progressPercentage === "number" ? `${task.progressPercentage}%` : task.progressPercentage ?? "-"}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
           </>
         )}
 

@@ -23,11 +23,14 @@ function Calendar() {
   const userId = useMemo(() => {
     try {
       const u = JSON.parse(localStorage.getItem("user")) || {};
-      return u.employeeId ?? u.id ?? null;
+      // Use DB primary key only. employeeId/codes like CP001 are not DB IDs.
+      return u.id ?? null;
+
     } catch {
       return null;
     }
   }, []);
+
 
   const months = [
     "January",

@@ -2,17 +2,31 @@ import { useEffect, useState } from "react";
 import Layout from "../../components/Layout/Layout";
 import "./project.css";
 
+import { 
+  deleteProject, 
+  fetchAllProjects, 
+  fetchProjectById, 
+  importProjectsFromExcel,
+  deleteProjectEmployee,
+  updateProjectEmployee,
+  updateProject
+} from "../../api/projectsApi";
+
 const API = "http://localhost:8080/api/projects";
 
 function Projects() {
+  // Centralized localStorage access (no changes to route/APIs)
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const role = user.role?.roleName || "";
-  const isDirector = ["DIRECTOR", "MANAGER", "OWNER"].includes(role.toUpperCase());
+  const isDirector = ["DIRECTOR", "MANAGER", "OWNER"].includes(String(role).toUpperCase());
+
 
   const [projects, setProjects] = useState([]);
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState("");
+  const [error, setError] = useState("");
+
 
   // Upload
   const [excelFile, setExcelFile] = useState(null);
@@ -34,87 +48,150 @@ function Projects() {
 
   const fetchProjects = async () => {
     setLoading(true);
+    setError("");
+    setMsg("");
     try {
-      const res = await fetch(API);
-      if (res.ok) setProjects(await res.json());
-      else setMsg("❌ Backend error: " + res.status);
-    } catch (err) { setMsg("❌ Cannot connect: " + err.message); }
-    setLoading(false);
+      const data = await fetchAllProjects();
+      setProjects(data);
+    } catch (err) {
+      const readable = err?.message || "Failed to load projects";
+      setError(readable);
+      console.log("[Projects] fetchProjects failed:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
+
   const openProject = async (id) => {
+    setError("");
+    setMsg("");
     try {
-      const res = await fetch(`${API}/${id}`);
-      if (res.ok) { const p = await res.json(); setSelected(p); setProjName(p.siteName); }
-    } catch {}
+      const p = await fetchProjectById(id);
+      setSelected(p);
+      setProjName(p?.siteName || "");
+    } catch (err) {
+      setError(err?.message || "Failed to load project details");
+      console.log("[Projects] openProject failed:", err);
+    }
   };
+
 
   const handleUpload = async (e) => {
     e.preventDefault();
-    if (!excelFile) { setMsg("⚠️ Pehle file select karo"); return; }
-    setUploading(true); setMsg("Uploading... ⏳");
-    const fd = new FormData(); fd.append("file", excelFile);
+    if (!excelFile) {
+      setMsg("⚠️ Pehle file select karo");
+      return;
+    }
+
+    setUploading(true);
+    setError("");
+    setMsg("Uploading... ⏳");
+
     try {
-      const res = await fetch(`${API}/import`, { method: "POST", body: fd });
-      const text = await res.text();
-      setMsg(res.ok ? "✅ " + text : "❌ " + text);
-      if (res.ok) fetchProjects();
-    } catch (err) { setMsg("❌ " + err.message); }
-    setUploading(false);
+      const result = await importProjectsFromExcel(excelFile);
+      setMsg(`✅ ${typeof result === "string" ? result : JSON.stringify(result)}`);
+      await fetchProjects();
+    } catch (err) {
+      const readable = err?.message || "Upload failed";
+      setError(readable);
+      console.log("[Projects] upload failed:", err);
+      setMsg("");
+    } finally {
+      setUploading(false);
+    }
   };
+
 
   // Project CRUD
   const saveProjectName = async () => {
+    setError("");
+    setMsg("");
     try {
-      const res = await fetch(`${API}/${selected.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...selected, siteName: projName }),
-      });
-      if (res.ok) { const p = await res.json(); setSelected(p); setEditingProject(false); fetchProjects(); }
-    } catch {}
+      const p = await updateProject(selected.id, { ...selected, siteName: projName });
+      setSelected(p);
+      setEditingProject(false);
+      await fetchProjects();
+      setMsg("✅ Project updated");
+    } catch (err) {
+      const readable = err?.message || "Update failed";
+      setError(readable);
+      console.log("[Projects] saveProjectName failed:", err);
+    }
   };
+
 
   const deleteProject = async (id) => {
     if (!window.confirm("Project delete karna chahte ho?")) return;
+    setError("");
+    setMsg("Deleting... ⏳");
     try {
-      await fetch(`${API}/${id}`, { method: "DELETE" });
-      setSelected(null); fetchProjects();
-    } catch {}
+      await deleteProject(id);
+      setSelected(null);
+      await fetchProjects();
+      setMsg("✅ Project deleted");
+    } catch (err) {
+      const readable = err?.message || "Delete failed";
+      setError(readable);
+      console.log("[Projects] deleteProject failed:", err);
+      setMsg("");
+    }
   };
+
 
   // Employee CRUD
   const saveEmployee = async (empId) => {
+    setError("");
+    setMsg("");
     try {
-      const res = await fetch(`${API}/employee/${empId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editEmpData),
-      });
-      if (res.ok) { setEditEmpId(null); openProject(selected.id); }
-    } catch {}
+      await updateProjectEmployee(selected.id, empId, editEmpData);
+      setEditEmpId(null);
+      await openProject(selected.id);
+      setMsg("✅ Employee updated");
+    } catch (err) {
+      const readable = err?.message || "Employee update failed";
+      setError(readable);
+      console.log("[Projects] saveEmployee failed:", err);
+    }
   };
+
 
   const deleteEmployee = async (empId) => {
     if (!window.confirm("Employee delete karna chahte ho?")) return;
+    setError("");
+    setMsg("Deleting... ⏳");
     try {
-      await fetch(`${API}/employee/${empId}`, { method: "DELETE" });
-      openProject(selected.id);
-    } catch {}
+      await deleteProjectEmployee(empId);
+      await openProject(selected.id);
+      setMsg("✅ Employee deleted");
+    } catch (err) {
+      const readable = err?.message || "Employee delete failed";
+      setError(readable);
+      console.log("[Projects] deleteEmployee failed:", err);
+      setMsg("");
+    }
   };
+
 
   const addEmployee = async (e) => {
     e.preventDefault();
+    setError("");
+    setMsg("");
+
     try {
       const updatedEmps = [...(selected.employees || []), newEmp];
-      const res = await fetch(`${API}/${selected.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...selected, employees: updatedEmps }),
-      });
-      if (res.ok) { setNewEmp({ name: "", designation: "", pNo: "" }); setShowAddEmp(false); openProject(selected.id); }
-    } catch {}
+      await updateProject(selected.id, { ...selected, employees: updatedEmps });
+      setNewEmp({ name: "", designation: "", pNo: "" });
+      setShowAddEmp(false);
+      await openProject(selected.id);
+      setMsg("✅ Employee added");
+    } catch (err) {
+      const readable = err?.message || "Add employee failed";
+      setError(readable);
+      console.log("[Projects] addEmployee failed:", err);
+    }
   };
+
 
   return (
     <Layout title="Projects">

@@ -105,6 +105,11 @@ public class UserService {
 		return userRepository.save(user);
 	}
 
+	public User getUserById(Long id) {
+		return userRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("User Not Found"));
+	}
+
 	// Excel import method
 	public String importStaffFromExcel(MultipartFile file) {
 

@@ -1,8 +1,8 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import "./Sidebar.css";
-import { Link } from "react-router-dom";
 
+import { t } from "../i18n/translator";
 
 import {
   FaTachometerAlt,
@@ -31,75 +31,77 @@ const Sidebar = () => {
         <li>
           <NavLink to="/dashboard">
             <FaTachometerAlt />
-            <span>Dashboard</span>
+            <span>{t("nav.dashboard")}</span>
           </NavLink>
         </li>
 
         
         <li>
-          <NavLink to="/Task">
+          <NavLink to="/task">
             <FaTachometerAlt />
-            <span>Task</span>
+            <span>{t("nav.task")}</span>
           </NavLink>
         </li>
 
         <li>
-       <NavLink to="/checklist">Checklist</NavLink>
+       <NavLink to="/checklist">{t("nav.checklist")}</NavLink>
+  
   
         </li>
         <li>
           <NavLink to="/attendance">
             <FaUserCheck />
-            <span>Attendance</span>
+            <span>{t("nav.attendance")}</span>
           </NavLink>
         </li>
 
         <li>
-<NavLink to="/calender">
-  Calender
+<NavLink to="/calendar">
+  {t("nav.calendar")}
 </NavLink>
         </li>
 
         <li>
           <NavLink to="/projects">
             <FaProjectDiagram />
-            <span>Projects</span>
+            <span>{t("nav.projects")}</span>
           </NavLink>
         </li>
 
         <li>
           <NavLink to="/team">
             <FaUsers />
-            <span>Team</span>
+            <span>{t("nav.team")}</span>
           </NavLink>
         </li>
 
         <li>
           <NavLink to="/reports">
             <FaChartBar />
-            <span>Reports</span>
+            <span>{t("nav.reports")}</span>
           </NavLink>
         </li>
 
         <li>
           <NavLink to="/profile">
             <FaUserCircle />
-            <span>Profile</span>
+            <span>{t("nav.profile")}</span>
           </NavLink>
         </li>
 
         <li>
           <NavLink to="/settings">
             <FaCog />
-            <span>Settings</span>
+            <span>{t("nav.settings")}</span>
           </NavLink>
         </li>
 
         <li>
           <NavLink to="/">
             <FaSignOutAlt />
-            <span>Logout</span>
+            <span>{t("nav.logout")}</span>
           </NavLink>
+
           
         </li>
       

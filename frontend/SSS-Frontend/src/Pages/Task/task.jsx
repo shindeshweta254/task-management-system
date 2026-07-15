@@ -1,29 +1,23 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Layout from "../../components/Layout/Layout";
 import "./task.css";
 import { FaEllipsisV } from "react-icons/fa";
+import { t } from "../../i18n/translator";
+
+import { updateTaskStatus, markTaskCompleted, deleteTask } from "../../api/taskApi";
+import { useTasks } from "../../hooks/useTasks";
+import { getUserFromStorage } from "../../utils/userStorage";
 
 function Task() {
-  const [tasks, setTasks] = useState([]);
+  const user = getUserFromStorage("user");
+
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("ALL");
   const [openDropdown, setOpenDropdown] = useState(null);
   const [selectedTask, setSelectedTask] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
-  const loadTask = async () => {
-    try {
-      const response = await fetch("http://localhost:8080/api/tasks");
-      const data = await response.json();
-      setTasks(data);
-    } catch (error) {
-      console.log("Task load error:", error);
-    }
-  };
-
-  useEffect(() => {
-    loadTask();
-  }, []);
+  const { tasks, reload } = useTasks(user);
 
   const markComplete = async (id) => {
     await fetch(`http://localhost:8080/api/tasks/${id}/COMPLETED`, {
@@ -64,45 +58,46 @@ function Task() {
   });
 
   return (
-    <Layout title="Task">
+    <Layout title={t("nav.task")}> 
+
       <div className="task-page">
         <div className="task-header">
-          <h2>All Assigned Tasks</h2>
+          <h2>{t("task.allAssignedTasks")}</h2>
 
           <div className="task-controls">
             <input
               type="text"
-              placeholder="Search task or employee..."
+              placeholder={t("task.searchPlaceholder")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
 
             <select value={filter} onChange={(e) => setFilter(e.target.value)}>
-              <option value="ALL">All</option>
-              <option value="PENDING">Pending</option>
-              <option value="IN_PROGRESS">In Progress</option>
-              <option value="COMPLETED">Completed</option>
+              <option value="ALL">{t("task.filters.all")}</option>
+              <option value="PENDING">{t("task.filters.pending")}</option>
+              <option value="IN_PROGRESS">{t("task.filters.inProgress")}</option>
+              <option value="COMPLETED">{t("task.filters.completed")}</option>
             </select>
           </div>
         </div>
 
         {filteredTasks.length === 0 ? (
           <div className="empty-task">
-            <h3>No tasks found</h3>
-            <p>Create task from Dashboard → Add Task</p>
+            <h3>{t("task.empty.title")}</h3>
+            <p>{t("task.empty.subtitle")}</p>
           </div>
         ) : (
           <div className="task-table-wrapper">
             <table className="task-table">
             <thead>
               <tr>
-                <th>Task</th>
-                <th>Employee</th>
-                <th>Priority</th>
-                <th>Due Date</th>
-                <th>Status</th>
-                <th>Description</th>
-                <th>Action</th>
+                <th>{t("task.tableHeaders.task")}</th>
+                <th>{t("task.tableHeaders.employee")}</th>
+                <th>{t("task.tableHeaders.priority")}</th>
+                <th>{t("task.tableHeaders.dueDate")}</th>
+                <th>{t("task.tableHeaders.status")}</th>
+                <th>{t("task.tableHeaders.description")}</th>
+                <th>{t("task.tableHeaders.action")}</th>
               </tr>
             </thead>
 
@@ -155,7 +150,7 @@ function Task() {
                                 className="dropdown-item"
                                 onClick={() => markComplete(task.id)}
                               >
-                                ✓ Complete
+                                {t("task.actions.complete")}
                               </button>
                             )}
                             <button
@@ -166,14 +161,14 @@ function Task() {
                                 setOpenDropdown(null);
                               }}
                             >
-                              ✎ Update
+                              {t("task.actions.update")}
                             </button>
-                            <button className="dropdown-item">+ Create</button>
-                            <button
-                              className="dropdown-item delete"
-                              onClick={() => deleteTask(task.id)}
+                            <button className="dropdown-item">{t("task.actions.create")}</button>
+                                <button
+                                className="dropdown-item delete"
+                                onClick={() => deleteTask(task.id)}
                             >
-                              🗑 Delete
+                              {t("task.actions.delete")}
                             </button>
                           </div>
                         )}
@@ -198,16 +193,16 @@ function Task() {
                 ✕
               </button>
 
-              <h2>Task Details</h2>
+              <h2>{t("task.modal.title")}</h2>
 
               <div className="modal-body">
                 <div className="modal-field">
-                  <label>Task Title:</label>
+                  <label>{t("task.modal.fields.taskTitle")}</label>
                   <p>{selectedTask.taskTitle}</p>
                 </div>
 
                 <div className="modal-field">
-                  <label>Employee:</label>
+                  <label>{t("task.modal.fields.employee")}</label>
                   <p>
                     {selectedTask.assignedTo?.name || "-"}{" "}
                     <small>({selectedTask.assignedTo?.employeeId || ""})</small>
@@ -215,7 +210,7 @@ function Task() {
                 </div>
 
                 <div className="modal-field">
-                  <label>Priority:</label>
+                  <label>{t("task.modal.fields.priority")}</label>
                   <p>
                     <span
                       className={`priority ${(
@@ -228,12 +223,12 @@ function Task() {
                 </div>
 
                 <div className="modal-field">
-                  <label>Due Date:</label>
+                  <label>{t("task.modal.fields.dueDate")}</label>
                   <p>{selectedTask.dueDate || "-"}</p>
                 </div>
 
                 <div className="modal-field">
-                  <label>Status:</label>
+                  <label>{t("task.modal.fields.status")}</label>
                   <div className="status-filter">
                     <button
                       className={`status-btn ${
@@ -243,7 +238,7 @@ function Task() {
                         updateTaskStatus(selectedTask.id, "PENDING")
                       }
                     >
-                      Pending
+                      {t("task.status.pending")}
                     </button>
                     <button
                       className={`status-btn ${
@@ -253,7 +248,7 @@ function Task() {
                         updateTaskStatus(selectedTask.id, "IN_PROGRESS")
                       }
                     >
-                      In Progress
+                      {t("task.status.inProgress")}
                     </button>
                     <button
                       className={`status-btn ${
@@ -263,13 +258,13 @@ function Task() {
                         updateTaskStatus(selectedTask.id, "COMPLETED")
                       }
                     >
-                      Completed
+                      {t("task.status.completed")}
                     </button>
                   </div>
                 </div>
 
                 <div className="modal-field">
-                  <label>Description:</label>
+                  <label>{t("task.modal.fields.description")}</label>
                   <p>{selectedTask.taskDescription || "-"}</p>
                 </div>
 
@@ -281,13 +276,13 @@ function Task() {
                       loadTask();
                     }}
                   >
-                    Save Changes
+                    {t("task.modal.fields.saveChanges")}
                   </button>
                   <button
                     className="cancel-btn"
                     onClick={() => setShowModal(false)}
                   >
-                    Close
+                    {t("task.modal.fields.close")}
                   </button>
                 </div>
               </div>

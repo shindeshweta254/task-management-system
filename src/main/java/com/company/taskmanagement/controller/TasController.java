@@ -30,10 +30,7 @@ public class TasController {
 		return taskService.saveTask(task);
 	}
 
-	@GetMapping
-	public List<Task> getAllTasks() {
-		return taskService.getAllTasks();
-	}
+
 
 	@PutMapping("/{taskId}/{status}")
 	public Task updateTaskStatus(@PathVariable Long taskId, @PathVariable String status) {
@@ -47,6 +44,14 @@ public class TasController {
 		return taskService.getTasksByEmployee(userId);
 
 	}
+
+	// Owner/Admin (and other privileged roles) के लिए सभी tasks
+	@GetMapping("/all")
+	public List<Task> getAllTasksForOwner() {
+		return taskService.getAllTasks();
+	}
+
+
 
 	@GetMapping("/count/total")
 	public long totalTasks() {

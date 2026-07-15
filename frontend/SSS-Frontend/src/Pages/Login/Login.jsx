@@ -1,5 +1,6 @@
 import "./Login.css";
 import { useState } from "react";
+import { t } from "../../i18n/translator";
 import { useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
@@ -46,21 +47,10 @@ function Login() {
       }
 
       localStorage.setItem("user", JSON.stringify(user));
-
       setMessage("Login Successful ✅");
 
       setTimeout(() => {
-        if (roleName === "EMPLOYEE") {
-          navigate("/dashboard");
-        } else if (roleName === "MANAGER") {
-          navigate("/manager-dashboard");
-        } else if (roleName === "DIRECTOR") {
-          navigate("/director-dashboard");
-        } else if (roleName === "SUPERVISOR") {
-          navigate("/supervisor-dashboard");
-        } else {
-          navigate("/dashboard");
-        }
+        navigate("/language");
       }, 700);
     } catch (error) {
       console.log(error);
@@ -75,15 +65,13 @@ function Login() {
           <img src="/logo.png" alt="SSS Logo" className="logo" />
         </div>
 
-        <h1>SSS FMS Facility Services</h1>
-
-        <p className="subtitle">Employee Task Management System</p>
-
-        <p className="version">Version 1.0</p>
+        <h1>{t("login.heading")}</h1>
+        <p className="subtitle">{t("login.subtitle")}</p>
+        <p className="version">{t("login.version")}</p>
 
         <form onSubmit={handleLogin}>
           <div className="input-group">
-            <label>Employee ID</label>
+            <label>{t("login.employeeId")}</label>
             <input
               type="text"
               placeholder="Enter Employee ID"
@@ -94,26 +82,23 @@ function Login() {
           </div>
 
           <div className="input-group">
-            <label>Select Role</label>
-
+            <label>{t("login.selectRole")}</label>
             <select
               className="role-select"
               value={role}
               onChange={(e) => setRole(e.target.value)}
               required
             >
-              <option value="">Select Role</option>
-              <option value="EMPLOYEE">Employee</option>
-              <option value="MANAGER">Manager</option>
-              <option value="DIRECTOR">Director</option>
-              <option value="SUPERVISOR">Supervisor</option>
+              <option value="">{t("login.selectRole")}</option>
+              <option value="EMPLOYEE">{t("login.roleEmployee")}</option>
+              <option value="MANAGER">{t("login.roleManager")}</option>
+              <option value="DIRECTOR">{t("login.roleDirector")}</option>
+              <option value="SUPERVISOR">{t("login.roleSupervisor")}</option>
             </select>
           </div>
-          
 
           <div className="input-group">
-            <label>Email</label>
-
+            <label>{t("login.email")}</label>
             <input
               type="email"
               placeholder="Enter Email"
@@ -125,8 +110,7 @@ function Login() {
           </div>
 
           <div className="input-group">
-            <label>Password</label>
-
+            <label>{t("login.password")}</label>
             <div className="password-box">
               <input
                 type={showPassword ? "text" : "password"}
@@ -147,7 +131,7 @@ function Login() {
           </div>
 
           <button type="submit" className="login-btn">
-            Login
+            {t("login.loginBtn")}
           </button>
 
           {message && <p className="message">{message}</p>}
@@ -168,17 +152,15 @@ function Login() {
         >
           Forgot Password?
         </a>
-        
-      <p className="signup-link">
-  New Employee?{" "}
-  <span onClick={() => navigate("/signup")}>
-    Create Account
-  </span>
-</p>
-      </div>
 
+        <p className="signup-link">
+          New Employee?{" "}
+        <span onClick={() => navigate("/signup")}>Create Account</span>
+        </p>
+      </div>
     </div>
   );
 }
 
 export default Login;
+
