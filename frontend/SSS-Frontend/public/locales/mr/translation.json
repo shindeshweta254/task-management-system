@@ -1,0 +1,85 @@
+{
+  "app": {
+    "name": "SSS FMS Facility Services",
+    "searchPlaceholder": "काहीही शोधा..."
+  },
+  "auth": {
+    "loginTitle": "SSS FMS INDIA PVT. LTD",
+    "subtitle": "कर्मचारी कार्य व्यवस्थापन प्रणाली",
+    "version": "आवृत्ती 1.0",
+    "employeeId": "कर्मचारी आयडी",
+    "enterEmployeeId": "कर्मचारी आयडी प्रविष्ट करा",
+    "selectRole": "भूमिका निवडा",
+    "role": {
+      "placeholder": "भूमिका निवडा",
+      "EMPLOYEE": "कर्मचारी",
+      "MANAGER": "मॅनेजर",
+      "DIRECTOR": "डायरेक्टर",
+      "SUPERVISOR": "सुपरवायझर"
+    },
+    "email": "ईमेल",
+    "enterEmail": "ईमेल प्रविष्ट करा",
+    "password": "पासवर्ड",
+    "enterPassword": "पासवर्ड प्रविष्ट करा",
+    "login": "लॉगिन",
+    "rememberMe": "मला लक्षात ठेवा",
+    "forgotPassword": "पासवर्ड विसरलात?",
+    "newEmployee": "नवीन कर्मचारी?",
+    "createAccount": "खाते तयार करा",
+    "invalidCredentials": "अवैध कर्मचारी आयडी, ईमेल किंवा पासवर्ड ❌",
+    "roleMismatch": "निवडलेली भूमिका जुळत नाही ❌",
+    "loginSuccessful": "लॉगिन यशस्वी ✅",
+    "backendNotConnected": "बॅकएंड सर्व्हर कनेक्ट नाही ❌"
+  },
+  "layout": {
+    "logoTitle": "SSS FMS Facility",
+    "logoSubtitle": "Services",
+    "notifications": "सूचना",
+    "darkMode": "डार्क मोड टॉगल करा",
+    "noResults": "काहीही परिणाम नाही",
+    "typeToSearch": "पेज शोधण्यासाठी लिहा"
+  },
+  "sidebar": {
+    "dashboard": "डॅशबोर्ड",
+    "task": "काम",
+    "checklist": "चेकलिस्ट",
+    "attendance": "हजेरी",
+    "calendar": "कॅलेंडर",
+    "projects": "प्रोजेक्ट्स",
+    "team": "टिम",
+    "reports": "रिपोर्ट्स",
+    "profile": "प्रोफाइल",
+    "employees": "कर्मचारी",
+    "addEmployee": "कर्मचारी जोडा",
+    "uploadExcel": "Excel अपलोड करा",
+    "logout": "लॉगआउट",
+    "settings": "सेटिंग्स"
+  },
+  "dashboard": {
+    "welcomeBack": "परत स्वागत आहे, {{name}}! 👋",
+    "employeeInfo": "कर्मचारी आयडी: {{employeeId}} | विभाग: {{department}} | भूमिका: {{role}}",
+    "addTask": "काम जोडा",
+    "stats": {
+      "totalEmployees": "एकूण कर्मचारी",
+      "todayAttendance": "आजची हजेरी",
+      "presentToday": "आज उपस्थित",
+      "pendingTasks": "प्रलंबित कामे",
+      "tasksInProgress": "प्रगतीतील कामे",
+      "completedTasks": "पूर्ण झालेली कामे",
+      "tasksCompleted": "पूर्ण केलेली कामे"
+    },
+    "taskOverview": "कामाचा आढावा",
+    "completed": "पूर्ण",
+    "myTasks": "माझी कामे (Dept: {{department}})",
+    "noTasksAssigned": "अजून काम असाइन केलेले नाही.",
+    "quickAccess": "झटपट अॅक्सेस",
+    "completedPercentLabel": "पूर्ण"
+  },
+  "language": {
+    "selectTitle": "भाषा निवडा",
+    "selectSubtitle": "आपली पसंतीची भाषा निवडा",
+    "current": "सध्याची"
+  }
+}
+
+

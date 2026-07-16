@@ -1,0 +1,87 @@
+{
+  "app": {
+    "name": "SSS FMS Facility Services",
+    "searchPlaceholder": "Search anything..."
+  },
+  "auth": {
+    "loginTitle": "SSS FMS INDIA PVT. LTD",
+    "subtitle": "Employee Task Management System",
+    "version": "Version 1.0",
+    "employeeId": "Employee ID",
+    "enterEmployeeId": "Enter Employee ID",
+    "selectRole": "Select Role",
+    "role": {
+      "placeholder": "Select Role",
+      "EMPLOYEE": "Employee",
+      "MANAGER": "Manager",
+      "DIRECTOR": "Director",
+      "SUPERVISOR": "Supervisor"
+    },
+    "email": "Email",
+    "enterEmail": "Enter Email",
+    "password": "Password",
+    "enterPassword": "Enter Password",
+    "login": "Login",
+    "rememberMe": "Remember Me",
+    "forgotPassword": "Forgot Password?",
+    "newEmployee": "New Employee?",
+    "createAccount": "Create Account",
+    "invalidCredentials": "Invalid Employee ID, Email or Password ❌",
+    "roleMismatch": "Selected role does not match ❌",
+    "loginSuccessful": "Login Successful ✅",
+    "backendNotConnected": "Backend server not connected ❌"
+  },
+  "layout": {
+    "logoTitle": "SSS FMS Facility",
+    "logoSubtitle": "Services",
+    "notifications": "Notifications",
+    "darkMode": "Toggle dark mode",
+    "noResults": "No results found",
+    "typeToSearch": "Type to search pages"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "task": "Task",
+    "checklist": "Checklist",
+    "attendance": "Attendance",
+    "calendar": "Calendar",
+    "projects": "Projects",
+    "team": "Team",
+    "reports": "Reports",
+    "profile": "Profile",
+    "employees": "Employees",
+    "addEmployee": "Add Employee",
+    "uploadExcel": "Upload Excel",
+    "logout": "Logout",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "welcomeBack": "Welcome back, {{name}}! 👋",
+    "employeeInfo": "Employee ID: {{employeeId}} | Department: {{department}} | Role: {{role}}",
+    "addTask": "Add Task",
+    "stats": {
+      "totalEmployees": "Total Employees",
+      "todayAttendance": "Today’s Attendance",
+      "presentToday": "Present today",
+      "pendingTasks": "Pending Tasks",
+      "tasksInProgress": "Tasks in progress",
+      "completedTasks": "Completed Tasks",
+      "tasksCompleted": "Tasks completed"
+    },
+    "taskOverview": "Task Overview",
+    "completed": "Completed",
+    "myTasks": "My Tasks (Dept: {{department}})",
+    "noTasksAssigned": "No tasks assigned yet.",
+    "quickAccess": "Quick Access",
+    "completedPercentLabel": "Completed"
+  },
+  "dashboardPages": {
+    "taskOverview": "Task Overview"
+  },
+  "language": {
+    "selectTitle": "Select Language",
+    "selectSubtitle": "Choose your preferred language",
+    "current": "Current"
+  }
+}
+

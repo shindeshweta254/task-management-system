@@ -132,6 +132,12 @@ function Calendar() {
     const id = item.id ?? item.scheduleId ?? item._id;
     if (!id) return;
 
+    // Upcoming schedule ko tab tak delete nahi hone dena jab tak save na ho jaye.
+    // If user is editing/creating, block delete for records that have no stable id.
+    if (formOpen && (item.id == null && item.scheduleId == null && item._id == null)) {
+      return;
+    }
+
     // Always update local immediately so user sees it saved.
     setEvents((prev) => {
       const next = prev.filter((x) => (x.id ?? x.scheduleId ?? x._id) !== id);

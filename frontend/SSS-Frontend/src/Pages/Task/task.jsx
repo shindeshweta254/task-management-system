@@ -35,6 +35,16 @@ function Task() {
     loadTask();
   };
 
+  const deleteSelectedTask = async (id) => {
+    await fetch(`http://localhost:8080/api/tasks/${id}`, {
+      method: "DELETE",
+    });
+    setShowModal(false);
+    setSelectedTask(null);
+    setOpenDropdown(null);
+    loadTask();
+  };
+
   const deleteTask = async (id) => {
     await fetch(`http://localhost:8080/api/tasks/${id}`, {
       method: "DELETE",
@@ -278,6 +288,14 @@ function Task() {
                   >
                     {t("task.modal.fields.saveChanges")}
                   </button>
+
+                  <button
+                    className="danger-btn"
+                    onClick={() => deleteSelectedTask(selectedTask.id)}
+                  >
+                    Delete Task
+                  </button>
+
                   <button
                     className="cancel-btn"
                     onClick={() => setShowModal(false)}

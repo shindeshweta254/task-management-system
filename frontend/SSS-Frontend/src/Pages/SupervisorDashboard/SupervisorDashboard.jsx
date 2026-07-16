@@ -24,6 +24,14 @@ function SupervisorDashboard() {
     completedTasks: 0,
   });
 
+  const [myTasks, setMyTasks] = useState([]);
+
+  const getUserId = (userObj) => {
+    const id = userObj?.id ?? userObj?.userId ?? userObj?.employeeId;
+    const n = Number(id);
+    return Number.isFinite(n) ? n : null;
+  };
+
   useEffect(() => {
     const loadStats = async () => {
       try {
@@ -50,6 +58,29 @@ function SupervisorDashboard() {
     };
     loadStats();
   }, []);
+
+  useEffect(() => {
+    const loadMyTasks = async () => {
+      try {
+        const id = getUserId(user);
+        if (!id) return;
+        const res = await fetch(`http://localhost:8080/api/tasks/employee/${id}`);
+        const data = await res.json();
+        setMyTasks(Array.isArray(data) ? data : []);
+      } catch {
+        setMyTasks([]);
+      }
+    };
+
+    loadMyTasks();
+  }, []);
+
+  const myTasksFiltered = myTasks.filter((t) => {
+    const taskDept = t?.assignedTo?.department || t?.assignedTo?.dept || null;
+    if (!department || department === "-") return true;
+    if (!taskDept) return true;
+    return String(taskDept).toLowerCase() === String(department).toLowerCase();
+  });
 
   return (
     <Layout title="Supervisor Dashboard">
@@ -102,6 +133,23 @@ function SupervisorDashboard() {
             <span>Tasks done</span>
           </div>
         </div>
+      </section>
+
+      {/* My Tasks */}
+      <section className="sv-quick" style={{ marginTop: 18 }}>
+        <h3>My Tasks (Dept: {department})</h3>
+        {myTasksFiltered.length === 0 ? (
+          <p>No tasks assigned yet.</p>
+        ) : (
+          <div>
+            {myTasksFiltered.slice(0, 5).map((t) => (
+              <p key={t.id} style={{ margin: "8px 0" }}>
+                ✅/⏳ {t.taskTitle} - <b>{t.status}</b>
+                {t.dueDate ? ` (Due: ${t.dueDate})` : ""}
+              </p>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Quick Access */}
