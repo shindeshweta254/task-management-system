@@ -1,306 +1,620 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { FaEllipsisV } from "react-icons/fa";
+
 import Layout from "../../components/Layout/Layout";
 import "./task.css";
-import { FaEllipsisV } from "react-icons/fa";
-import { t } from "../../i18n/translator";
 
-import { updateTaskStatus, markTaskCompleted, deleteTask } from "../../api/taskApi";
+import {
+  updateTaskStatus,
+  markTaskCompleted,
+  deleteTask,
+} from "../../api/taskApi";
+
 import { useTasks } from "../../hooks/useTasks";
-import { getUserFromStorage } from "../../utils/userStorage";
+
+function getLoggedInUser() {
+  try {
+    return (
+      JSON.parse(localStorage.getItem("user")) || {}
+    );
+  } catch (error) {
+    console.error(
+      "Invalid localStorage user data:",
+      error
+    );
+
+    return {};
+  }
+}
 
 function Task() {
-  const user = getUserFromStorage("user");
+  const user = getLoggedInUser();
+
+  const {
+    tasks,
+    loading,
+    error,
+    reload,
+  } = useTasks(user);
 
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("ALL");
-  const [openDropdown, setOpenDropdown] = useState(null);
-  const [selectedTask, setSelectedTask] = useState(null);
-  const [showModal, setShowModal] = useState(false);
 
-  const { tasks, reload } = useTasks(user);
+  const [openDropdown, setOpenDropdown] =
+    useState(null);
 
-  const markComplete = async (id) => {
-    await fetch(`http://localhost:8080/api/tasks/${id}/COMPLETED`, {
-      method: "PUT",
+  const [selectedTask, setSelectedTask] =
+    useState(null);
+
+  const [showModal, setShowModal] =
+    useState(false);
+
+  const [actionLoading, setActionLoading] =
+    useState(false);
+
+  const [actionError, setActionError] =
+    useState("");
+
+  const filteredTasks = useMemo(() => {
+    const safeTasks = Array.isArray(tasks)
+      ? tasks
+      : [];
+
+    const searchValue = search
+      .trim()
+      .toLowerCase();
+
+    return safeTasks.filter((task) => {
+      const title = String(
+        task?.taskTitle ||
+          task?.title ||
+          ""
+      ).toLowerCase();
+
+      const employeeName = String(
+        task?.assignedTo?.name || ""
+      ).toLowerCase();
+
+      const employeeId = String(
+        task?.assignedTo?.employeeId || ""
+      ).toLowerCase();
+
+      const status = String(
+        task?.status || "PENDING"
+      ).toUpperCase();
+
+      const matchesSearch =
+        !searchValue ||
+        title.includes(searchValue) ||
+        employeeName.includes(searchValue) ||
+        employeeId.includes(searchValue);
+
+      const matchesFilter =
+        filter === "ALL" || status === filter;
+
+      return matchesSearch && matchesFilter;
     });
-    setOpenDropdown(null);
-    loadTask();
-  };
+  }, [tasks, search, filter]);
 
-  const updateTaskStatus = async (id, status) => {
-    await fetch(`http://localhost:8080/api/tasks/${id}/${status}`, {
-      method: "PUT",
-    });
-    setOpenDropdown(null);
-    loadTask();
-  };
-
-  const deleteSelectedTask = async (id) => {
-    await fetch(`http://localhost:8080/api/tasks/${id}`, {
-      method: "DELETE",
-    });
+  const closeModal = () => {
     setShowModal(false);
     setSelectedTask(null);
-    setOpenDropdown(null);
-    loadTask();
   };
 
-  const deleteTask = async (id) => {
-    await fetch(`http://localhost:8080/api/tasks/${id}`, {
-      method: "DELETE",
-    });
-    setOpenDropdown(null);
-    loadTask();
+  const handleMarkComplete = async (taskId) => {
+    setActionLoading(true);
+    setActionError("");
+
+    try {
+      await markTaskCompleted(taskId);
+
+      setOpenDropdown(null);
+      await reload();
+    } catch (requestError) {
+      console.error(
+        "Complete task error:",
+        requestError
+      );
+
+      setActionError(
+        requestError?.message ||
+          "Task could not be completed."
+      );
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  const filteredTasks = tasks.filter((task) => {
-    const taskTitle = task.taskTitle || "";
-    const employeeName = task.assignedTo?.name || "";
-    const taskStatus = task.status || "";
+  const handleStatusChange = async (
+    taskId,
+    newStatus
+  ) => {
+    setActionLoading(true);
+    setActionError("");
 
-    const matchesSearch =
-      taskTitle.toLowerCase().includes(search.toLowerCase()) ||
-      employeeName.toLowerCase().includes(search.toLowerCase());
+    try {
+      await updateTaskStatus(
+        taskId,
+        newStatus
+      );
 
-    const matchesFilter = filter === "ALL" || taskStatus === filter;
+      setSelectedTask((previousTask) => {
+        if (!previousTask) {
+          return previousTask;
+        }
 
-    return matchesSearch && matchesFilter;
-  });
+        return {
+          ...previousTask,
+          status: newStatus,
+        };
+      });
+
+      await reload();
+    } catch (requestError) {
+      console.error(
+        "Update task status error:",
+        requestError
+      );
+
+      setActionError(
+        requestError?.message ||
+          "Task status could not be updated."
+      );
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteTask = async (taskId) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this task?"
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setActionLoading(true);
+    setActionError("");
+
+    try {
+      await deleteTask(taskId);
+
+      setOpenDropdown(null);
+      closeModal();
+
+      await reload();
+    } catch (requestError) {
+      console.error(
+        "Delete task error:",
+        requestError
+      );
+
+      setActionError(
+        requestError?.message ||
+          "Task could not be deleted."
+      );
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const visibleError =
+    actionError ||
+    (typeof error === "string" ? error : "");
 
   return (
-    <Layout title={t("nav.task")}> 
-
+    <Layout title="Task">
       <div className="task-page">
         <div className="task-header">
-          <h2>{t("task.allAssignedTasks")}</h2>
+          <div>
+            <h2>All Assigned Tasks</h2>
+
+            <p className="task-count">
+              Total tasks: {filteredTasks.length}
+            </p>
+          </div>
 
           <div className="task-controls">
             <input
               type="text"
-              placeholder={t("task.searchPlaceholder")}
+              placeholder="Search task or employee..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(event) =>
+                setSearch(event.target.value)
+              }
             />
 
-            <select value={filter} onChange={(e) => setFilter(e.target.value)}>
-              <option value="ALL">{t("task.filters.all")}</option>
-              <option value="PENDING">{t("task.filters.pending")}</option>
-              <option value="IN_PROGRESS">{t("task.filters.inProgress")}</option>
-              <option value="COMPLETED">{t("task.filters.completed")}</option>
+            <select
+              value={filter}
+              onChange={(event) =>
+                setFilter(event.target.value)
+              }
+            >
+              <option value="ALL">
+                All Tasks
+              </option>
+
+              <option value="PENDING">
+                Pending
+              </option>
+
+              <option value="IN_PROGRESS">
+                In Progress
+              </option>
+
+              <option value="COMPLETED">
+                Completed
+              </option>
             </select>
           </div>
         </div>
 
-        {filteredTasks.length === 0 ? (
+        {visibleError && (
+          <div className="task-error-message">
+            {visibleError}
+          </div>
+        )}
+
+        {loading ? (
           <div className="empty-task">
-            <h3>{t("task.empty.title")}</h3>
-            <p>{t("task.empty.subtitle")}</p>
+            <h3>Loading tasks...</h3>
+            <p>Please wait.</p>
+          </div>
+        ) : filteredTasks.length === 0 ? (
+          <div className="empty-task">
+            <h3>No tasks found</h3>
+            <p>
+              There are currently no tasks to display.
+            </p>
           </div>
         ) : (
           <div className="task-table-wrapper">
             <table className="task-table">
-            <thead>
-              <tr>
-                <th>{t("task.tableHeaders.task")}</th>
-                <th>{t("task.tableHeaders.employee")}</th>
-                <th>{t("task.tableHeaders.priority")}</th>
-                <th>{t("task.tableHeaders.dueDate")}</th>
-                <th>{t("task.tableHeaders.status")}</th>
-                <th>{t("task.tableHeaders.description")}</th>
-                <th>{t("task.tableHeaders.action")}</th>
-              </tr>
-            </thead>
+              <thead>
+                <tr>
+                  <th>Task</th>
+                  <th>Employee</th>
+                  <th>Priority</th>
+                  <th>Due Date</th>
+                  <th>Status</th>
+                  <th>Description</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
 
-            <tbody>
-              {filteredTasks.map((task) => (
-                <tr key={task.id}>
-                  <td>{task.taskTitle}</td>
-                  <td>
-                    {task.assignedTo?.name || "-"} <br />
-                    <small>{task.assignedTo?.employeeId || ""}</small>
-                  </td>
-                  <td>
-                    <span className={`priority ${(task.priority || "").toLowerCase()}`}>
-                      {task.priority}
-                    </span>
-                  </td>
-                  <td>{task.dueDate || "-"}</td>
-                  <td>
-                    <span className="status pending">{task.status}</span>
-                  </td>
-                  <td>{task.taskDescription || "-"}</td>
-                  <td>
-                    <div className="task-actions">
-                      <button
-                        className="view-btn"
-                        onClick={() => {
-                          setSelectedTask(task);
-                          setShowModal(true);
-                        }}
-                      >
-                        View All
-                      </button>
+              <tbody>
+                {filteredTasks.map(
+                  (task, index) => {
+                    const taskKey =
+                      task?.id ?? index;
 
-                      <div className="dropdown-container">
-                        <button
-                          className="dropdown-btn"
-                          onClick={() =>
-                            setOpenDropdown(
-                              openDropdown === task.id ? null : task.id
-                            )
-                          }
-                        >
-                          <FaEllipsisV />
-                        </button>
+                    const status = String(
+                      task?.status || "PENDING"
+                    ).toUpperCase();
 
-                        {openDropdown === task.id && (
-                          <div className="dropdown-menu">
-                            {task.status !== "COMPLETED" && (
-                              <button
-                                className="dropdown-item"
-                                onClick={() => markComplete(task.id)}
-                              >
-                                {t("task.actions.complete")}
-                              </button>
-                            )}
+                    const priority = String(
+                      task?.priority || ""
+                    ).toLowerCase();
+
+                    return (
+                      <tr key={taskKey}>
+                        <td>
+                          {task?.taskTitle ||
+                            task?.title ||
+                            "-"}
+                        </td>
+
+                        <td>
+                          {task?.assignedTo?.name ||
+                            "-"}
+
+                          <br />
+
+                          <small>
+                            {task?.assignedTo
+                              ?.employeeId || ""}
+                          </small>
+                        </td>
+
+                        <td>
+                          <span
+                            className={`priority ${priority}`}
+                          >
+                            {task?.priority || "-"}
+                          </span>
+                        </td>
+
+                        <td>
+                          {task?.dueDate || "-"}
+                        </td>
+
+                        <td>
+                          <span
+                            className={`status ${status.toLowerCase()}`}
+                          >
+                            {status}
+                          </span>
+                        </td>
+
+                        <td>
+                          {task?.taskDescription ||
+                            task?.description ||
+                            "-"}
+                        </td>
+
+                        <td>
+                          <div className="task-actions">
                             <button
-                              className="dropdown-item"
+                              type="button"
+                              className="view-btn"
                               onClick={() => {
                                 setSelectedTask(task);
                                 setShowModal(true);
-                                setOpenDropdown(null);
                               }}
                             >
-                              {t("task.actions.update")}
+                              View
                             </button>
-                            <button className="dropdown-item">{t("task.actions.create")}</button>
-                                <button
-                                className="dropdown-item delete"
-                                onClick={() => deleteTask(task.id)}
-                            >
-                              {t("task.actions.delete")}
-                            </button>
+
+                            <div className="dropdown-container">
+                              <button
+                                type="button"
+                                className="dropdown-btn"
+                                aria-label="Task actions"
+                                onClick={() =>
+                                  setOpenDropdown(
+                                    openDropdown ===
+                                      taskKey
+                                      ? null
+                                      : taskKey
+                                  )
+                                }
+                              >
+                                <FaEllipsisV />
+                              </button>
+
+                              {openDropdown ===
+                                taskKey && (
+                                <div className="dropdown-menu">
+                                  {status !==
+                                    "COMPLETED" && (
+                                    <button
+                                      type="button"
+                                      className="dropdown-item"
+                                      disabled={
+                                        actionLoading
+                                      }
+                                      onClick={() =>
+                                        handleMarkComplete(
+                                          task.id
+                                        )
+                                      }
+                                    >
+                                      Complete
+                                    </button>
+                                  )}
+
+                                  <button
+                                    type="button"
+                                    className="dropdown-item"
+                                    onClick={() => {
+                                      setSelectedTask(
+                                        task
+                                      );
+
+                                      setShowModal(
+                                        true
+                                      );
+
+                                      setOpenDropdown(
+                                        null
+                                      );
+                                    }}
+                                  >
+                                    Update
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    className="dropdown-item delete"
+                                    disabled={
+                                      actionLoading
+                                    }
+                                    onClick={() =>
+                                      handleDeleteTask(
+                                        task.id
+                                      )
+                                    }
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+                        </td>
+                      </tr>
+                    );
+                  }
+                )}
+              </tbody>
             </table>
           </div>
         )}
 
-        {/* View All Modal */}
         {showModal && selectedTask && (
-          <div className="modal-overlay" onClick={() => setShowModal(false)}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="modal-overlay"
+            onClick={closeModal}
+          >
+            <div
+              className="modal-content"
+              onClick={(event) =>
+                event.stopPropagation()
+              }
+            >
               <button
+                type="button"
                 className="modal-close"
-                onClick={() => setShowModal(false)}
+                onClick={closeModal}
               >
                 ✕
               </button>
 
-              <h2>{t("task.modal.title")}</h2>
+              <h2>Task Details</h2>
 
               <div className="modal-body">
                 <div className="modal-field">
-                  <label>{t("task.modal.fields.taskTitle")}</label>
-                  <p>{selectedTask.taskTitle}</p>
-                </div>
+                  <label>Task Title</label>
 
-                <div className="modal-field">
-                  <label>{t("task.modal.fields.employee")}</label>
                   <p>
-                    {selectedTask.assignedTo?.name || "-"}{" "}
-                    <small>({selectedTask.assignedTo?.employeeId || ""})</small>
+                    {selectedTask?.taskTitle ||
+                      selectedTask?.title ||
+                      "-"}
                   </p>
                 </div>
 
                 <div className="modal-field">
-                  <label>{t("task.modal.fields.priority")}</label>
+                  <label>Employee</label>
+
+                  <p>
+                    {selectedTask?.assignedTo
+                      ?.name || "-"}{" "}
+
+                    <small>
+                      (
+                      {selectedTask?.assignedTo
+                        ?.employeeId || "-"}
+                      )
+                    </small>
+                  </p>
+                </div>
+
+                <div className="modal-field">
+                  <label>Priority</label>
+
                   <p>
                     <span
-                      className={`priority ${(
-                        selectedTask.priority || ""
+                      className={`priority ${String(
+                        selectedTask?.priority ||
+                          ""
                       ).toLowerCase()}`}
                     >
-                      {selectedTask.priority}
+                      {selectedTask?.priority ||
+                        "-"}
                     </span>
                   </p>
                 </div>
 
                 <div className="modal-field">
-                  <label>{t("task.modal.fields.dueDate")}</label>
-                  <p>{selectedTask.dueDate || "-"}</p>
+                  <label>Due Date</label>
+
+                  <p>
+                    {selectedTask?.dueDate || "-"}
+                  </p>
                 </div>
 
                 <div className="modal-field">
-                  <label>{t("task.modal.fields.status")}</label>
+                  <label>Status</label>
+
                   <div className="status-filter">
                     <button
+                      type="button"
+                      disabled={actionLoading}
                       className={`status-btn ${
-                        selectedTask.status === "PENDING" ? "active" : ""
+                        selectedTask?.status ===
+                        "PENDING"
+                          ? "active"
+                          : ""
                       }`}
                       onClick={() =>
-                        updateTaskStatus(selectedTask.id, "PENDING")
+                        handleStatusChange(
+                          selectedTask.id,
+                          "PENDING"
+                        )
                       }
                     >
-                      {t("task.status.pending")}
+                      Pending
                     </button>
+
                     <button
+                      type="button"
+                      disabled={actionLoading}
                       className={`status-btn ${
-                        selectedTask.status === "IN_PROGRESS" ? "active" : ""
+                        selectedTask?.status ===
+                        "IN_PROGRESS"
+                          ? "active"
+                          : ""
                       }`}
                       onClick={() =>
-                        updateTaskStatus(selectedTask.id, "IN_PROGRESS")
+                        handleStatusChange(
+                          selectedTask.id,
+                          "IN_PROGRESS"
+                        )
                       }
                     >
-                      {t("task.status.inProgress")}
+                      In Progress
                     </button>
+
                     <button
+                      type="button"
+                      disabled={actionLoading}
                       className={`status-btn ${
-                        selectedTask.status === "COMPLETED" ? "active" : ""
+                        selectedTask?.status ===
+                        "COMPLETED"
+                          ? "active"
+                          : ""
                       }`}
                       onClick={() =>
-                        updateTaskStatus(selectedTask.id, "COMPLETED")
+                        handleStatusChange(
+                          selectedTask.id,
+                          "COMPLETED"
+                        )
                       }
                     >
-                      {t("task.status.completed")}
+                      Completed
                     </button>
                   </div>
                 </div>
 
                 <div className="modal-field">
-                  <label>{t("task.modal.fields.description")}</label>
-                  <p>{selectedTask.taskDescription || "-"}</p>
+                  <label>Description</label>
+
+                  <p>
+                    {selectedTask?.taskDescription ||
+                      selectedTask?.description ||
+                      "-"}
+                  </p>
                 </div>
 
                 <div className="modal-actions">
                   <button
+                    type="button"
                     className="save-btn"
-                    onClick={() => {
-                      setShowModal(false);
-                      loadTask();
-                    }}
+                    onClick={closeModal}
                   >
-                    {t("task.modal.fields.saveChanges")}
+                    Save Changes
                   </button>
 
                   <button
+                    type="button"
                     className="danger-btn"
-                    onClick={() => deleteSelectedTask(selectedTask.id)}
+                    disabled={actionLoading}
+                    onClick={() =>
+                      handleDeleteTask(
+                        selectedTask.id
+                      )
+                    }
                   >
                     Delete Task
                   </button>
 
                   <button
+                    type="button"
                     className="cancel-btn"
-                    onClick={() => setShowModal(false)}
+                    onClick={closeModal}
                   >
-                    {t("task.modal.fields.close")}
+                    Close
                   </button>
                 </div>
               </div>

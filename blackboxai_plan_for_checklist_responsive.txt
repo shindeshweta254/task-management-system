@@ -1,0 +1,41 @@
+PLANNED EDIT (for approval)
+
+Information Gathered:
+- Read current: frontend/SSS-Frontend/src/Pages/Checklist/Checklist.css
+- Checklist.css already has base desktop styles + one breakpoint at max-width:900px and @media print.
+- Current issues for mobile likely: min-width:900px on .checklist-sheet + table, fixed widths on status/select/task column; also top actions/select/input not forced full width; action buttons grid stays 4 columns unless <=900px.
+
+Plan (CSS-only, no React/API/table/filter logic changes):
+1) Keep all existing base styles unchanged.
+2) Add/override responsive rules mainly at:
+   - @media (max-width:1024px)
+   - @media (max-width:768px)
+   - @media (max-width:480px)
+3) Ensure no horizontal overflow on mobile:
+   - Set .checklist-wrapper { overflow-x:hidden } on small screens.
+   - Ensure table scrolls: wrap behavior via overflow-x:auto on .checklist-sheet and ensure table min-width only at breakpoint; use width: max-content or min-width: 100% as needed.
+   - Reduce/remove min-width:900px on small screens using overrides.
+4) Make search box / inputs / selects 100% width on small screens:
+   - For .checklist-top-actions select/input apply width:100%, flex:1 1 auto; in smaller breakpoints stack if needed.
+   - For .site-grid inputs/selects apply width:100% (override 70%).
+5) Tabs wrapping is requested, but tabs are not in Checklist.jsx shown; apply generic wrapping rules for any tab-like container if present (CSS-safe using class selectors you confirm in file names). If no selectors found, skip.
+6) Make checklist-actions buttons wrap/stack:
+   - At <=768 and <=480 set grid-template-columns:1fr and/or flex-wrap.
+7) Reduce font sizes/padding/margins on small screens:
+   - Adjust .excel-title h1/h2, th/td font-size, .note-box padding, .summary-card padding.
+8) Ensure long text wraps:
+   - Override .task-text and td to use word-break/break-word; allow line wrapping.
+9) Modal/popup fit mobile:
+   - Add generic rules for common modal containers if present in this CSS; otherwise add minimal safe selectors for fixed-position overlays inside checklist (e.g., .modal, .popup) but only if they already exist in Checklist.css; if not, avoid.
+
+Dependent Files to be edited:
+- Only: frontend/SSS-Frontend/src/Pages/Checklist/Checklist.css
+
+Followup steps:
+- Build/run frontend (npm test/build if available) and manually check Checklist page at widths 320/375/768/1024.
+- Verify: no horizontal overflow, header sticky if implemented via table styles (likely in markup); ensure overrides do not break sticky.
+
+<ask_followup_question>
+Proceed to update Checklist.css with the above responsive overrides (CSS-only) and return complete updated Checklist.css.
+</ask_followup_question>
+

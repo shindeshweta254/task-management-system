@@ -13,6 +13,39 @@
   box-shadow: 0 4px 16px rgba(25,25,80,0.07);
 }
 
+.proj-upload-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.proj-sample-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  color: #4f46e5;
+  text-decoration: none;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.proj-sample-btn:hover {
+  background: #e2e8f0;
+}
+
+.proj-upload-error {
+  margin: 10px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #dc2626;
+}
+
+
 .proj-upload-card h3 {
   margin: 0 0 14px;
   color: #1e293b;

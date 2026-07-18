@@ -1,40 +1,111 @@
-.splash-container{
-  height:100vh;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  background:#081b4b;
-  color:white;
+.splash-container {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  background: #081b4b;
+  color: #ffffff;
+  text-align: center;
+  overflow: hidden;
 }
 
-.logo-circle{
-  width:200px;
-  height:200px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  animation:spin 3s linear infinite;
+/* Rotating logo wrapper */
+
+.splash-container .logo-circle {
+  width: 255px;
+  height: 255px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: splashSpin 3s linear infinite;
 }
 
-.logo{
-  width:180px;
+/* Splash logo image */
+
+.splash-container .logo-circle .logo {
+  width: 225px;
+  height: 225px;
+  object-fit: contain;
+  display: block;
 }
 
-.splash-container h1{
-  margin-top:20px;
-  font-size:32px;
+/* Splash heading */
+
+.splash-container h1 {
+  margin-top: 22px;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
-.splash-container p{
-  margin-top:10px;
+/* Splash subtitle */
+
+.splash-container p {
+  margin-top: 10px;
+  font-size: 17px;
+  color: rgba(255, 255, 255, 0.85);
 }
 
-@keyframes spin{
-  from{
-    transform:rotate(0deg);
+/* Logo rotation */
+
+@keyframes splashSpin {
+  from {
+    transform: rotate(0deg);
   }
-  to{
-    transform:rotate(360deg);
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Tablet */
+
+@media (max-width: 768px) {
+  .splash-container .logo-circle {
+    width: 230px;
+    height: 230px;
+  }
+
+  .splash-container .logo-circle .logo {
+    width: 205px;
+    height: 205px;
+  }
+
+  .splash-container h1 {
+    font-size: 31px;
+  }
+
+  .splash-container p {
+    font-size: 16px;
+  }
+}
+
+/* Mobile */
+
+@media (max-width: 500px) {
+  .splash-container {
+    padding: 18px;
+  }
+
+  .splash-container .logo-circle {
+    width: 205px;
+    height: 205px;
+  }
+
+  .splash-container .logo-circle .logo {
+    width: 180px;
+    height: 180px;
+  }
+
+  .splash-container h1 {
+    margin-top: 18px;
+    font-size: 27px;
+  }
+
+  .splash-container p {
+    font-size: 14px;
   }
 }

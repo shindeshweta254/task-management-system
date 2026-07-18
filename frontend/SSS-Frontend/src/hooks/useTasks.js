@@ -1,43 +1,69 @@
 import { useCallback, useEffect, useState } from "react";
-import { fetchAllTasks, fetchEmployeeTasks } from "../api/taskApi";
 
-function isPrivilegedRole(roleName) {
-  const r = String(roleName || "").toUpperCase();
-  return ["OWNER/ADMIN", "OWNER/ADMINISTRATOR", "OWNER", "ADMIN"].includes(r) || r === "OWNER/ADMIN";
-}
+import {
+  fetchAllTasks,
+  fetchEmployeeTasks,
+} from "../api/taskApi";
 
 export function useTasks(user) {
   const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const userId = user?.id;
-  const employeeId = Number(userId);
-  const canFetchEmployeeTasks = Number.isFinite(employeeId) && employeeId > 0;
-  const isPrivileged = isPrivilegedRole(user?.role?.roleName);
-
-  const load = useCallback(async () => {
+  const loadTasks = useCallback(async () => {
     setLoading(true);
+    setError("");
+
     try {
-      if (isPrivileged) {
-        const data = await fetchAllTasks();
-        setTasks(data);
+      const roleName = String(
+        user?.role?.roleName || ""
+      ).toUpperCase();
+
+      const userId = user?.id;
+
+      let taskData = [];
+
+      const canViewAllTasks =
+        roleName === "DIRECTOR" ||
+        roleName === "ADMIN" ||
+        roleName === "MANAGER";
+
+      if (canViewAllTasks) {
+        taskData = await fetchAllTasks();
       } else {
-        if (!canFetchEmployeeTasks) {
-          setTasks([]);
-        } else {
-          const data = await fetchEmployeeTasks(userId);
-          setTasks(Array.isArray(data) ? data : []);
+        if (!userId) {
+          throw new Error(
+            "Logged-in user database ID was not found."
+          );
         }
+
+        taskData = await fetchEmployeeTasks(userId);
       }
+
+      setTasks(
+        Array.isArray(taskData) ? taskData : []
+      );
+    } catch (loadError) {
+      console.error("Task loading error:", loadError);
+
+      setTasks([]);
+      setError(
+        loadError?.message ||
+          "Tasks could not be loaded."
+      );
     } finally {
       setLoading(false);
     }
-  }, [canFetchEmployeeTasks, isPrivileged, userId]);
+  }, [user?.id, user?.role?.roleName]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    loadTasks();
+  }, [loadTasks]);
 
-  return { tasks, setTasks, loading, reload: load };
+  return {
+    tasks,
+    loading,
+    error,
+    reload: loadTasks,
+  };
 }
-

@@ -19,7 +19,7 @@ import com.company.taskmanagement.dto.LoginRequest;
 import com.company.taskmanagement.entity.User;
 import com.company.taskmanagement.service.UserService;
 
-@CrossOrigin(origins = "http://localhost:5176")
+@CrossOrigin(origins = "http://localhost:5177")
 @RestController
 @RequestMapping("/api/users")
 public class UserController {

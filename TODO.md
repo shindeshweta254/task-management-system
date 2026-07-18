@@ -1,5 +1,11 @@
-- [ ] Fix language selector UI to show after login
-- [ ] Ensure dropdown has Marathi/Hindi/English options
-- [ ] Ensure selected language persists in localStorage
-- [ ] Ensure whole authenticated project renders in selected language (replace remaining hardcoded strings with i18n keys)
+- [ ] Inspect existing Checklist.css (already read)
+- [ ] Update Checklist.css with mobile/tablet media queries (<=1024, <=768, <=480)
+- [ ] Ensure no desktop changes (keep existing styles as base)
+- [ ] Make checklist-top-actions inputs/selects full width on small screens
+- [ ] Ensure checklist-sheet/table supports horizontal scrolling without overflow
+- [ ] Adjust font sizes/padding/margins for smaller screens
+- [ ] Stack action buttons appropriately on mobile
+- [ ] Add responsive handling for excel-header/site-grid/bottom-panels
+- [ ] Fit modal/popup inputs within mobile via general responsive rules
+- [ ] Write updated Checklist.css completely and verify build/lint (optional)
 

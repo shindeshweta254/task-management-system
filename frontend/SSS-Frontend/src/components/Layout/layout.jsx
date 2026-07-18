@@ -50,7 +50,6 @@ function Layout({ title, children }) {
   const nameParts = userName.trim().split(" ");
 
   const navItems = [
-    { label: "Dashboard", path: "/dashboard", icon: <FaChartBar /> },
     { label: "Task", path: "/task", icon: <FaTasks /> },
     { label: "Checklist", path: "/checklist", icon: <FaClipboardList /> },
     { label: "Attendance", path: "/attendance", icon: <FaCalendarAlt /> },

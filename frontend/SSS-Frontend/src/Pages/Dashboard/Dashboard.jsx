@@ -159,24 +159,25 @@ function Dashboard() {
   return (
     <Layout title="Dashboard">
       <section className="hero-card">
-        <div className="hero-user-info">
-          <div className="profile-circle">{initials}</div>
+        <div className="hero-left">
+          <div className="hero-user-info">
+            <div className="profile-circle">{initials}</div>
 
-          <div>
-            <h2>Welcome back, {userName}! 👋</h2>
-            <p>
-              Employee ID: {employeeId} | Department: {department} | Role:{" "}
-              {roleName}
-            </p>
+            <div className="hero-text">
+              <h2>Welcome back, {userName}! 👋</h2>
+              <p>
+                Employee ID: {employeeId} | Department: {department} | Role:{" "}
+                {roleName}
+              </p>
 
-            <button
-              type="button"
-              className="add-btn"
-              onClick={() => navigate("/add-task")}
-            >
-              <FaPlus /> Add Task
-            </button>
-
+              <button
+                type="button"
+                className="add-btn"
+                onClick={() => navigate("/add-task")}
+              >
+                <FaPlus /> Add Task
+              </button>
+            </div>
           </div>
         </div>
 
@@ -184,6 +185,7 @@ function Dashboard() {
           <img src="/logo.png" alt="SSS Logo" className="dashboard-logo" />
         </div>
       </section>
+
 
       <section className="stats-grid">
         <div className="stat-card purple">

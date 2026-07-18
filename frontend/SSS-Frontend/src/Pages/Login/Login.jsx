@@ -15,34 +15,64 @@ function Login() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const handleLogin = async (event) => {
+    event.preventDefault();
+
     setMessage("");
+    setIsSubmitting(true);
 
     try {
-      const response = await fetch("http://localhost:8080/api/users/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          employeeId: employeeId.trim(),
-          email: email.trim(),
-          password: password,
-        }),
-      });
+      const response = await fetch(
+        "http://localhost:8080/api/users/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            employeeId: employeeId.trim(),
+            email: email.trim(),
+            password,
+          }),
+        }
+      );
 
       if (!response.ok) {
-        setMessage("Invalid Employee ID, Email or Password ❌");
+        let backendMessage = `Login failed (${response.status})`;
+
+        const responseText = await response.text();
+
+        if (responseText) {
+          try {
+            const errorData = JSON.parse(responseText);
+
+            backendMessage =
+              errorData?.message ||
+              errorData?.error ||
+              backendMessage;
+          } catch {
+            if (responseText.length < 300) {
+              backendMessage = responseText;
+            }
+          }
+        }
+
+        setMessage(backendMessage);
         return;
       }
 
       const user = await response.json();
+      const roleName = String(
+        user?.role?.roleName || ""
+      ).toUpperCase();
 
-      const roleName = user.role?.roleName;
-
-      if (role && roleName && role.toUpperCase() !== roleName.toUpperCase()) {
+      if (
+        role &&
+        roleName &&
+        role.toUpperCase() !== roleName
+      ) {
         setMessage("Selected role does not match ❌");
         return;
       }
@@ -52,136 +82,248 @@ function Login() {
       setMessage("Login Successful ✅");
 
       setTimeout(() => {
-        const savedLang = localStorage.getItem("app_language");
+        const savedLanguage = localStorage.getItem(
+          "app_language"
+        );
 
-        // Requirement: Login -> Select Language -> Dashboard
-        if (!savedLang) {
+        if (!savedLanguage) {
           navigate("/select-language");
           return;
         }
 
-        if (roleName === "EMPLOYEE") navigate("/dashboard");
-        else if (roleName === "MANAGER") navigate("/manager-dashboard");
-        else if (roleName === "DIRECTOR") navigate("/director-dashboard");
-        else if (roleName === "SUPERVISOR") navigate("/supervisor-dashboard");
-        else navigate("/dashboard");
-      }, 700);
+        if (roleName === "DIRECTOR") {
+          navigate("/director-dashboard");
+        } else if (roleName === "SUPERVISOR") {
+          navigate("/supervisor-dashboard");
+        } else if (roleName === "MANAGER") {
+          navigate("/manager-dashboard");
+        } else {
+          navigate("/dashboard");
+        }
+      }, 500);
     } catch (error) {
-      console.log(error);
-      setMessage("Backend server not connected ❌");
+      console.error("Login error:", error);
+
+      const errorMessage = String(
+        error?.message || ""
+      );
+
+      const isNetworkError =
+        errorMessage.includes("Failed to fetch") ||
+        errorMessage.includes("ERR_CONNECTION_REFUSED") ||
+        errorMessage.includes("NetworkError") ||
+        errorMessage.includes("ECONNREFUSED");
+
+      setMessage(
+        isNetworkError
+          ? "Backend server not connected ❌"
+          : errorMessage || "Login failed ❌"
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <div className="login-page">
-        <div className="login-card">
-        <div className="logo-wrapper">
-          <img src="/logo.png" alt="SSS Logo" className="logo" />
+      <div className="login-card">
+        <div className="login-logo-wrapper">
+          <img
+            src="/logo.png"
+            alt="SSS FMS Logo"
+            className="login-logo-image"
+          />
         </div>
 
         <h1>{t("auth.loginTitle")}</h1>
 
-        <p className="subtitle">{t("auth.subtitle")}</p>
+        <p className="subtitle">
+          {t("auth.subtitle")}
+        </p>
 
-        <p className="version">{t("auth.version")}</p>
-
+        <p className="version">
+          {t("auth.version")}
+        </p>
 
         <form onSubmit={handleLogin}>
           <div className="input-group">
-            <label>{t("auth.employeeId")}</label>
+            <label htmlFor="employeeId">
+              {t("auth.employeeId")}
+            </label>
+
             <input
+              id="employeeId"
               type="text"
               placeholder="Enter Employee ID"
               value={employeeId}
-              onChange={(e) => setEmployeeId(e.target.value)}
-              autoComplete="off"
+              onChange={(event) =>
+                setEmployeeId(event.target.value)
+              }
+              autoComplete="username"
+              required
             />
           </div>
 
           <div className="input-group">
-            <label>Select Role</label>
+            <label htmlFor="role">
+              Select Role
+            </label>
 
             <select
+              id="role"
               className="role-select"
               value={role}
-              onChange={(e) => setRole(e.target.value)}
+              onChange={(event) =>
+                setRole(event.target.value)
+              }
               required
             >
-              <option value="">Select Role</option>
-              <option value="EMPLOYEE">Employee</option>
-              <option value="MANAGER">Manager</option>
-              <option value="DIRECTOR">Director</option>
-              <option value="SUPERVISOR">Supervisor</option>
+              <option value="">
+                Select Role
+              </option>
+
+              <option value="EMPLOYEE">
+                Employee
+              </option>
+
+              <option value="MANAGER">
+                Manager
+              </option>
+
+              <option value="DIRECTOR">
+                Director
+              </option>
+
+              <option value="SUPERVISOR">
+                Supervisor
+              </option>
             </select>
           </div>
-          
 
           <div className="input-group">
-            <label>Email</label>
+            <label htmlFor="email">
+              Email
+            </label>
 
             <input
+              id="email"
               type="email"
               placeholder="Enter Email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="off"
+              onChange={(event) =>
+                setEmail(event.target.value)
+              }
+              autoComplete="email"
               required
             />
           </div>
 
           <div className="input-group">
-            <label>Password</label>
+            <label htmlFor="password">
+              Password
+            </label>
 
             <div className="password-box">
               <input
-                type={showPassword ? "text" : "password"}
+                id="password"
+                type={
+                  showPassword
+                    ? "text"
+                    : "password"
+                }
                 placeholder="Enter Password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="new-password"
+                onChange={(event) =>
+                  setPassword(event.target.value)
+                }
+                autoComplete="current-password"
                 required
               />
 
-              <span
+              <button
+                type="button"
                 className="eye-icon"
-                onClick={() => setShowPassword(!showPassword)}
+                aria-label={
+                  showPassword
+                    ? "Hide password"
+                    : "Show password"
+                }
+                onClick={() =>
+                  setShowPassword(
+                    (previousValue) =>
+                      !previousValue
+                  )
+                }
               >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </span>
+                {showPassword ? (
+                  <FaEyeSlash />
+                ) : (
+                  <FaEye />
+                )}
+              </button>
             </div>
           </div>
 
-          <button type="submit" className="login-btn">
-            {t("auth.login")}
+          <button
+            type="submit"
+            className="login-btn"
+            disabled={isSubmitting}
+          >
+            {isSubmitting
+              ? "Logging in..."
+              : t("auth.login")}
           </button>
 
-          {message && <p className="message">{message}</p>}
+          {message && (
+            <p
+              className={`message ${
+                message.includes("Successful")
+                  ? "success"
+                  : "error"
+              }`}
+            >
+              {message}
+            </p>
+          )}
         </form>
 
         <div className="remember-me">
-          <input type="checkbox" id="remember" />
-          <label htmlFor="remember">{t("auth.rememberMe")}</label>
+          <input
+            type="checkbox"
+            id="remember"
+          />
+
+          <label htmlFor="remember">
+            {t("auth.rememberMe")}
+          </label>
         </div>
 
         <a
-          href="#"
+          href="#forgot-password"
           className="forgot-link"
-          onClick={(e) => {
-            e.preventDefault();
-            alert("Please contact Administrator\n\nEmail: anantavathore@sssfmsindia.com");
+          onClick={(event) => {
+            event.preventDefault();
+
+            alert(
+              "Please contact Administrator\n\nEmail: anantavathore@sssfmsindia.com"
+            );
           }}
         >
           Forgot Password?
         </a>
-        
-      <p className="signup-link">
-  New Employee?{" "}
-  <span onClick={() => navigate("/signup")}>
-    Create Account
-  </span>
-</p>
-      </div>
 
+        <p className="signup-link">
+          New Employee?{" "}
+
+          <button
+            type="button"
+            className="signup-button"
+            onClick={() => navigate("/signup")}
+          >
+            Create Account
+          </button>
+        </p>
+      </div>
     </div>
   );
 }
