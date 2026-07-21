@@ -1,6 +1,9 @@
 package com.company.taskmanagement.dto;
 
+// Disabled: Work History module removed as requested.
+// public class WorkHistoryDTO {
 public class WorkHistoryDTO {
+
 
 	private String taskName;
 	private String startDate;

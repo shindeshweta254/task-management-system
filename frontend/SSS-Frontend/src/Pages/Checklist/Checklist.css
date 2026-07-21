@@ -333,6 +333,7 @@
   justify-content: center;
   gap: 6px;
 }
+
 @media print {
   .sidebar,
   .topbar,
@@ -355,18 +356,241 @@
   }
 }
 
-@media (max-width: 900px) {
-  .site-grid,
-  .bottom-panels,
+@media (max-width: 1024px) {
+  .checklist-wrapper {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .checklist-top-actions {
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .checklist-top-actions select,
+  .checklist-top-actions input {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .checklist-top-actions {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .print-btn {
+    flex: 0 0 auto;
+    max-width: 100%;
+    white-space: nowrap;
+  }
+
+  .checklist-sheet {
+    min-width: 100%;
+    width: 100%;
+  }
+
+  .checklist-table {
+    min-width: 900px;
+  }
+
+  .excel-title h1 {
+    font-size: 26px;
+  }
+
+  .excel-title h2 {
+    font-size: 20px;
+  }
+
+  .site-grid input,
+  .site-grid select {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 6px;
+  }
+
+  .site-grid div {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 768px) {
+  .checklist-wrapper {
+    overflow-x: hidden;
+    padding: 0 10px 28px;
+  }
+
+  .checklist-top-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .checklist-top-actions select,
+  .checklist-top-actions input {
+    width: 100%;
+  }
+
+  .print-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .checklist-sheet {
+    padding: 14px;
+    min-width: 100%;
+  }
+
+  .checklist-table th {
+    font-size: 12px;
+    padding: 10px 8px;
+  }
+
+  .checklist-table td {
+    font-size: 12px;
+    padding: 8px 6px;
+    word-break: break-word;
+  }
+
+  .task-text {
+    min-width: 180px;
+    white-space: normal;
+  }
+
+  .status-select {
+    width: 110px;
+    max-width: 100%;
+  }
+
+  .icon-btn {
+    padding: 6px 8px;
+    margin: 0 2px;
+  }
+
+  .bottom-panels {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-top: 14px;
+  }
+
+  .summary-card {
+    padding: 14px;
+  }
+
   .checklist-actions {
     grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 12px 0;
+  }
+
+  .checklist-actions button {
+    width: 100%;
+    padding: 12px;
   }
 
   .excel-header {
     grid-template-columns: 1fr;
   }
 
+  .excel-logo {
+    border-right: none;
+    border-bottom: 1px solid #cfd6e6;
+    padding: 14px;
+  }
+
+  .excel-title {
+    padding: 16px 10px;
+  }
+
   .excel-title h1 {
-    font-size: 24px;
+    font-size: 22px;
+  }
+
+  .excel-title h2 {
+    font-size: 18px;
+  }
+
+  .note-box {
+    margin: 12px 0;
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  /* Table horizontal scroll helper for sticky header (if present) */
+  .checklist-sheet {
+    overflow-x: auto;
   }
 }
+
+@media (max-width: 480px) {
+  .checklist-wrapper {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .checklist-sheet {
+    padding: 12px;
+  }
+
+  .excel-logo {
+    padding: 12px;
+  }
+
+  .sss-logo {
+    width: 58px;
+    height: 58px;
+    font-size: 20px;
+  }
+
+  .excel-title h1 {
+    font-size: 18px;
+    letter-spacing: 0;
+  }
+
+  .excel-title h2 {
+    font-size: 16px;
+  }
+
+  .site-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .note-box {
+    font-size: 13px;
+    padding: 10px;
+  }
+
+  .checklist-table th {
+    font-size: 11px;
+    padding: 9px 6px;
+  }
+
+  .checklist-table td {
+    font-size: 11px;
+    padding: 7px 5px;
+  }
+
+  .status-select {
+    width: 96px;
+  }
+
+  .task-text {
+    min-width: 150px;
+  }
+
+  .bottom-panels {
+    gap: 10px;
+  }
+
+  .summary-card {
+    padding: 12px;
+  }
+}
+
+
+

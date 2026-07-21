@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import "./Layout.css";
 
 import LanguageSelector from "../LanguageSelector";
+import BackButton from "../BackButton/BackButton";
+
 
 import {
   FaBars,
@@ -118,14 +120,18 @@ function Layout({ title, children }) {
       <main className="layout-main-content">
         <header className="topbar">
           <div style={{ display: 'none' }}>{title}</div>
-          <button
-            className="mobile-menu-btn"
-            type="button"
-            onClick={toggleSidebar}
-            aria-label="Toggle sidebar"
-          >
-            <FaBars />
-          </button>
+          <div className="mobile-navigation-controls">
+            <button
+              className="mobile-menu-btn"
+              type="button"
+              onClick={toggleSidebar}
+              aria-label="Toggle sidebar"
+            >
+              <FaBars />
+            </button>
+
+            <BackButton />
+          </div>
 
           <h1>{title}</h1>
 
@@ -195,8 +201,10 @@ function Layout({ title, children }) {
           </div>
         </header>
 
+
         {children}
       </main>
+
     </div>
   );
 }

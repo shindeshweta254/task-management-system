@@ -136,6 +136,7 @@ html, body {
 
 .topbar {
   background: white;
+
   border-radius: 18px;
   padding: 16px 20px;
   box-shadow: 0 8px 22px rgba(25, 25, 80, 0.08);
@@ -472,3 +473,38 @@ body.dark-theme .user-card {
     font-size: 13px;
   }
 }
+
+.mobile-navigation-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobile-navigation-controls .global-back-button {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .mobile-navigation-controls {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    gap: 6px !important;
+    width: 44px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .mobile-navigation-controls .mobile-menu-btn {
+    display: inline-flex !important;
+    margin: 0 !important;
+  }
+
+  .mobile-navigation-controls .global-back-button {
+    display: inline-flex !important;
+    margin: 0 !important;
+    position: static !important;
+    transform: none !important;
+  }
+}
+

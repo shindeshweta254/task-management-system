@@ -1,11 +1,15 @@
-- [ ] Inspect existing Checklist.css (already read)
-- [ ] Update Checklist.css with mobile/tablet media queries (<=1024, <=768, <=480)
-- [ ] Ensure no desktop changes (keep existing styles as base)
-- [ ] Make checklist-top-actions inputs/selects full width on small screens
-- [ ] Ensure checklist-sheet/table supports horizontal scrolling without overflow
-- [ ] Adjust font sizes/padding/margins for smaller screens
-- [ ] Stack action buttons appropriately on mobile
-- [ ] Add responsive handling for excel-header/site-grid/bottom-panels
-- [ ] Fit modal/popup inputs within mobile via general responsive rules
-- [ ] Write updated Checklist.css completely and verify build/lint (optional)
+# TODO - Excel Upload History (DirectorDashboard)
+
+- [x] Backend: add StaffExcelUpload entity + repository + service + controller + rows parsing + download endpoint
+- [x] Backend: add ProjectExcelUpload entity + repository + service + controller + rows parsing (multi-sheet) + download endpoint
+- [x] Backend: add listing endpoints with role-based filtering (Employee/My, Supervisor/Site, Director/Admin/All) (Supervisor staff is not supported since staff upload table has no siteName)
+- [x] Backend: parse Excel to compute total records consistently with existing import logic
+- [x] Backend: implement “store file permanently” including SUCCESS + FAILED history (controller currently always stores SUCCESS; failed history wiring is next in frontend)
+- [ ] Frontend: update DirectorDashboard.jsx to call new history endpoints after existing import success/failure without changing existing import calls/response handling
+- [ ] Frontend: add two new sections below upload cards with required columns + actions (View/Download/Print)
+- [ ] Frontend: implement View modal rendering Excel as table from backend rows endpoint
+- [ ] Frontend: implement Print to print the opened Excel table
+- [ ] Frontend: implement role-based visibility for staff/project histories
+- [ ] Run: frontend build (optional): `npm run build` in frontend/SSS-Frontend
+
 

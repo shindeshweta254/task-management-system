@@ -3,6 +3,15 @@ import Layout from "../../Components/Layout/Layout";
 import { t } from "../../i18n/translator";
 import "./reports.css";
 
+import {
+  fetchAllWorkProofs,
+  fetchMyWorkProofs,
+  fetchSiteWorkProofs,
+  fetchSiteUserWorkProofs,
+  updateWorkProofStatus,
+  uploadWorkProof,
+} from "../../api/workProofApi";
+
 const API_BASE = "http://localhost:8080/api";
 
 function Reports() {
@@ -17,7 +26,26 @@ function Reports() {
   const userId = user?.id || user?.userId || null;
   const roleName = user?.role?.roleName || "EMPLOYEE";
 
-  const [activeTab, setActiveTab] = useState("upload");
+  const [activeTab, setActiveTab] = useState("submit");
+
+  // Work Proof module (separate from existing daily reports)
+  const [siteName, setSiteName] = useState("");
+
+  const [selectedWorkerId, setSelectedWorkerId] = useState("");
+
+  const [myWorkProofs, setMyWorkProofs] = useState([]);
+  const [siteWorkProofs, setSiteWorkProofs] = useState([]);
+  const [allWorkProofs, setAllWorkProofs] = useState([]);
+
+  const [workersForSite, setWorkersForSite] = useState([]);
+
+  const [directorStats, setDirectorStats] = useState({
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+    changesRequested: 0,
+    total: 0,
+  });
   const [busy, setBusy] = useState(false);
 
   const [completedWork, setCompletedWork] = useState("");
@@ -34,6 +62,13 @@ function Reports() {
   const [allReports, setAllReports] = useState([]);
 
   const isOwner = roleName === "Owner/Admin" || roleName === "DIRECTOR" || roleName === "Director";
+  const isDirectorLike = isOwner;
+  const isSupervisor = roleName === "SUPERVISOR";
+  const canSubmitWorkProof = roleName === "EMPLOYEE" || isSupervisor || isDirectorLike;
+  const canViewSiteReports = isSupervisor || isDirectorLike;
+  const canViewAllReports = isDirectorLike;
+  const canViewMyReports = true;
+
 
   useEffect(() => {
     if (!userId) return;

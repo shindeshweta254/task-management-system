@@ -34,3 +34,5 @@ build/
 node_modules/
 frontend/node_modules/
 dist/
+last10.txt
+uploads/

@@ -12,9 +12,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.company.taskmanagement.dto.WorkHistoryDTO;
 import com.company.taskmanagement.service.WorkHistoryService;
 @CrossOrigin(origins = "http://localhost:5173")
-@RestController
-@RequestMapping("/api/work-history")
+// Disabled: Work History module removed as requested.
+// @RestController
+// @RequestMapping("/api/work-history")
 public class WorkHistoryController {
+
 	@Autowired
 	private WorkHistoryService workHistoryService;
 

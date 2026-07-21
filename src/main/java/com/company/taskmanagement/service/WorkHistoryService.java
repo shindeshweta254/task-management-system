@@ -14,9 +14,11 @@ import com.company.taskmanagement.repository.TaskAttachmentRepository;
 import com.company.taskmanagement.repository.TaskRepository;
 import com.company.taskmanagement.entity.Review;
 
-@Service
+// Disabled: Work History module removed as requested.
+// @Service
 
 public class WorkHistoryService {
+
 
 	@Autowired
 	private TaskRepository taskRepository;
