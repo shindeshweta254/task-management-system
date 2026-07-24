@@ -33,6 +33,15 @@ public class User {
 	@Column(name = "contact_no", length = 20)
 	private String contactNo;
 
+	/**
+	 * siteCode identifies which site/location this user belongs to.
+	 * 
+	 * TEMPORARY AUTH NOTE: X-User-Id header is used to identify the logged-in user.
+	 * This MUST be replaced with JWT/session-based authentication before production deployment.
+	 */
+	@Column(name = "site_code", length = 50)
+	private String siteCode;
+
 	@ManyToOne
 	@JoinColumn(name = "role_id")
 	private Role role;
@@ -99,6 +108,14 @@ public class User {
 
 	public void setContactNo(String contactNo) {
 		this.contactNo = contactNo;
+	}
+
+	public String getSiteCode() {
+		return siteCode;
+	}
+
+	public void setSiteCode(String siteCode) {
+		this.siteCode = siteCode;
 	}
 
 	public Role getRole() {

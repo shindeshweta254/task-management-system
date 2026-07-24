@@ -1,0 +1,4 @@
+Sidebar.jsx: 0 bytes
+Navbar.jsx: 0 bytes
+ChecklistHeader.jsx: 0 bytes
+StatCard.jsx: 0 bytes

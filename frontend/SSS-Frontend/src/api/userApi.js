@@ -12,7 +12,10 @@ const jsonOrText = async (res) => {
 };
 
 export async function fetchAllUsers() {
-  const res = await fetch(`${API_BASE_URL}/api/users`);
+  let loggedInUser;
+  try { loggedInUser = JSON.parse(localStorage.getItem("user")); } catch { loggedInUser = null; }
+  const headers = loggedInUser?.id ? { "X-User-Id": String(loggedInUser.id) } : {};
+  const res = await fetch(`${API_BASE_URL}/api/users`, { headers });
   const data = await jsonOrText(res);
   if (!res.ok) {
     const msg = typeof data === "string" ? data : JSON.stringify(data);

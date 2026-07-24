@@ -33,17 +33,36 @@ function Checklist() {
     loadChecklist(sheetName);
   }, [sheetName]);
 
-  const loadChecklist = async (sheet) => {
+const loadChecklist = async (sheet) => {
     try {
+      let loggedInUser;
+      try {
+        loggedInUser = JSON.parse(localStorage.getItem("user"));
+      } catch {
+        loggedInUser = null;
+      }
+
+      if (!loggedInUser?.id) {
+        setChecklist([]);
+        return;
+      }
+
       const response = await fetch(
         `http://localhost:8080/api/checklist-master/sheet?sheetName=${encodeURIComponent(
           sheet
-        )}`
+        )}`,
+        {
+          headers: {
+            "X-User-Id": String(loggedInUser.id),
+          },
+        }
       );
+
       const data = await response.json();
-      setChecklist(data);
+      setChecklist(Array.isArray(data) ? data : []);
     } catch (error) {
       console.log(error);
+      setChecklist([]);
     }
   };
 

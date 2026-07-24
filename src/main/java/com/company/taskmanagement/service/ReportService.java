@@ -12,21 +12,25 @@ import com.company.taskmanagement.repository.ReportRepository;
 public class ReportService {
 
 	@Autowired
-	private ReportRepository ReportRepository;
+	private ReportRepository reportRepository;
 
 	public Report saveReport(Report report) {
-
-		return ReportRepository.save(report);
+		return reportRepository.save(report);
 	}
 
 	public List<Report> getAllReports() {
-
-		return ReportRepository.findAll();
+		return reportRepository.findAll();
 	}
 
 	public List<Report> getReportsByUser(Long userId) {
-
-		return ReportRepository.findByUserId(userId);
+		return reportRepository.findByUserId(userId);
 	}
 
+	/**
+	 * TEMPORARY AUTH NOTE: X-User-Id header is used to identify the logged-in user.
+	 * This MUST be replaced with JWT/session-based authentication before production deployment.
+	 */
+	public List<Report> getReportsBySiteCode(String siteCode) {
+		return reportRepository.findByUserSiteCode(siteCode);
+	}
 }

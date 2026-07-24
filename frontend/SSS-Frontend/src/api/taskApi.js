@@ -50,8 +50,24 @@ export async function fetchEmployeeTasks(userId) {
     return [];
   }
 
+  let loggedInUser;
+  try {
+    loggedInUser = JSON.parse(localStorage.getItem("user"));
+  } catch {
+    loggedInUser = null;
+  }
+
+  if (!loggedInUser?.id) {
+    throw new Error("User session not found. Please log in again.");
+  }
+
   const response = await fetch(
-    `${API_BASE_URL}/api/tasks/employee/${userId}`
+    `${API_BASE_URL}/api/tasks/employee/${userId}`,
+    {
+      headers: {
+        "X-User-Id": String(loggedInUser.id),
+      },
+    }
   );
 
   const data = await parseResponse(response);

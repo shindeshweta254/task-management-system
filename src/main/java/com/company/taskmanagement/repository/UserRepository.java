@@ -1,5 +1,7 @@
 package com.company.taskmanagement.repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.company.taskmanagement.entity.User;
@@ -16,4 +18,8 @@ public interface UserRepository
 	);
 
 	long countByRoleRoleName(String string);
+
+	List<User> findBySiteCode(String siteCode);
+
+	long countBySiteCode(String siteCode);
 }

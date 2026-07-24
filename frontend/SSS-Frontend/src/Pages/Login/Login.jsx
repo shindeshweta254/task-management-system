@@ -65,7 +65,7 @@ function Login() {
 
       const user = await response.json();
       const roleName = String(
-        user?.role?.roleName || ""
+        user?.roleName || user?.role?.roleName || ""
       ).toUpperCase();
 
       if (
@@ -94,7 +94,7 @@ function Login() {
         if (roleName === "DIRECTOR") {
           navigate("/director-dashboard");
         } else if (roleName === "SUPERVISOR") {
-          navigate("/supervisor-dashboard");
+          navigate("/dashboard");
         } else if (roleName === "MANAGER") {
           navigate("/manager-dashboard");
         } else {

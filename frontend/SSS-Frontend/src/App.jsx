@@ -4,6 +4,7 @@ import Splash from "./Pages/Splash/Splash";
 import Login from "./Pages/Login/Login";
 import Dashboard from "./Pages/Dashboard/Dashboard";
 import DirectorDashboard from "./Pages/DirectorDashboard/DirectorDashboard";
+import SupervisorDashboard from "./Pages/SupervisorDashboard/SupervisorDashboard";
 import Language from "./Pages/Language/Language";
 
 import Task from "./Pages/Task/task";
@@ -16,6 +17,8 @@ import TeamDetails from "./Pages/Team/TeamDetails";
 
 import Reports from "./Pages/Reports/Reports";
 import Profile from "./Pages/Profile/Profile";
+import AddTask from "./Pages/AddTask/AddTask";
+import Notifications from "./Pages/Notifications/Notifications";
 
 function App() {
   return (
@@ -29,6 +32,10 @@ function App() {
         path="/director-dashboard"
         element={<DirectorDashboard />}
       />
+      <Route
+        path="/supervisor-dashboard"
+        element={<SupervisorDashboard />}
+      />
 
       <Route path="/task" element={<Task />} />
       <Route path="/checklist" element={<Checklist />} />
@@ -39,6 +46,8 @@ function App() {
       <Route path="/team/:teamId" element={<TeamDetails />} />
 
       <Route path="/reports" element={<Reports />} />
+<Route path="/add-task" element={<AddTask />} />
+      <Route path="/notifications" element={<Notifications />} />
       <Route path="/profile" element={<Profile />} />
     </Routes>
   );

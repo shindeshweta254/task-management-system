@@ -1,10 +1,9 @@
 package com.company.taskmanagement.controller;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,18 +18,28 @@ import com.company.taskmanagement.dto.ExcelUploadHistoryResponse;
 import com.company.taskmanagement.entity.ProjectExcelUpload;
 import com.company.taskmanagement.entity.StaffExcelUpload;
 import com.company.taskmanagement.entity.StaffExcelUpload.UploadStatus;
+import com.company.taskmanagement.entity.User;
+import com.company.taskmanagement.service.AccessService;
 import com.company.taskmanagement.service.ExcelUploadHistoryService;
 
-import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
+
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 
 @RestController
 @RequestMapping("/api/excel-uploads")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176"})
 public class ExcelUploadHistoryController {
 
     @Autowired
     private ExcelUploadHistoryService excelUploadHistoryService;
+
+    @Autowired
+    private AccessService accessService;
 
     @GetMapping("/test")
     public ResponseEntity<Map<String, String>> testEndpoint() {
@@ -42,8 +51,10 @@ public class ExcelUploadHistoryController {
             @RequestParam("file") MultipartFile file,
             @RequestParam("uploadedByUserId") Long uploadedByUserId,
             @RequestParam("uploadedByName") String uploadedByName,
-            @RequestParam("uploadedByRole") String uploadedByRole) {
+            @RequestParam("uploadedByRole") String uploadedByRole,
+            HttpServletRequest request) {
         try {
+            accessService.resolveAndValidateTargetUser(request, uploadedByUserId);
             Long totalRecords = excelUploadHistoryService.countStaffDataRows(file);
             StaffExcelUpload rec = excelUploadHistoryService.saveStaffHistory(
                     file, uploadedByUserId, uploadedByName, uploadedByRole,
@@ -60,8 +71,10 @@ public class ExcelUploadHistoryController {
             @RequestParam("uploadedByUserId") Long uploadedByUserId,
             @RequestParam("uploadedByName") String uploadedByName,
             @RequestParam("uploadedByRole") String uploadedByRole,
-            @RequestParam(value = "siteName", required = false) String siteName) {
+            @RequestParam(value = "siteName", required = false) String siteName,
+            HttpServletRequest request) {
         try {
+            accessService.resolveAndValidateTargetUser(request, uploadedByUserId);
             if (siteName == null || siteName.isBlank()) {
                 siteName = excelUploadHistoryService.extractProjectSiteName(file);
             }
@@ -122,7 +135,10 @@ public class ExcelUploadHistoryController {
     }
 
     @GetMapping("/staff/my")
-    public List<ExcelUploadHistoryResponse> listStaffMy(@RequestParam("userId") Long userId) {
+    public List<ExcelUploadHistoryResponse> listStaffMy(
+            @RequestParam("userId") Long userId,
+            HttpServletRequest request) {
+        accessService.resolveAndValidateTargetUser(request, userId);
         return excelUploadHistoryService.listStaffForEmployeeOrAll(userId, false)
                 .stream()
                 .map(r -> ExcelUploadHistoryResponse.ofStaff(
@@ -133,7 +149,10 @@ public class ExcelUploadHistoryController {
     }
 
     @GetMapping("/project/my")
-    public List<ExcelUploadHistoryResponse> listProjectMy(@RequestParam("userId") Long userId) {
+    public List<ExcelUploadHistoryResponse> listProjectMy(
+            @RequestParam("userId") Long userId,
+            HttpServletRequest request) {
+        accessService.resolveAndValidateTargetUser(request, userId);
         return excelUploadHistoryService.listProjectForEmployeeOrAll(userId, false)
                 .stream()
                 .map(r -> ExcelUploadHistoryResponse.ofProject(
@@ -145,9 +164,11 @@ public class ExcelUploadHistoryController {
     }
 
     @GetMapping("/staff/all")
-    public List<ExcelUploadHistoryResponse> listStaffAll() {
-        return excelUploadHistoryService.listStaffForEmployeeOrAll(null, true)
-                .stream()
+    public List<ExcelUploadHistoryResponse> listStaffAll(HttpServletRequest request) {
+        User currentUser = accessService.resolveUser(request);
+        List<StaffExcelUpload> allRecords = excelUploadHistoryService.listStaffForEmployeeOrAll(null, true);
+        List<StaffExcelUpload> filtered = filterStaffByAccess(currentUser, allRecords);
+        return filtered.stream()
                 .map(r -> ExcelUploadHistoryResponse.ofStaff(
                         r.getId(), r.getOriginalFileName(), r.getUploadedByName(),
                         r.getUploadedByUserId(), r.getUploadDate(), r.getFileSize(),
@@ -156,9 +177,11 @@ public class ExcelUploadHistoryController {
     }
 
     @GetMapping("/project/all")
-    public List<ExcelUploadHistoryResponse> listProjectAll() {
-        return excelUploadHistoryService.listProjectForEmployeeOrAll(null, true)
-                .stream()
+    public List<ExcelUploadHistoryResponse> listProjectAll(HttpServletRequest request) {
+        User currentUser = accessService.resolveUser(request);
+        List<ProjectExcelUpload> allRecords = excelUploadHistoryService.listProjectForEmployeeOrAll(null, true);
+        List<ProjectExcelUpload> filtered = filterProjectByAccess(currentUser, allRecords);
+        return filtered.stream()
                 .map(r -> ExcelUploadHistoryResponse.ofProject(
                         r.getId(), r.getOriginalFileName(), r.getUploadedByName(),
                         r.getUploadedByUserId(), r.getSiteName(), r.getUploadDate(),
@@ -168,7 +191,11 @@ public class ExcelUploadHistoryController {
     }
 
     @GetMapping("/project/site/{siteName}")
-    public List<ExcelUploadHistoryResponse> listProjectBySite(@PathVariable String siteName) {
+    public List<ExcelUploadHistoryResponse> listProjectBySite(
+            @PathVariable String siteName,
+            HttpServletRequest request) {
+        User currentUser = accessService.resolveUser(request);
+        accessService.validateSiteAccess(currentUser, siteName);
         return excelUploadHistoryService.listProjectBySite(siteName)
                 .stream()
                 .map(r -> ExcelUploadHistoryResponse.ofProject(
@@ -182,5 +209,27 @@ public class ExcelUploadHistoryController {
     @GetMapping("/staff/site/{siteName}")
     public List<ExcelUploadHistoryResponse> listStaffBySite(@PathVariable String siteName) {
         return List.of();
+    }
+
+    // Helper: filter staff records by user's site access
+    private List<StaffExcelUpload> filterStaffByAccess(User currentUser, List<StaffExcelUpload> records) {
+        if (accessService.hasElevatedAccess(currentUser) || accessService.isSP002(currentUser)) {
+            return records;
+        }
+        // Staff records don't have a site field, return empty for non-elevated users
+        return List.of();
+    }
+
+    // Helper: filter project records by user's site access
+    private List<ProjectExcelUpload> filterProjectByAccess(User currentUser, List<ProjectExcelUpload> records) {
+        if (accessService.hasElevatedAccess(currentUser) || accessService.isSP002(currentUser)) {
+            return records;
+        }
+        return records.stream()
+                .filter(r -> {
+                    String site = r.getSiteName();
+                    return site != null && accessService.hasSiteAccess(currentUser, site);
+                })
+                .collect(Collectors.toList());
     }
 }

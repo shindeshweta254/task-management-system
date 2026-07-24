@@ -34,12 +34,38 @@ function SupervisorDashboard() {
 
   useEffect(() => {
     const loadStats = async () => {
+      const userId = getUserId(user);
+      const headers = userId ? { "X-User-Id": String(userId), "Content-Type": "application/json" } : {};
+
+      const fetchNumber = async (url) => {
+        try {
+          const res = await fetch(url, { headers });
+          if (!res.ok) return 0;
+          const text = await res.text();
+          const val = Number(text);
+          return Number.isFinite(val) ? val : 0;
+        } catch {
+          return 0;
+        }
+      };
+
+      const fetchUsers = async () => {
+        try {
+          const res = await fetch("http://localhost:8080/api/users", { headers });
+          if (!res.ok) return [];
+          const data = await res.json();
+          return Array.isArray(data) ? data : [];
+        } catch {
+          return [];
+        }
+      };
+
       try {
         const [users, pending, completed, attendance] = await Promise.all([
-          fetch("http://localhost:8080/api/users").then((r) => r.json()),
-          fetch("http://localhost:8080/api/tasks/count/pending").then((r) => r.json()),
-          fetch("http://localhost:8080/api/tasks/count/completed").then((r) => r.json()),
-          fetch("http://localhost:8080/api/attendance/today").then((r) => r.json()).catch(() => 0),
+          fetchUsers(),
+          fetchNumber("http://localhost:8080/api/tasks/count/pending"),
+          fetchNumber("http://localhost:8080/api/tasks/count/completed"),
+          fetchNumber("http://localhost:8080/api/dashboard/todays-attendance"),
         ]);
 
         setStats({
@@ -49,7 +75,6 @@ function SupervisorDashboard() {
           completedTasks: completed || 0,
         });
       } catch {
-        // backend band ho toh localStorage se attendance count karo
         const attendanceData = JSON.parse(localStorage.getItem("attendanceData")) || [];
         const today = new Date().toLocaleDateString("en-IN");
         const todayCount = attendanceData.filter((a) => a.date === today && a.punchIn).length;
@@ -64,7 +89,10 @@ function SupervisorDashboard() {
       try {
         const id = getUserId(user);
         if (!id) return;
-        const res = await fetch(`http://localhost:8080/api/tasks/employee/${id}`);
+        const res = await fetch(`http://localhost:8080/api/tasks/employee/${id}`, {
+          headers: { "X-User-Id": String(id), "Content-Type": "application/json" },
+        });
+        if (!res.ok) { setMyTasks([]); return; }
         const data = await res.json();
         setMyTasks(Array.isArray(data) ? data : []);
       } catch {

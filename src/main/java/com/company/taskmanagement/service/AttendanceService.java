@@ -49,4 +49,16 @@ public class AttendanceService {
 
 		return attendanceRepository.save(attendance);
 	}
+
+	/**
+	 * TEMPORARY AUTH NOTE: X-User-Id header is used to identify the logged-in user.
+	 * This MUST be replaced with JWT/session-based authentication before production deployment.
+	 */
+	public List<Attendance> getAttendanceBySiteCode(String siteCode) {
+		return attendanceRepository.findByUserSiteCode(siteCode);
+	}
+
+	public long getTodayAttendanceCountBySiteCode(String siteCode) {
+		return attendanceRepository.countByUserSiteCodeAndAttendanceDate(siteCode, LocalDate.now());
+	}
 }

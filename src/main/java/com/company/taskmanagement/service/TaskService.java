@@ -21,8 +21,15 @@ public class TaskService {
 	@Autowired
 	private UserRepository userRepository;
 
+<<<<<<< Updated upstream
 	@Autowired
 	private NotificationRepository notificationRepository;
+=======
+	public Task getTaskById(Long taskId) {
+		return taskRepository.findById(taskId)
+				.orElseThrow(() -> new RuntimeException("Task Not Found"));
+	}
+>>>>>>> Stashed changes
 
 	public Task takeTask(Long taskId, Long userId) {
 
@@ -238,8 +245,16 @@ public class TaskService {
 		return taskRepository.countByStatus("PENDING");
 	}
 
+	public List<Task> getPendingTasksList() {
+		return taskRepository.findByStatus("PENDING");
+	}
+
 	public long getCompletedTasks() {
 		return taskRepository.countByStatus("COMPLETED");
+	}
+
+	public List<Task> getCompletedTasksList() {
+		return taskRepository.findByStatus("COMPLETED");
 	}
 
 	public long getTotalTasks() {
@@ -321,5 +336,25 @@ public class TaskService {
 	                    !"COMPLETED".equals(task.getStatus()))
 	            .count();
 
+	}
+
+	/**
+	 * TEMPORARY AUTH NOTE: X-User-Id header is used to identify the logged-in user.
+	 * This MUST be replaced with JWT/session-based authentication before production deployment.
+	 */
+	public List<Task> getTasksBySiteCode(String siteCode) {
+		return taskRepository.findByAssignedToSiteCode(siteCode);
+	}
+
+	public long getPendingTasksBySiteCode(String siteCode) {
+		return taskRepository.countByAssignedToSiteCodeAndStatus(siteCode, "PENDING");
+	}
+
+	public long getCompletedTasksBySiteCode(String siteCode) {
+		return taskRepository.countByAssignedToSiteCodeAndStatus(siteCode, "COMPLETED");
+	}
+
+	public long getTotalTasksBySiteCode(String siteCode) {
+		return taskRepository.countByAssignedToSiteCode(siteCode);
 	}
 }

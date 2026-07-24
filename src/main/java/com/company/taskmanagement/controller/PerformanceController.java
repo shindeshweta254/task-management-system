@@ -9,8 +9,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.company.taskmanagement.entity.User;
+import com.company.taskmanagement.service.AccessService;
 import com.company.taskmanagement.service.PerformanceService;
-@CrossOrigin(origins = "http://localhost:5173")
+
+import jakarta.servlet.http.HttpServletRequest;
+
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176"})
 @RestController
 @RequestMapping("/api/performance")
 public class PerformanceController {
@@ -18,9 +23,15 @@ public class PerformanceController {
 	@Autowired
 	private PerformanceService performanceService;
 
-	@GetMapping("/employee/{userId}")
-	public Map<String, Object> getEmployeePerformance(@PathVariable Long userId) {
+	@Autowired
+	private AccessService accessService;
 
+	@GetMapping("/employee/{userId}")
+	public Map<String, Object> getEmployeePerformance(
+			@PathVariable Long userId,
+			HttpServletRequest request) {
+
+		accessService.resolveAndValidateTargetUser(request, userId);
 		return performanceService.getEmployeePerformance(userId);
 	}
 }

@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.company.taskmanagement.dto.UserDTO;
 import com.company.taskmanagement.entity.Role;
 import com.company.taskmanagement.entity.User;
 import com.company.taskmanagement.repository.RoleRepository;
@@ -57,7 +58,7 @@ public class UserService {
 	}
 
 	// Login
-	public User login(
+	public UserDTO login(
 			String employeeId,
 			String email,
 			String password) {
@@ -90,7 +91,7 @@ public class UserService {
 			);
 		}
 
-		return user;
+		return UserDTO.fromUser(user);
 	}
 
 	// Employee resign karne ke liye
@@ -108,6 +109,10 @@ public class UserService {
 	public User getUserById(Long id) {
 		return userRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("User Not Found"));
+	}
+
+	public User findUserByEmployeeId(String employeeId) {
+		return userRepository.findByEmployeeId(employeeId);
 	}
 
 	// Excel import method
@@ -402,5 +407,13 @@ public class UserService {
 		}
 
 		return cleanedContact;
+	}
+
+	/**
+	 * TEMPORARY AUTH NOTE: X-User-Id header is used to identify the logged-in user.
+	 * This MUST be replaced with JWT/session-based authentication before production deployment.
+	 */
+	public List<User> getUsersBySiteCode(String siteCode) {
+		return userRepository.findBySiteCode(siteCode);
 	}
 }

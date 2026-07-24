@@ -27,24 +27,14 @@ function Reports() {
   const roleName = user?.role?.roleName || "EMPLOYEE";
 
   const [activeTab, setActiveTab] = useState("submit");
-
-  // Work Proof module (separate from existing daily reports)
   const [siteName, setSiteName] = useState("");
-
   const [selectedWorkerId, setSelectedWorkerId] = useState("");
-
   const [myWorkProofs, setMyWorkProofs] = useState([]);
   const [siteWorkProofs, setSiteWorkProofs] = useState([]);
   const [allWorkProofs, setAllWorkProofs] = useState([]);
-
   const [workersForSite, setWorkersForSite] = useState([]);
-
   const [directorStats, setDirectorStats] = useState({
-    pending: 0,
-    approved: 0,
-    rejected: 0,
-    changesRequested: 0,
-    total: 0,
+    pending: 0, approved: 0, rejected: 0, changesRequested: 0, total: 0,
   });
   const [busy, setBusy] = useState(false);
 
@@ -52,11 +42,9 @@ function Reports() {
   const [pendingWork, setPendingWork] = useState("");
   const [issues, setIssues] = useState("");
   const [reportDate, setReportDate] = useState(() => new Date().toISOString().slice(0, 10));
-
   const [proofFile, setProofFile] = useState(null);
   const [coords, setCoords] = useState(null);
   const [locationAddress, setLocationAddress] = useState("");
-
   const [message, setMessage] = useState("");
   const [myReports, setMyReports] = useState([]);
   const [allReports, setAllReports] = useState([]);
@@ -69,19 +57,17 @@ function Reports() {
   const canViewAllReports = isDirectorLike;
   const canViewMyReports = true;
 
-
   useEffect(() => {
     if (!userId) return;
     const fetchReports = async () => {
       try {
+        const headers = userId ? { "X-User-Id": String(userId) } : {};
         const url = isOwner ? `${API_BASE}/reports` : `${API_BASE}/reports/user/${userId}`;
-        const res = await fetch(url);
+        const res = await fetch(url, { headers });
         const data = await res.json();
         if (isOwner) setAllReports(data || []);
         else setMyReports(data || []);
-      } catch (e) {
-        // ignore
-      }
+      } catch (e) { /* ignore */ }
     };
     fetchReports();
   }, [userId, isOwner]);
@@ -91,43 +77,21 @@ function Reports() {
       setMessage("Geolocation not supported");
       return;
     }
-
     setMessage("");
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setCoords({
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-          timestamp: pos.timestamp,
-        });
-      },
-      (err) => {
-        setMessage(err?.message || "Location permission denied");
-      },
+      (pos) => setCoords({ latitude: pos.coords.latitude, longitude: pos.coords.longitude, timestamp: pos.timestamp }),
+      (err) => setMessage(err?.message || "Location permission denied"),
       { enableHighAccuracy: true, timeout: 15000 }
     );
   };
 
   const onSubmit = async (e) => {
     e.preventDefault();
-
-    if (!userId) {
-      setMessage("User not found");
-      return;
-    }
-    if (!proofFile) {
-      setMessage("Please upload daily work proof");
-      return;
-    }
-    if (!coords) {
-      setMessage("Please allow live location first");
-      return;
-    }
-
+    if (!userId) { setMessage("User not found"); return; }
+    if (!proofFile) { setMessage("Please upload daily work proof"); return; }
+    if (!coords) { setMessage("Please allow live location first"); return; }
     try {
-      setBusy(true);
-      setMessage("");
-
+      setBusy(true); setMessage("");
       const form = new FormData();
       form.append("userId", String(userId));
       form.append("completedWork", completedWork);
@@ -138,34 +102,18 @@ function Reports() {
       form.append("longitude", String(coords.longitude));
       form.append("locationAddress", locationAddress || "");
       form.append("proof", proofFile);
-
-      const res = await fetch(`${API_BASE}/reports/upload`, {
-        method: "POST",
-        body: form,
-      });
-
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || "Upload failed");
-      }
-
+      const res = await fetch(`${API_BASE}/reports/upload`, { method: "POST", body: form });
+      if (!res.ok) { const txt = await res.text(); throw new Error(txt || "Upload failed"); }
       setMessage("Saved successfully ✅");
-      setCompletedWork("");
-      setPendingWork("");
-      setIssues("");
-      setProofFile(null);
-      setCoords(null);
-      setLocationAddress("");
-
-      // refresh
-      const refresh = await fetch(`${API_BASE}/reports/user/${userId}`);
+      setCompletedWork(""); setPendingWork(""); setIssues("");
+      setProofFile(null); setCoords(null); setLocationAddress("");
+      const refreshHeaders = userId ? { "X-User-Id": String(userId) } : {};
+      const refresh = await fetch(`${API_BASE}/reports/user/${userId}`, { headers: refreshHeaders });
       const data = await refresh.json();
       setMyReports(data || []);
     } catch (err) {
       setMessage(err?.message || "Upload failed");
-    } finally {
-      setBusy(false);
-    }
+    } finally { setBusy(false); }
   };
 
   const listToShow = isOwner ? allReports : myReports;
@@ -175,19 +123,9 @@ function Reports() {
       <div className="reports-page">
         <div className="reports-tabs">
           {!isOwner && (
-            <button
-              type="button"
-              className={`reports-tab-btn ${activeTab === "upload" ? "active" : ""}`}
-              onClick={() => setActiveTab("upload")}
-            >
-              Upload Proof
-            </button>
+            <button type="button" className={`reports-tab-btn ${activeTab === "upload" ? "active" : ""}`} onClick={() => setActiveTab("upload")}>Upload Proof</button>
           )}
-          <button
-            type="button"
-            className={`reports-tab-btn ${activeTab === "list" ? "active" : ""}`}
-            onClick={() => setActiveTab("list")}
-          >
+          <button type="button" className={`reports-tab-btn ${activeTab === "list" ? "active" : ""}`} onClick={() => setActiveTab("list")}>
             {t("reports.viewSubmissions") || "View Submissions"}
           </button>
         </div>
@@ -195,70 +133,42 @@ function Reports() {
         {activeTab === "upload" && !isOwner && (
           <div className="page-card">
             <h2>Daily Work Proof Upload</h2>
-
             <form className="reports-form" onSubmit={onSubmit}>
               <div className="full">
                 <label>Report Date</label>
                 <input type="date" value={reportDate} onChange={(e) => setReportDate(e.target.value)} />
               </div>
-
               <div>
                 <label>Completed Work</label>
                 <textarea value={completedWork} onChange={(e) => setCompletedWork(e.target.value)} />
               </div>
-
               <div>
                 <label>Pending Work</label>
                 <textarea value={pendingWork} onChange={(e) => setPendingWork(e.target.value)} />
               </div>
-
               <div className="full">
                 <label>Issues</label>
                 <textarea value={issues} onChange={(e) => setIssues(e.target.value)} />
               </div>
-
               <div className="full">
                 <label>Work Proof (Screenshot/Image)</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setProofFile(e.target.files?.[0] || null)}
-                />
+                <input type="file" accept="image/*" onChange={(e) => setProofFile(e.target.files?.[0] || null)} />
               </div>
-
               <div className="full">
                 <label>Live Location</label>
                 <div className="reports-actions">
-                  <button type="button" className="reports-submit" onClick={requestLocation} disabled={busy}>
-                    Get Location
-                  </button>
+                  <button type="button" className="reports-submit" onClick={requestLocation} disabled={busy}>Get Location</button>
                   <div className="reports-location">
-                    {coords ? (
-                      <span>
-                        Lat: {coords.latitude} , Lng: {coords.longitude}
-                      </span>
-                    ) : (
-                      <span>Not captured yet</span>
-                    )}
+                    {coords ? <span>Lat: {coords.latitude} , Lng: {coords.longitude}</span> : <span>Not captured yet</span>}
                   </div>
                 </div>
-
                 <div style={{ marginTop: 10 }}>
-                  <label style={{ marginBottom: 6, display: "block", fontSize: 13, color: "#374151" }}>
-                    Location Address (optional)
-                  </label>
-                  <input
-                    value={locationAddress}
-                    onChange={(e) => setLocationAddress(e.target.value)}
-                    placeholder="Street/Area"
-                  />
+                  <label style={{ marginBottom: 6, display: "block", fontSize: 13, color: "#374151" }}>Location Address (optional)</label>
+                  <input value={locationAddress} onChange={(e) => setLocationAddress(e.target.value)} placeholder="Street/Area" />
                 </div>
               </div>
-
               <div className="full">
-                <button type="submit" className="reports-submit" disabled={busy}>
-                  {busy ? "Saving..." : "Submit Proof"}
-                </button>
+                <button type="submit" className="reports-submit" disabled={busy}>{busy ? "Saving..." : "Submit Proof"}</button>
                 {message && <div className="reports-message">{message}</div>}
               </div>
             </form>
@@ -268,17 +178,10 @@ function Reports() {
         {activeTab === "list" && (
           <div className="page-card">
             <h2>{isOwner ? "Owner Dashboard - Reports" : "My Daily Submissions"}</h2>
-
             <table className="reports-table">
               <thead>
                 <tr>
-                  <th>Date</th>
-                  <th>User</th>
-                  <th>Completed</th>
-                  <th>Pending</th>
-                  <th>Issues</th>
-                  <th>Proof</th>
-                  <th>Location</th>
+                  <th>Date</th><th>User</th><th>Completed</th><th>Pending</th><th>Issues</th><th>Proof</th><th>Location</th>
                 </tr>
               </thead>
               <tbody>
@@ -293,8 +196,23 @@ function Reports() {
                     <td>
                       {r.latitude && r.longitude ? (
                         <span>
-                          {r.latitude}, {r.longitude}
-                          {r.locationAddress ? <div>{r.locationAddress}</div> : null}
+                          <div className="address-display">
+                            {r.locationAddress ? (
+                              <span className="address-text">{r.locationAddress}</span>
+                            ) : (
+                              <span className="coords-fallback">{r.latitude}, {r.longitude}</span>
+                            )}
+                          </div>
+                          <a
+                            href={`https://www.google.com/maps?q=${r.latitude},${r.longitude}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="map-link"
+                            title="View on Map"
+                            style={{ fontSize: 12, color: "#2563eb", textDecoration: "underline" }}
+                          >
+                            View on Map
+                          </a>
                         </span>
                       ) : (
                         "-"
@@ -302,11 +220,8 @@ function Reports() {
                     </td>
                   </tr>
                 ))}
-
                 {(listToShow || []).length === 0 && (
-                  <tr>
-                    <td colSpan={7}>No submissions found</td>
-                  </tr>
+                  <tr><td colSpan={7}>No submissions found</td></tr>
                 )}
               </tbody>
             </table>
@@ -318,4 +233,3 @@ function Reports() {
 }
 
 export default Reports;
-

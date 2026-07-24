@@ -1,195 +1,36 @@
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
+/* Employee Dashboard inherits styles from DirectorDashboard.css */
+/* This file contains any employee-specific overrides */
+
+.director-stat-card.notifications {
+  border-color: #f59e0b;
 }
 
-.dashboard{
-  display:flex;
-  min-height:100vh;
-  background:#f5f7fb;
+.director-stat-card.notifications .director-stat-icon {
+  color: #f59e0b;
 }
 
-/* Sidebar */
-
-.sidebar{
-  width:260px;
-  background:#09142d;
-  color:white;
-  padding:25px;
+.director-add-task-button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 10px 17px;
+  border: 0;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #5046e5, #6858eb);
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
 }
 
-.logo{
-  text-align:center;
-  margin-bottom:40px;
+.director-add-task-button:hover {
+  background: linear-gradient(135deg, #3f35d4, #5545d8);
+  color: #ffffff;
+  transform: translateY(-1px);
 }
-
-.menu{
-  list-style:none;
-}
-
-.menu li{
-  padding:15px;
-  margin-bottom:10px;
-  border-radius:10px;
-  cursor:pointer;
-  transition:.3s;
-}
-
-.menu li:hover{
-  background:#5b3df5;
-}
-
-.active{
-  background:#5b3df5;
-}
-
-.logout{
-  margin-top:50px;
-  color:#ff5d5d;
-}
-
-/* Main */
-
-.main-content{
-  flex:1;
-  padding:30px;
-}
-
-/* Navbar */
-
-.navbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:30px;
-}
-
-.search-box{
-  width:300px;
-  padding:12px;
-  border:none;
-  border-radius:10px;
-  box-shadow:0 2px 8px rgba(0,0,0,.1);
-}
-
-/* Welcome */
-
-.welcome-box{
-  background:white;
-  padding:25px;
-  border-radius:20px;
-  margin-bottom:25px;
-  box-shadow:0 5px 20px rgba(0,0,0,.08);
-}
-
-/* Cards */
-
-.cards{
-  display:grid;
-  grid-template-columns:repeat(5,1fr);
-  gap:20px;
-}
-
-.card{
-  background:white;
-  padding:25px;
-  border-radius:20px;
-  text-align:center;
-  box-shadow:0 5px 20px rgba(0,0,0,.08);
-}
-
-.card h2{
-  color:#5b3df5;
-  margin-bottom:10px;
-}
-
-/* Hero (dashboard) */
-
-.hero-card{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:20px;
-  background:white;
-  padding:25px;
-  border-radius:20px;
-  margin-bottom:25px;
-  box-shadow:0 5px 20px rgba(0,0,0,.08);
-  position:relative;
-  overflow:hidden;
-}
-
-.hero-left{
-  flex:1;
-  min-width:0;
-}
-
-.hero-user-info{
-  display:flex;
-  gap:18px;
-  align-items:flex-start;
-}
-
-.profile-circle{
-  width:48px;
-  height:48px;
-  border-radius:50%;
-  background:#5b3df5;
-  color:white;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:700;
-  flex-shrink:0;
-}
-
-.hero-text h2{
-  font-size:22px;
-  margin-bottom:8px;
-  color:#1e293b;
-}
-
-.hero-text p{
-  color:#64748b;
-  line-height:1.5;
-  margin-bottom:14px;
-  font-size:14px;
-}
-
-.add-btn{
-  display:inline-flex;
-  align-items:center;
-  gap:10px;
-  background:#5b3df5;
-  color:white;
-  border:none;
-  padding:12px 18px;
-  border-radius:10px;
-  cursor:pointer;
-  font-weight:700;
-  white-space:nowrap;
-}
-
-.add-btn:hover{ background:#4c2ee0; }
-
-.hero-image{
-  flex-shrink:0;
-  display:flex;
-  align-items:flex-start;
-  justify-content:flex-end;
-}
-
-.dashboard-logo{
-  width:170px;
-  height:170px;
-  object-fit:contain;
-  opacity:0.95;
-  transform:translateY(-8px);
-}
-
-@media (max-width: 900px){
-  .hero-card{ flex-direction:column; align-items:flex-start; }
-  .dashboard-logo{ width:120px; height:120px; transform:none; }
-}
-

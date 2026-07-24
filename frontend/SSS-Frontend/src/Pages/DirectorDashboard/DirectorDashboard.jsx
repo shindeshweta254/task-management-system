@@ -389,7 +389,7 @@ function DirectorDashboard() {
     window.URL.revokeObjectURL(url);
   };
 
-  const directorTabs = [];
+const directorTabs = [];
 
   return (
     <Layout title="Director Dashboard">
@@ -411,6 +411,14 @@ function DirectorDashboard() {
             ))}
           </div>
 
+<button
+            type="button"
+            className="director-tab-button"
+            onClick={() => navigate("/add-task")}
+          >
+            <FaTasks />
+            <span>Add Task</span>
+          </button>
           <button
             type="button"
             className="director-refresh-button"

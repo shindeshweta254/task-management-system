@@ -20,6 +20,8 @@ import {
   FaMoon,
   FaProjectDiagram,
   FaSearch,
+  FaHome,
+  FaPlus,
 } from "react-icons/fa";
 
 function Layout({ title, children }) {
@@ -46,32 +48,37 @@ function Layout({ title, children }) {
     }
   };
 
-  const user = parseLocalStorage("user") || {};
+const user = parseLocalStorage("user") || {};
   const userName = typeof user.name === "string" && user.name.trim() ? user.name : "Employee";
-  const role = user.role?.roleName || "EMPLOYEE";
+  const roleRaw = user?.roleName || user?.role?.roleName || "EMPLOYEE";
+  const role = String(roleRaw).toUpperCase();
   const nameParts = userName.trim().split(" ");
 
-  const navItems = [
-    { label: "Task", path: "/task", icon: <FaTasks /> },
+const navItems = [
+    { label: "Dashboard", path: "/dashboard", icon: <FaHome /> },
+    { label: "My Tasks", path: "/task", icon: <FaTasks /> },
     { label: "Checklist", path: "/checklist", icon: <FaClipboardList /> },
     { label: "Attendance", path: "/attendance", icon: <FaCalendarAlt /> },
     { label: "Calendar", path: "/calendar", icon: <FaCalendarAlt /> },
     { label: "Projects", path: "/projects", icon: <FaProjectDiagram /> },
     { label: "Team", path: "/team", icon: <FaUsers /> },
     { label: "Reports", path: "/reports", icon: <FaChartBar /> },
+    { label: "Add Task", path: "/add-task", icon: <FaPlus /> },
+    { label: "Notifications", path: "/notifications", icon: <FaBell /> },
     { label: "Profile", path: "/profile", icon: <FaUser /> },
     { label: "Employees", path: "/director-dashboard?tab=employees", icon: <FaUsers />, directorOnly: true },
     { label: "Add Employee", path: "/director-dashboard?tab=add-employee", icon: <FaUserPlus />, directorOnly: true },
     { label: "Upload Excel", path: "/director-dashboard?tab=upload-excel", icon: <FaFileExcel />, directorOnly: true },
   ];
 
-  const isDirector = role === "DIRECTOR" || role === "director";
+  const isDirector = role === "DIRECTOR";
 
   const filteredNavItems = navItems.filter((item) => {
-    if (item.directorOnly) return isDirector || role === "Owner/Admin";
-    if (role === "Owner/Admin" || isDirector) return true;
-    if (role === "Manager/Supervisor") return ["/dashboard", "/task", "/checklist", "/attendance", "/reports", "/team", "/calendar", "/projects"].includes(item.path);
-    return ["/dashboard", "/task", "/checklist", "/attendance", "/profile"].includes(item.path);
+    if (item.directorOnly) return isDirector || role === "OWNER/ADMIN";
+    if (isDirector || role === "OWNER/ADMIN") return true;
+    if (role === "SUPERVISOR") return ["/dashboard", "/task", "/checklist", "/attendance", "/reports", "/team", "/calendar", "/projects"].includes(item.path);
+    if (role === "EMPLOYEE") return ["/dashboard", "/task", "/add-task", "/attendance", "/calendar", "/reports", "/notifications", "/profile"].includes(item.path);
+    return false;
   });
 
   const searchResults = searchQuery.trim()

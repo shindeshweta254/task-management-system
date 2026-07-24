@@ -1,6 +1,7 @@
 package com.company.taskmanagement.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -18,18 +19,26 @@ import java.nio.file.Paths;
 import java.time.format.DateTimeFormatter;
 
 import com.company.taskmanagement.entity.Report;
+import com.company.taskmanagement.entity.User;
+import com.company.taskmanagement.service.AccessService;
 import com.company.taskmanagement.service.ReportService;
 
-@CrossOrigin(origins = "http://localhost:5173")
+import jakarta.servlet.http.HttpServletRequest;
+
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176"})
 @RestController
 @RequestMapping("/api/reports")
 public class ReportController {
 	@Autowired
 	private ReportService dailyReportService;
 
+	@Autowired
+	private AccessService accessService;
+
 	// Existing JSON save
 	@PostMapping
-	public Report saveReport(@RequestBody Report report) {
+	public Report saveReport(@RequestBody Report report, HttpServletRequest request) {
+		accessService.resolveUser(request);
 		return dailyReportService.saveReport(report);
 	}
 
@@ -44,8 +53,11 @@ public class ReportController {
 			@RequestParam("latitude") Double latitude,
 			@RequestParam("longitude") Double longitude,
 			@RequestParam(value = "locationAddress", required = false) String locationAddress,
-			@RequestParam("proof") org.springframework.web.multipart.MultipartFile proof
+			@RequestParam("proof") org.springframework.web.multipart.MultipartFile proof,
+			HttpServletRequest request
 	) throws Exception {
+
+		accessService.resolveAndValidateTargetUser(request, userId);
 
 		Report report = new Report();
 		report.setCompletedWork(completedWork);
@@ -81,13 +93,48 @@ public class ReportController {
 	}
 
 	@GetMapping
-	public List<Report> getAllReports() {
-		return dailyReportService.getAllReports();
+	public List<Report> getAllReports(HttpServletRequest request) {
+		User currentUser = accessService.resolveUser(request);
+		List<Report> allReports = dailyReportService.getAllReports();
+		return allReports.stream()
+				.filter(r -> {
+					if (r.getUser() == null) return false;
+					try {
+						accessService.validateTargetEmployee(currentUser, r.getUser());
+						return true;
+					} catch (Exception e) {
+						return false;
+					}
+				})
+				.collect(Collectors.toList());
 	}
 
 	@GetMapping("/user/{userId}")
-	public List<Report> getReportsByUser(@PathVariable Long userId) {
+	public List<Report> getReportsByUser(
+			@PathVariable Long userId,
+			HttpServletRequest request) {
+
+		accessService.resolveAndValidateTargetUser(request, userId);
 		return dailyReportService.getReportsByUser(userId);
+	}
+
+	@GetMapping("/me")
+	public List<Report> getMyReports(HttpServletRequest request) {
+		User currentUser = accessService.resolveUser(request);
+		return dailyReportService.getReportsByUser(currentUser.getId());
+	}
+
+	@GetMapping("/my-site")
+	public List<Report> getMySiteReports(HttpServletRequest request) {
+		User currentUser = accessService.resolveUser(request);
+		// For supervisors/managers/SP001/SP002 - return site reports
+		if (accessService.isSupervisor(currentUser) || accessService.isManager(currentUser)
+				|| accessService.isSP001(currentUser) || accessService.isSP002(currentUser)
+				|| accessService.hasElevatedAccess(currentUser)) {
+			return dailyReportService.getReportsBySiteCode(currentUser.getSiteCode());
+		}
+		// For employees, return own reports
+		return dailyReportService.getReportsByUser(currentUser.getId());
 	}
 }
 
