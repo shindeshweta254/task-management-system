@@ -21,15 +21,15 @@ public class TaskService {
 	@Autowired
 	private UserRepository userRepository;
 
-<<<<<<< Updated upstream
+
 	@Autowired
 	private NotificationRepository notificationRepository;
-=======
+
 	public Task getTaskById(Long taskId) {
 		return taskRepository.findById(taskId)
 				.orElseThrow(() -> new RuntimeException("Task Not Found"));
 	}
->>>>>>> Stashed changes
+
 
 	public Task takeTask(Long taskId, Long userId) {
 
