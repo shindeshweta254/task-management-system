@@ -52,8 +52,14 @@ export async function uploadProjectHistory({ file, uploadedByUserId, uploadedByN
   return data;
 }
 
+function getAuthHeaders() {
+  let loggedInUser;
+  try { loggedInUser = JSON.parse(localStorage.getItem("user")); } catch { loggedInUser = null; }
+  return loggedInUser?.id ? { "X-User-Id": String(loggedInUser.id) } : {};
+}
+
 export async function fetchStaffUploadsAll() {
-  const res = await fetch(`${API_BASE_URL}/api/excel-uploads/staff/all`);
+  const res = await fetch(`${API_BASE_URL}/api/excel-uploads/staff/all`, { headers: getAuthHeaders() });
   if (res.status === 404) return [];
   const data = await jsonOrText(res);
   if (!res.ok) return [];
@@ -61,7 +67,7 @@ export async function fetchStaffUploadsAll() {
 }
 
 export async function fetchStaffUploadsMy(userId) {
-  const res = await fetch(`${API_BASE_URL}/api/excel-uploads/staff/my?userId=${encodeURIComponent(userId)}`);
+  const res = await fetch(`${API_BASE_URL}/api/excel-uploads/staff/my?userId=${encodeURIComponent(userId)}`, { headers: getAuthHeaders() });
   if (res.status === 404) return [];
   const data = await jsonOrText(res);
   if (!res.ok) return [];
@@ -77,7 +83,7 @@ export async function fetchStaffUploadsBySite(siteName) {
 }
 
 export async function fetchProjectUploadsAll() {
-  const res = await fetch(`${API_BASE_URL}/api/excel-uploads/project/all`);
+  const res = await fetch(`${API_BASE_URL}/api/excel-uploads/project/all`, { headers: getAuthHeaders() });
   if (res.status === 404) return [];
   const data = await jsonOrText(res);
   if (!res.ok) return [];
@@ -85,7 +91,7 @@ export async function fetchProjectUploadsAll() {
 }
 
 export async function fetchProjectUploadsMy(userId) {
-  const res = await fetch(`${API_BASE_URL}/api/excel-uploads/project/my?userId=${encodeURIComponent(userId)}`);
+  const res = await fetch(`${API_BASE_URL}/api/excel-uploads/project/my?userId=${encodeURIComponent(userId)}`, { headers: getAuthHeaders() });
   if (res.status === 404) return [];
   const data = await jsonOrText(res);
   if (!res.ok) return [];
@@ -93,7 +99,10 @@ export async function fetchProjectUploadsMy(userId) {
 }
 
 export async function fetchProjectUploadsBySite(siteName) {
-  const res = await fetch(`${API_BASE_URL}/api/excel-uploads/project/site/${encodeURIComponent(siteName)}`);
+  let loggedInUser;
+  try { loggedInUser = JSON.parse(localStorage.getItem("user")); } catch { loggedInUser = null; }
+  const headers = loggedInUser?.id ? { "X-User-Id": String(loggedInUser.id) } : {};
+  const res = await fetch(`${API_BASE_URL}/api/excel-uploads/project/site/${encodeURIComponent(siteName)}`, { headers });
   if (res.status === 404) return [];
   const data = await jsonOrText(res);
   if (!res.ok) return [];

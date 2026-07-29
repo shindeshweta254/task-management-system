@@ -1,15 +1,11 @@
-# TODO - Excel Upload History (DirectorDashboard)
+# Eclipse/Maven Configuration Repair
 
-- [x] Backend: add StaffExcelUpload entity + repository + service + controller + rows parsing + download endpoint
-- [x] Backend: add ProjectExcelUpload entity + repository + service + controller + rows parsing (multi-sheet) + download endpoint
-- [x] Backend: add listing endpoints with role-based filtering (Employee/My, Supervisor/Site, Director/Admin/All) (Supervisor staff is not supported since staff upload table has no siteName)
-- [x] Backend: parse Excel to compute total records consistently with existing import logic
-- [x] Backend: implement “store file permanently” including SUCCESS + FAILED history (controller currently always stores SUCCESS; failed history wiring is next in frontend)
-- [ ] Frontend: update DirectorDashboard.jsx to call new history endpoints after existing import success/failure without changing existing import calls/response handling
-- [ ] Frontend: add two new sections below upload cards with required columns + actions (View/Download/Print)
-- [ ] Frontend: implement View modal rendering Excel as table from backend rows endpoint
-- [ ] Frontend: implement Print to print the opened Excel table
-- [ ] Frontend: implement role-based visibility for staff/project histories
-- [ ] Run: frontend build (optional): `npm run build` in frontend/SSS-Frontend
-
+## Steps
+- [x] Step 1: Create missing `.classpath` (JRE System Library Java 17 + Maven classpath)
+- [x] Step 2: Create `.settings/org.eclipse.wst.common.project.facet.core.xml` (Facet metadata)
+- [x] Step 3: Create `.settings/org.eclipse.jdt.core.prefs` (Java 17 compiler settings)
+- [x] Step 4: Create `.settings/org.eclipse.m2e.core.prefs` (Maven integration)
+- [x] Step 5: Create `.settings/org.springframework.ide.eclipse.prefs` (Spring Boot IDE support)
+- [x] Step 6: Run Maven dependency resolution (`mvnw.cmd clean install -DskipTests`)
+- [x] Step 7: Verify the fix — ✅ Build successful, classes compiled to target/classes
 

@@ -36,3 +36,4 @@ frontend/node_modules/
 dist/
 last10.txt
 uploads/
+bin/

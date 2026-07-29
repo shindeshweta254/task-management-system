@@ -12,13 +12,19 @@ const jsonOrText = async (res) => {
 };
 
 export async function fetchAllUsers() {
-  const res = await fetch(`${API_BASE_URL}/api/users`);
+  let loggedInUser;
+  try { loggedInUser = JSON.parse(localStorage.getItem("user")); } catch { loggedInUser = null; }
+  const headers = loggedInUser?.id ? { "X-User-Id": String(loggedInUser.id) } : {};
+  const res = await fetch(`${API_BASE_URL}/api/users`, { headers });
   if (!res.ok) throw new Error(`Failed to load users (${res.status})`);
   return res.json();
 }
 
 export async function fetchTasksAll() {
-  const res = await fetch(`${API_BASE_URL}/api/tasks/all`);
+  let loggedInUser;
+  try { loggedInUser = JSON.parse(localStorage.getItem("user")); } catch { loggedInUser = null; }
+  const headers = loggedInUser?.id ? { "X-User-Id": String(loggedInUser.id) } : {};
+  const res = await fetch(`${API_BASE_URL}/api/tasks/all`, { headers });
   const data = await jsonOrText(res);
   if (!res.ok) {
     const msg = typeof data === "string" ? data : JSON.stringify(data);
@@ -35,26 +41,32 @@ export async function fetchTasksAll() {
   return normalized;
 }
 
+function getAuthHeaders() {
+  let loggedInUser;
+  try { loggedInUser = JSON.parse(localStorage.getItem("user")); } catch { loggedInUser = null; }
+  return loggedInUser?.id ? { "X-User-Id": String(loggedInUser.id) } : {};
+}
+
 export async function fetchTaskCountTotal() {
-  const res = await fetch(`${API_BASE_URL}/api/tasks/count/total`);
+  const res = await fetch(`${API_BASE_URL}/api/tasks/count/total`, { headers: getAuthHeaders() });
   if (!res.ok) throw new Error(`Failed to load total tasks (${res.status})`);
   return res.json();
 }
 
 export async function fetchTaskCountPending() {
-  const res = await fetch(`${API_BASE_URL}/api/tasks/count/pending`);
+  const res = await fetch(`${API_BASE_URL}/api/tasks/count/pending`, { headers: getAuthHeaders() });
   if (!res.ok) throw new Error(`Failed to load pending tasks (${res.status})`);
   return res.json();
 }
 
 export async function fetchTaskCountCompleted() {
-  const res = await fetch(`${API_BASE_URL}/api/tasks/count/completed`);
+  const res = await fetch(`${API_BASE_URL}/api/tasks/count/completed`, { headers: getAuthHeaders() });
   if (!res.ok) throw new Error(`Failed to load completed tasks (${res.status})`);
   return res.json();
 }
 
 export async function fetchDeadlineToday() {
-  const res = await fetch(`${API_BASE_URL}/api/tasks/deadline-today`);
+  const res = await fetch(`${API_BASE_URL}/api/tasks/deadline-today`, { headers: getAuthHeaders() });
   if (!res.ok) throw new Error(`Failed to load today's deadlines (${res.status})`);
   return res.json();
 }

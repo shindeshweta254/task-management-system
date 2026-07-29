@@ -49,14 +49,18 @@ public class SecurityConfig {
                 "OPTIONS"
         ));
 
-        // Must explicitly allow common headers; '*' can be unreliable with security CORS + preflight
+        // Explicitly list allowed headers — no wildcard allowed when credentials=true per CORS spec
         configuration.setAllowedHeaders(List.of(
-                "*",
                 "Authorization",
                 "Content-Type",
                 "X-User-Id"
         ));
         configuration.setAllowCredentials(true);
+
+        // Expose custom headers so browser-side JS can read them (e.g. X-User-Id response headers)
+        configuration.setExposedHeaders(List.of(
+                "X-User-Id"
+        ));
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();

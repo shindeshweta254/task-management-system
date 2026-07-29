@@ -36,8 +36,13 @@ async function parseResponse(response) {
 }
 
 export async function fetchAllTasks() {
+  let loggedInUser;
+  try { loggedInUser = JSON.parse(localStorage.getItem("user")); } catch { loggedInUser = null; }
+  const headers = loggedInUser?.id ? { "X-User-Id": String(loggedInUser.id) } : {};
+
   const response = await fetch(
-    `${API_BASE_URL}/api/tasks/all`
+    `${API_BASE_URL}/api/tasks/all`,
+    { headers }
   );
 
   const data = await parseResponse(response);
