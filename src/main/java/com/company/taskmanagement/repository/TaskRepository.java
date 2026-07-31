@@ -1,5 +1,6 @@
 package com.company.taskmanagement.repository;
 
+
 import java.time.LocalDate;
 import java.util.List;
 
@@ -9,35 +10,102 @@ import org.springframework.data.repository.query.Param;
 
 import com.company.taskmanagement.entity.Task;
 
+
 public interface TaskRepository extends JpaRepository<Task, Long> {
-	List<Task> findByAssignedToId(Long userId);
 
-	long countByStatus(String status);
 
-	long countByAssignedToId(Long userId);
+    List<Task> findByAssignedToId(Long userId);
 
-	long countByAssignedToIdAndStatus(Long userId, String status);
 
-	long countByDueDate(LocalDate dueDate);
+    long countByStatus(String status);
 
-	long countByDueDateBeforeAndStatusNot(LocalDate date, String status);
 
-	List<Task> findByAssignedToIsNull();
+    long countByAssignedToId(Long userId);
 
-	List<Task> findByAssignedToIdAndStatus(Long userId, String string);
 
-	List<Task> findByStatus(String status);
+    long countByAssignedToIdAndStatus(
+            Long userId,
+            String status
+    );
 
-	/**
-	 * TEMPORARY AUTH NOTE: X-User-Id header is used to identify the logged-in user.
-	 * This MUST be replaced with JWT/session-based authentication before production deployment.
-	 */
-	@Query("SELECT t FROM Task t WHERE t.assignedTo.siteCode = :siteCode")
-	List<Task> findByAssignedToSiteCode(@Param("siteCode") String siteCode);
 
-	@Query("SELECT COUNT(t) FROM Task t WHERE t.assignedTo.siteCode = :siteCode AND t.status = :status")
-	long countByAssignedToSiteCodeAndStatus(@Param("siteCode") String siteCode, @Param("status") String status);
+    long countByDueDate(LocalDate dueDate);
 
-	@Query("SELECT COUNT(t) FROM Task t WHERE t.assignedTo.siteCode = :siteCode")
-	long countByAssignedToSiteCode(@Param("siteCode") String siteCode);
+
+    long countByDueDateBeforeAndStatusNot(
+            LocalDate date,
+            String status
+    );
+
+
+    List<Task> findByAssignedToIsNull();
+
+
+    List<Task> findByAssignedToIdAndStatus(
+            Long userId,
+            String status
+    );
+
+
+    List<Task> findByStatus(String status);
+
+
+
+    /*
+     * Single site task fetch
+     *
+     * Example:
+     * RUNWALL_TECH
+     */
+    @Query("""
+            SELECT t 
+            FROM Task t
+            WHERE t.assignedTo.siteCode = :siteCode
+            """)
+    List<Task> findByAssignedToSiteCode(
+            @Param("siteCode") String siteCode
+    );
+
+
+
+    /*
+     * Multiple site task fetch
+     *
+     * Example:
+     * KALPATARU_3AB,KALPATARU_5AB
+     */
+    @Query("""
+            SELECT t
+            FROM Task t
+            WHERE t.assignedTo.siteCode IN :siteCodes
+            """)
+    List<Task> findByAssignedToSiteCodeIn(
+            @Param("siteCodes") List<String> siteCodes
+    );
+
+
+
+    @Query("""
+            SELECT COUNT(t)
+            FROM Task t
+            WHERE t.assignedTo.siteCode = :siteCode
+            AND t.status = :status
+            """)
+    long countByAssignedToSiteCodeAndStatus(
+            @Param("siteCode") String siteCode,
+            @Param("status") String status
+    );
+
+
+
+    @Query("""
+            SELECT COUNT(t)
+            FROM Task t
+            WHERE t.assignedTo.siteCode = :siteCode
+            """)
+    long countByAssignedToSiteCode(
+            @Param("siteCode") String siteCode
+    );
+
+
 }

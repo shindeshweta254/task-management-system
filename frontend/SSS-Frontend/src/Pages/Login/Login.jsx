@@ -94,7 +94,7 @@ function Login() {
         if (roleName === "DIRECTOR") {
           navigate("/director-dashboard");
         } else if (roleName === "SUPERVISOR") {
-          navigate("/dashboard");
+          navigate("/supervisor-dashboard");
         } else if (roleName === "MANAGER") {
           navigate("/manager-dashboard");
         } else {

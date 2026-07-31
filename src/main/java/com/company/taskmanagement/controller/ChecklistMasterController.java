@@ -52,22 +52,24 @@ public class ChecklistMasterController {
                 .collect(Collectors.toList());
     }
 
-	@GetMapping("/sheet")
-	public List<ChecklistMaster> getChecklistBySheet(
-			@RequestParam String sheetName,
-			HttpServletRequest request) {
+    @GetMapping("/sheet")
+    public List<ChecklistMaster> getChecklistBySheet(
+            @RequestParam("sheetName") String sheetName,
+            HttpServletRequest request) {
 
-		User currentUser = accessService.resolveUser(request);
-		List<ChecklistMaster> results = checklistMasterService.getChecklistBySheet(sheetName);
-		// Filter by site access
-		return results.stream()
-				.filter(c -> {
-					String siteName = c.getSiteName();
-					if (siteName == null) return false;
-					return accessService.hasSiteAccess(currentUser, siteName);
-				})
-				.collect(Collectors.toList());
-	}
+        User currentUser = accessService.resolveUser(request);
+
+        List<ChecklistMaster> results =
+                checklistMasterService.getChecklistBySheet(sheetName);
+
+        return results.stream()
+                .filter(c -> {
+                    String siteName = c.getSiteName();
+                    return siteName != null
+                            && accessService.hasSiteAccess(currentUser, siteName);
+                })
+                .collect(Collectors.toList());
+    }
 
 	@GetMapping("/my-checklists")
 	public List<ChecklistMaster> getMyChecklists(HttpServletRequest request) {

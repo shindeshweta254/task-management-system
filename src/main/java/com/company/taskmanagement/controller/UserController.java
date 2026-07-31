@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -109,7 +110,7 @@ public class UserController {
 		return UserDTO.fromUser(currentUser);
 	}
 
-	@GetMapping("/my-site-team")
+@GetMapping("/my-site-team")
 	public List<UserDTO> getMySiteTeam(HttpServletRequest request) {
 		User currentUser = accessService.resolveUser(request);
 		List<User> siteUsers = userService.getUsersBySiteCode(currentUser.getSiteCode());
@@ -118,21 +119,31 @@ public class UserController {
 				.collect(Collectors.toList());
 	}
 
-	@GetMapping("/{employeeId}/profile")
-	public UserDTO getEmployeeProfile(
-			@PathVariable String employeeId,
-			HttpServletRequest request) {
+@GetMapping("/site/{siteCode}")
+public List<UserDTO> getUsersBySiteCode(
+        @PathVariable("siteCode") String siteCode
+) {
+    List<User> siteUsers = userService.getUsersBySiteCode(siteCode);
 
-		User currentUser = accessService.resolveUser(request);
-		User targetUser = userService.findUserByEmployeeId(employeeId);
+    return siteUsers.stream()
+            .map(UserDTO::fromUser)
+            .collect(Collectors.toList());
+}
+@GetMapping("/{employeeId}/profile")
+public UserDTO getEmployeeProfile(
+        @PathVariable("employeeId") String employeeId,
+        HttpServletRequest request) {
 
-		if (targetUser == null) {
-			throw new RuntimeException("User not found with employeeId: " + employeeId);
-		}
+    User currentUser = accessService.resolveUser(request);
+    User targetUser = userService.findUserByEmployeeId(employeeId);
 
-		accessService.validateTargetEmployee(currentUser, targetUser);
-		return UserDTO.fromUser(targetUser);
-	}
+    if (targetUser == null) {
+        throw new RuntimeException("User not found with employeeId: " + employeeId);
+    }
+
+    accessService.validateTargetEmployee(currentUser, targetUser);
+    return UserDTO.fromUser(targetUser);
+}
 
 	@PostMapping("/add-employee")
 	public UserDTO addEmployee(
@@ -157,5 +168,14 @@ public class UserController {
 		// Force EMPLOYEE role for supervisor-added users
 		User saved = userService.saveUser(newUser);
 		return UserDTO.fromUser(saved);
+	}
+	
+	@GetMapping("/supervisor/employees")
+	public List<User> getSupervisorEmployees(
+	        @RequestHeader("X-User-Id") Long userId
+	){
+
+	    return userService.getSupervisorEmployees(userId);
+
 	}
 }

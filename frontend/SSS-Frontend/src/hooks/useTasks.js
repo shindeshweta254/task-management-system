@@ -23,10 +23,10 @@ export function useTasks(user) {
 
       let taskData = [];
 
+      // Only Director sees all tasks; Supervisor/Employee see only their own
       const canViewAllTasks =
         roleName === "DIRECTOR" ||
-        roleName === "ADMIN" ||
-        roleName === "MANAGER";
+        roleName === "ADMIN";
 
       if (canViewAllTasks) {
         taskData = await fetchAllTasks();

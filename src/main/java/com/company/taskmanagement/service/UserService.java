@@ -17,6 +17,7 @@ import com.company.taskmanagement.entity.Role;
 import com.company.taskmanagement.entity.User;
 import com.company.taskmanagement.repository.RoleRepository;
 import com.company.taskmanagement.repository.UserRepository;
+import java.util.Arrays;
 
 @Service
 public class UserService {
@@ -26,7 +27,8 @@ public class UserService {
 
 	@Autowired
 	private RoleRepository roleRepository;
-
+	
+	
 	// Normal user save karne ke liye
 	public User saveUser(User user) {
 
@@ -153,23 +155,6 @@ public class UserService {
 				);
 			}
 
-			/*
-			 * Excel columns:
-			 *
-			 * Column 0 = NAME
-			 * Column 1 = EMP ID
-			 * Column 2 = DEPARTMENT
-			 * Column 3 = MOBILE NO.
-			 * Column 4 = DOJ
-			 * Column 5 = DESIGNATION
-			 * Column 6 = GENDER
-			 * Column 7 = MAIL ID
-			 * Column 8 = DOB
-			 *
-			 * Row 0 = Header
-			 * Row 1 = Blank
-			 * Row 2 se employee data start
-			 */
 
 			for (
 				int rowIndex = 2;
@@ -416,4 +401,40 @@ public class UserService {
 	public List<User> getUsersBySiteCode(String siteCode) {
 		return userRepository.findBySiteCode(siteCode);
 	}
+	
+	/**
+	 * Supervisor ke site code ke hisaab se employees fetch karna
+	 */
+	public List<User> getSupervisorEmployees(Long userId) {
+
+	    User supervisor = userRepository.findById(userId)
+	            .orElseThrow(() ->
+	                    new RuntimeException("Supervisor not found")
+	            );
+
+	    String siteCode = supervisor.getSiteCode();
+
+	    if(siteCode == null || siteCode.trim().isEmpty()) {
+	        throw new RuntimeException(
+	                "Supervisor site code missing"
+	        );
+	    }
+
+	    if("ALL".equalsIgnoreCase(siteCode.trim())) {
+	        return userRepository.findAll();
+	    }
+
+	    if(siteCode.contains(",")) {
+	        List<String> sites =
+	                Arrays.stream(siteCode.split(","))
+	                        .map(String::trim)
+	                        .toList();
+	        return userRepository.findBySiteCodeIn(sites);
+	    }
+
+	    return userRepository.findBySiteCode(
+	            siteCode.trim()
+	    );
+	}
+
 }

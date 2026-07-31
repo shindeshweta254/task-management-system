@@ -22,4 +22,5 @@ public interface UserRepository
 	List<User> findBySiteCode(String siteCode);
 
 	long countBySiteCode(String siteCode);
+	List<User> findBySiteCodeIn(List<String> siteCodes);
 }

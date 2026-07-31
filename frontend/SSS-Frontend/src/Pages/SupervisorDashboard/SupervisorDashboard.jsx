@@ -10,6 +10,7 @@ function SupervisorDashboard() {
   const userName = user.name || "Supervisor";
   const department = user.department || "-";
   const employeeId = user.employeeId || "-";
+  const siteCode = user.siteCode || "";
 
   const nameParts = userName.trim().split(" ");
   const initials =
@@ -51,7 +52,10 @@ function SupervisorDashboard() {
 
       const fetchUsers = async () => {
         try {
-          const res = await fetch("http://localhost:8080/api/users", { headers });
+          const url = siteCode
+            ? `http://localhost:8080/api/users/site/${encodeURIComponent(siteCode)}`
+            : "http://localhost:8080/api/users";
+          const res = await fetch(url, { headers });
           if (!res.ok) return [];
           const data = await res.json();
           return Array.isArray(data) ? data : [];
@@ -118,7 +122,7 @@ function SupervisorDashboard() {
           <div className="sv-avatar">{initials}</div>
           <div>
             <h2>Welcome, {userName}! 👋</h2>
-            <p>ID: {employeeId} &nbsp;|&nbsp; Dept: {department} &nbsp;|&nbsp; Role: SUPERVISOR</p>
+            <p>ID: {employeeId} &nbsp;|&nbsp; Dept: {department} &nbsp;|&nbsp; Site: {siteCode || "-"} &nbsp;|&nbsp; Role: SUPERVISOR</p>
           </div>
         </div>
         <img src="/logo.png" alt="logo" className="sv-hero-logo" />

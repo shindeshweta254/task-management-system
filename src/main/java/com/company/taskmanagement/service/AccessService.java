@@ -33,6 +33,12 @@ public class AccessService {
     private static final String SP001 = "SP001";
     private static final String SP002 = "SP002";
 
+    // Global supervisors – these supervisors see ALL sites.
+    // Add their employee IDs here (case-insensitive).
+    private static final Set<String> GLOBAL_SUPERVISOR_EMPLOYEE_IDS = Set.of(
+        "SP003"  // Replace with actual global supervisor employee IDs
+    );
+
     // Known role IDs from database
     private static final long ROLE_ADMIN = 1L;
     private static final long ROLE_MANAGER = 2L;
@@ -155,6 +161,13 @@ public class AccessService {
         return SP002.equalsIgnoreCase(user.getEmployeeId());
     }
 
+    /** Returns true if this supervisor is a GLOBAL supervisor who can see ALL sites. */
+    public boolean isGlobalSupervisor(User user) {
+        return isSupervisor(user) && 
+               user.getEmployeeId() != null && 
+               GLOBAL_SUPERVISOR_EMPLOYEE_IDS.contains(user.getEmployeeId().toUpperCase());
+    }
+
     public boolean isDirector(User user) {
         return user.getRole() != null && user.getRole().getId() == ROLE_DIRECTOR;
     }
@@ -202,8 +215,8 @@ public class AccessService {
             return;
         }
 
-        // SP001, Admin, Director can access anyone
-        if (isSP001(currentUser) || isAdmin(currentUser) || isDirector(currentUser)) {
+// SP001, Admin, Director, Global Supervisor can access anyone
+        if (isSP001(currentUser) || isAdmin(currentUser) || isDirector(currentUser) || isGlobalSupervisor(currentUser)) {
             return;
         }
 
@@ -271,8 +284,8 @@ public class AccessService {
             }
         }
 
-        // SP001, Admin, Director can access any task
-        if (isSP001(currentUser) || isAdmin(currentUser) || isDirector(currentUser)) {
+// SP001, Admin, Director, Global Supervisor can access any task
+        if (isSP001(currentUser) || isAdmin(currentUser) || isDirector(currentUser) || isGlobalSupervisor(currentUser)) {
             return;
         }
 
@@ -328,8 +341,8 @@ public class AccessService {
      * Filter a list of users to only those accessible by the current user.
      */
     public List<User> filterUsersByAccess(User currentUser, List<User> allUsers) {
-        // SP001, Admin, Director see all
-        if (isSP001(currentUser) || isAdmin(currentUser) || isDirector(currentUser)) {
+        // SP001, Admin, Director, Global Supervisor see all
+        if (isSP001(currentUser) || isAdmin(currentUser) || isDirector(currentUser) || isGlobalSupervisor(currentUser)) {
             return allUsers;
         }
         // SP002 sees all (operational only - no director confidential)
@@ -360,8 +373,8 @@ public class AccessService {
      * Uses the assignedTo user's site_code for site-based filtering.
      */
     public List<Task> filterTasksByAccess(User currentUser, List<Task> allTasks) {
-        // Elevated users see all
-        if (hasElevatedAccess(currentUser)) {
+        // Elevated users and global supervisors see all
+        if (hasElevatedAccess(currentUser) || isGlobalSupervisor(currentUser)) {
             return allTasks;
         }
         // SP002 sees all operational

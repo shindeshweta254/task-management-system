@@ -140,24 +140,44 @@ function DirectorDashboard() {
   };
 
   const safeFetch = async (url, fallbackValue) => {
-    try {
-      const response = await fetch(url);
-      return await readResponse(response, fallbackValue);
-    } catch (error) {
-      console.error(`API request failed: ${url}`, error);
-      return fallbackValue;
-    }
-  };
+  try {
+    const loggedInUser = JSON.parse(localStorage.getItem("user")) || {};
+
+    const response = await fetch(url, {
+      headers: {
+        "X-User-Id": String(
+          loggedInUser?.id || loggedInUser?.userId || ""
+        ),
+        "Content-Type": "application/json",
+      },
+    });
+
+    return await readResponse(response, fallbackValue);
+  } catch (error) {
+    console.error(`API request failed: ${url}`, error);
+    return fallbackValue;
+  }
+};
 
   const fetchAllTasks = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/tasks/all`);
-      return await readResponse(response, []);
-    } catch (error) {
-      console.error("All tasks API failed:", error);
-      return [];
-    }
-  };
+  try {
+    const loggedInUser = JSON.parse(localStorage.getItem("user")) || {};
+
+    const response = await fetch(`${API_BASE_URL}/api/tasks/all`, {
+      headers: {
+        "X-User-Id": String(
+          loggedInUser?.id || loggedInUser?.userId || ""
+        ),
+        "Content-Type": "application/json",
+      },
+    });
+
+    return await readResponse(response, []);
+  } catch (error) {
+    console.error("All tasks API failed:", error);
+    return [];
+  }
+};
 
   const calculateTodayAttendance = () => {
     try {
@@ -242,7 +262,10 @@ function DirectorDashboard() {
 
       const response = await fetch(`${API_BASE_URL}/api/users`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+       headers: {
+  "Content-Type": "application/json",
+  "X-User-Id": String(user?.id || user?.userId || ""),
+},
         body: JSON.stringify({
           name: newEmployee.name.trim(),
           employeeId: employeeIdValue,
@@ -322,9 +345,12 @@ function DirectorDashboard() {
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/users/import-staff`, {
-        method: "POST",
-        body: formData,
-      });
+  method: "POST",
+  headers: {
+    "X-User-Id": String(user?.id || user?.userId || ""),
+  },
+  body: formData,
+});
 
       const result = await readResponse(response, "Excel import successful");
 

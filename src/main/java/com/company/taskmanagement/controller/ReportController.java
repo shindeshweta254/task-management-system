@@ -108,15 +108,15 @@ public class ReportController {
 				})
 				.collect(Collectors.toList());
 	}
-
 	@GetMapping("/user/{userId}")
 	public List<Report> getReportsByUser(
-			@PathVariable Long userId,
-			HttpServletRequest request) {
+	        @PathVariable("userId") Long userId,
+	        HttpServletRequest request) {
 
-		accessService.resolveAndValidateTargetUser(request, userId);
-		return dailyReportService.getReportsByUser(userId);
-	}
+	    accessService.resolveAndValidateTargetUser(request, userId);
+
+	    return dailyReportService.getReportsByUser(userId);
+	} 
 
 	@GetMapping("/me")
 	public List<Report> getMyReports(HttpServletRequest request) {

@@ -1,246 +1,493 @@
 package com.company.taskmanagement.controller;
 
+
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.company.taskmanagement.dto.UserDTO;
 import com.company.taskmanagement.entity.Task;
 import com.company.taskmanagement.entity.User;
-import com.company.taskmanagement.repository.TaskRepository;
 import com.company.taskmanagement.service.AccessService;
 import com.company.taskmanagement.service.TaskService;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176"})
+
+
+@CrossOrigin(origins = {
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5175",
+        "http://localhost:5176"
+})
 @RestController
 @RequestMapping("/api/tasks")
 public class TasController {
 
-	@Autowired
-	TaskService taskService;
 
-	@Autowired
-	private AccessService accessService;
+    @Autowired
+    private TaskService taskService;
 
-	@Autowired
-	private TaskRepository taskRepository;
 
-	@PostMapping
-	public Task saveTask(@RequestBody Task task, HttpServletRequest request) {
-		accessService.resolveUser(request);
-		return taskService.saveTask(task);
-	}
+    @Autowired
+    private AccessService accessService;
 
-	@PutMapping("/{taskId}/{status}")
-	public Task updateTaskStatus(
-			@PathVariable Long taskId,
-			@PathVariable String status,
-			HttpServletRequest request) {
 
-		User currentUser = accessService.resolveUser(request);
-		Task task = taskService.getTaskById(taskId);
-		accessService.validateTaskAccess(currentUser, task);
-		return taskService.updateTaskStatus(taskId, status);
-	}
+    @PostMapping
+    public Task saveTask(
+            @RequestBody Task task,
+            HttpServletRequest request
+    ){
 
-	@GetMapping("/employee/{userId}")
-	public List<Task> getTasksByEmployee(
-			@PathVariable Long userId,
-			HttpServletRequest request) {
+        accessService.resolveUser(request);
 
-		accessService.resolveAndValidateTargetUser(request, userId);
-		return taskService.getTasksByEmployee(userId);
-	}
+        return taskService.saveTask(task);
 
-	// Owner/Admin (and other privileged roles) के लिए सभी tasks
-	@GetMapping("/all")
-	public List<Task> getAllTasksForOwner(HttpServletRequest request) {
-		User currentUser = accessService.resolveUser(request);
-		List<Task> allTasks = taskService.getAllTasks();
-		return accessService.filterTasksByAccess(currentUser, allTasks);
-	}
+    }
 
-	@GetMapping("/count/total")
-	public long totalTasks(HttpServletRequest request) {
-		User currentUser = accessService.resolveUser(request);
-		List<Task> allTasks = taskService.getAllTasks();
-		return accessService.filterTasksByAccess(currentUser, allTasks).size();
-	}
 
-	@GetMapping("/count/pending")
-	public long pendingTasks(HttpServletRequest request) {
-		User currentUser = accessService.resolveUser(request);
-		List<Task> allTasks = taskService.getPendingTasksList();
-		return accessService.filterTasksByAccess(currentUser, allTasks).size();
-	}
 
-	@GetMapping("/count/completed")
-	public long completedTasks(HttpServletRequest request) {
-		User currentUser = accessService.resolveUser(request);
-		List<Task> allTasks = taskService.getCompletedTasksList();
-		return accessService.filterTasksByAccess(currentUser, allTasks).size();
-	}
+    @PutMapping("/{taskId}/{status}")
+    public Task updateTaskStatus(
+            @PathVariable Long taskId,
+            @PathVariable String status,
+            HttpServletRequest request
+    ){
 
-	@DeleteMapping("/{taskId}")
-	public String deleteTask(
-			@PathVariable Long taskId,
-			HttpServletRequest request) {
+        User currentUser =
+                accessService.resolveUser(request);
 
-		User currentUser = accessService.resolveUser(request);
-		Task task = taskService.getTaskById(taskId);
-		accessService.validateTaskAccess(currentUser, task);
-		taskService.deleteTask(taskId);
-		return "Task Deleted Successfully";
-	}
 
-	@PutMapping("/progress/{taskId}/{progress}")
-	public Task updateProgress(
-			@PathVariable Long taskId,
-			@PathVariable Integer progress,
-			HttpServletRequest request) {
+        Task task =
+                taskService.getTaskById(taskId);
 
-		User currentUser = accessService.resolveUser(request);
-		Task task = taskService.getTaskById(taskId);
-		accessService.validateTaskAccess(currentUser, task);
-		return taskService.updateProgress(taskId, progress);
-	}
 
-	@GetMapping("/deadline-today")
-	public long deadlineToday(HttpServletRequest request) {
-		User currentUser = accessService.resolveUser(request);
-		List<Task> allTasks = taskService.getAllTasks();
-		return accessService.filterTasksByAccess(currentUser, allTasks).stream()
-				.filter(t -> t.getDueDate() != null && 
-					java.time.LocalDate.now().equals(t.getDueDate()))
-				.count();
-	}
-	
-	@GetMapping("/available")
-	public List<Task> getAvailableTasks(HttpServletRequest request) {
-		accessService.resolveUser(request);
-		return taskService.getAvailableTasks();
-	}
+        accessService.validateTaskAccess(
+                currentUser,
+                task
+        );
 
-	@PostMapping("/take/{taskId}/{userId}")
-	public Task takeTask(
-			@PathVariable Long taskId,
-			@PathVariable Long userId,
-			HttpServletRequest request) {
 
-		accessService.resolveAndValidateTargetUser(request, userId);
-		return taskService.takeTask(taskId, userId);
-	}
+        return taskService.updateTaskStatus(
+                taskId,
+                status
+        );
 
-	@PutMapping("/approve/{taskId}")
-	public Task approveTask(
-			@PathVariable Long taskId,
-			HttpServletRequest request) {
+    }
 
-		User currentUser = accessService.resolveUser(request);
-		Task task = taskService.getTaskById(taskId);
-		accessService.validateTaskAccess(currentUser, task);
-		return taskService.updateTaskStatus(taskId, "APPROVED");
-	}
+    @GetMapping("/employee/{userId}")
+    public List<Task> getTasksByEmployee(
+            @PathVariable("userId") Long userId,
+            HttpServletRequest request
+    ){
 
-	@PutMapping("/changes/{taskId}")
-	public Task changesRequested(
-			@PathVariable Long taskId,
-			HttpServletRequest request) {
+        accessService
+                .resolveAndValidateTargetUser(
+                        request,
+                        userId
+                );
 
-		User currentUser = accessService.resolveUser(request);
-		Task task = taskService.getTaskById(taskId);
-		accessService.validateTaskAccess(currentUser, task);
-		return taskService.updateTaskStatus(taskId, "CHANGES_REQUESTED");
-	}
 
-	@PostMapping("/{taskId}/watchers/{userId}")
-	public Task addWatcher(
-			@PathVariable Long taskId,
-			@PathVariable Long userId,
-			HttpServletRequest request) {
+        return taskService
+                .getTasksByEmployee(userId);
 
-		User currentUser = accessService.resolveUser(request);
-		Task task = taskService.getTaskById(taskId);
-		accessService.validateTaskAccess(currentUser, task);
-		return taskService.addWatcher(taskId, userId);
-	}
+    }
 
-	@GetMapping("/{taskId}/watchers")
-	public List<UserDTO> getWatchers(
-			@PathVariable Long taskId,
-			HttpServletRequest request) {
 
-		User currentUser = accessService.resolveUser(request);
-		Task task = taskService.getTaskById(taskId);
-		accessService.validateTaskAccess(currentUser, task);
-		return taskService.getWatchers(taskId).stream()
-				.map(UserDTO::fromUser)
-				.collect(Collectors.toList());
-	}
-	
-	@GetMapping("/dashboard/{userId}/total")
-	public long employeeTotal(
-			@PathVariable Long userId,
-			HttpServletRequest request){
 
-		accessService.resolveAndValidateTargetUser(request, userId);
-	    return taskService.getEmployeeTotalTasks(userId);
-	}
+    /*
+     * FINAL ROLE BASED TASK ACCESS
+     *
+     * Director  -> ALL
+     * SP001     -> ALL
+     * Supervisor-> SITE WISE
+     * Employee  -> OWN TASK
+     */
 
-	@GetMapping("/dashboard/{userId}/pending")
-	public long employeePending(
-			@PathVariable Long userId,
-			HttpServletRequest request){
+    @GetMapping("/all")
+    public List<Task> getAllTasks(
+            HttpServletRequest request
+    ){
 
-		accessService.resolveAndValidateTargetUser(request, userId);
-	    return taskService.getEmployeePendingTasks(userId);
-	}
+        User currentUser =
+                accessService.resolveUser(request);
 
-	@GetMapping("/dashboard/{userId}/completed")
-	public long employeeCompleted(
-			@PathVariable Long userId,
-			HttpServletRequest request){
 
-		accessService.resolveAndValidateTargetUser(request, userId);
-	    return taskService.getEmployeeCompletedTasks(userId);
-	}
 
-	@GetMapping("/dashboard/{userId}/deadline")
-	public long employeeDeadline(
-			@PathVariable Long userId,
-			HttpServletRequest request){
+        // Director + SP001
 
-		accessService.resolveAndValidateTargetUser(request, userId);
-	    return taskService.getEmployeeDeadlineTasks(userId);
-	}
+        if(accessService.isDirector(currentUser)
+                ||
+           accessService.isSP001(currentUser)
+        ){
 
-	@GetMapping("/my-tasks")
-	public List<Task> getMyTasks(HttpServletRequest request) {
-		User currentUser = accessService.resolveUser(request);
-		return taskRepository.findByAssignedToId(currentUser.getId());
-	}
+            return taskService.getAllTasks();
 
-	@GetMapping("/my-site")
-	public List<Task> getMySiteTasks(HttpServletRequest request) {
-		User currentUser = accessService.resolveUser(request);
-		// For employees, return own tasks; for supervisors/SP001/SP002, return site tasks
-		if (accessService.isSupervisor(currentUser) || accessService.isManager(currentUser)
-				|| accessService.isSP001(currentUser) || accessService.isSP002(currentUser)
-				|| accessService.hasElevatedAccess(currentUser)) {
-			return taskRepository.findByAssignedToSiteCode(currentUser.getSiteCode());
-		}
-		return taskRepository.findByAssignedToId(currentUser.getId());
-	}
+        }
+
+
+        // Supervisor
+
+        if(currentUser.getRole()!=null
+                &&
+           "SUPERVISOR"
+           .equalsIgnoreCase(
+              currentUser.getRole().getRoleName()
+           )
+        ){
+
+            return taskService
+                    .getSupervisorSiteTasks(
+                            currentUser
+                    );
+
+        }
+
+
+        return taskService
+                .getTasksByEmployee(
+                        currentUser.getId()
+                );
+
+    }
+
+    @GetMapping("/count/total")
+    public long totalTasks(
+            HttpServletRequest request
+    ){
+
+        User currentUser =
+                accessService.resolveUser(request);
+
+
+        List<Task> tasks;
+
+
+        if(accessService.isDirector(currentUser)
+                ||
+           accessService.isSP001(currentUser)
+        ){
+
+            tasks =
+              taskService.getAllTasks();
+
+        }
+        else if(
+          currentUser.getRole()!=null
+          &&
+          "SUPERVISOR".equalsIgnoreCase(
+          currentUser.getRole().getRoleName())
+        ){
+
+            tasks =
+              taskService.getSupervisorSiteTasks(
+                      currentUser
+              );
+
+        }
+        else{
+
+            tasks =
+              taskService.getTasksByEmployee(
+                      currentUser.getId()
+              );
+
+        }
+
+
+        return tasks.size();
+
+    }
+
+
+    @GetMapping("/count/pending")
+    public long pendingTasks(
+            HttpServletRequest request
+    ){
+
+        User currentUser =
+                accessService.resolveUser(request);
+
+
+        return taskService
+                .getPendingTasksList()
+                .stream()
+                .filter(task ->
+                    accessService
+                    .filterTasksByAccess(
+                            currentUser,
+                            List.of(task)
+                    )
+                    .size()>0
+                )
+                .count();
+
+    }
+
+
+    @GetMapping("/count/completed")
+    public long completedTasks(
+            HttpServletRequest request
+    ){
+
+        User currentUser =
+                accessService.resolveUser(request);
+
+
+
+        return taskService
+                .getCompletedTasksList()
+                .stream()
+                .filter(task ->
+                    accessService
+                    .filterTasksByAccess(
+                            currentUser,
+                            List.of(task)
+                    )
+                    .size()>0
+                )
+                .count();
+
+    }
+
+
+    @DeleteMapping("/{taskId}")
+    public String deleteTask(
+            @PathVariable Long taskId,
+            HttpServletRequest request
+    ){
+
+        User currentUser =
+                accessService.resolveUser(request);
+
+
+        Task task =
+                taskService.getTaskById(taskId);
+
+
+        accessService.validateTaskAccess(
+                currentUser,
+                task
+        );
+
+
+        taskService.deleteTask(taskId);
+
+
+        return "Task Deleted Successfully";
+
+    }
+
+    @PutMapping("/progress/{taskId}/{progress}")
+    public Task updateProgress(
+            @PathVariable Long taskId,
+            @PathVariable Integer progress,
+            HttpServletRequest request
+    ){
+
+        User currentUser =
+                accessService.resolveUser(request);
+
+
+        Task task =
+                taskService.getTaskById(taskId);
+
+
+        accessService.validateTaskAccess(
+                currentUser,
+                task
+        );
+
+
+        return taskService.updateProgress(
+                taskId,
+                progress
+        );
+
+    }
+
+
+    @GetMapping("/deadline-today")
+    public long deadlineToday(
+            HttpServletRequest request
+    ){
+
+        User currentUser =
+                accessService.resolveUser(request);
+
+
+        return taskService
+                .getAllTasks()
+                .stream()
+                .filter(task ->
+
+                    task.getDueDate()!=null
+                    &&
+                    task.getDueDate()
+                    .equals(
+                    java.time.LocalDate.now()
+                    )
+
+                )
+                .filter(task ->
+                    accessService
+                    .filterTasksByAccess(
+                            currentUser,
+                            List.of(task)
+                    )
+                    .size()>0
+                )
+                .count();
+
+    }
+
+    @GetMapping("/available")
+    public List<Task> getAvailableTasks(
+            HttpServletRequest request
+    ){
+
+        accessService.resolveUser(request);
+
+        return taskService.getAvailableTasks();
+
+    }
+
+
+    @PostMapping("/take/{taskId}/{userId}")
+    public Task takeTask(
+            @PathVariable Long taskId,
+            @PathVariable Long userId,
+            HttpServletRequest request
+    ){
+
+        accessService
+                .resolveAndValidateTargetUser(
+                        request,
+                        userId
+                );
+
+
+        return taskService.takeTask(
+                taskId,
+                userId
+        );
+
+    }
+
+
+    @PutMapping("/approve/{taskId}")
+    public Task approveTask(
+            @PathVariable Long taskId,
+            HttpServletRequest request
+    ){
+
+        User currentUser =
+                accessService.resolveUser(request);
+
+
+        Task task =
+                taskService.getTaskById(taskId);
+
+
+        accessService.validateTaskAccess(
+                currentUser,
+                task
+        );
+
+
+        return taskService.updateTaskStatus(
+                taskId,
+                "APPROVED"
+        );
+
+    }
+
+
+    @PutMapping("/changes/{taskId}")
+    public Task changesRequested(
+            @PathVariable Long taskId,
+            HttpServletRequest request
+    ){
+
+        User currentUser =
+                accessService.resolveUser(request);
+
+
+        Task task =
+                taskService.getTaskById(taskId);
+
+
+        accessService.validateTaskAccess(
+                currentUser,
+                task
+        );
+
+
+        return taskService.updateTaskStatus(
+                taskId,
+                "CHANGES_REQUESTED"
+        );
+
+    }
+
+
+    @PostMapping("/{taskId}/watchers/{userId}")
+    public Task addWatcher(
+            @PathVariable Long taskId,
+            @PathVariable Long userId,
+            HttpServletRequest request
+    ){
+
+        User currentUser =
+                accessService.resolveUser(request);
+
+
+        Task task =
+                taskService.getTaskById(taskId);
+
+
+        accessService.validateTaskAccess(
+                currentUser,
+                task
+        );
+
+
+        return taskService.addWatcher(
+                taskId,
+                userId
+        );
+
+    }
+
+    @GetMapping("/{taskId}/watchers")
+    public List<UserDTO> getWatchers(
+            @PathVariable Long taskId,
+            HttpServletRequest request
+    ){
+
+        User currentUser =
+                accessService.resolveUser(request);
+
+
+        Task task =
+                taskService.getTaskById(taskId);
+
+
+        accessService.validateTaskAccess(
+                currentUser,
+                task
+        );
+
+
+        return taskService
+                .getWatchers(taskId)
+                .stream()
+                .map(UserDTO::fromUser)
+                .collect(Collectors.toList());
+
+    }
+   
 }

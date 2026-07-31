@@ -29,6 +29,8 @@ function getLoggedInUser() {
 
 function Task() {
   const user = getLoggedInUser();
+  const roleName = String(user?.roleName || user?.role?.roleName || "").toUpperCase();
+  const isDirector = roleName === "DIRECTOR";
 
   const {
     tasks,
@@ -208,7 +210,7 @@ function Task() {
       <div className="task-page">
         <div className="task-header">
           <div>
-            <h2>All Assigned Tasks</h2>
+            <h2>{isDirector ? "All Tasks" : "My Tasks"}</h2>
 
             <p className="task-count">
               Total tasks: {filteredTasks.length}
