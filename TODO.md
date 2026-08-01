@@ -1,38 +1,52 @@
-# Attendance Module - MySQL Integration
+# Checklist Implementation Status
 
-## Tasks
+## Backend (ALREADY COMPLETE — BUILD_SUCCESS)
+- [x] All ChecklistMaster, ChecklistReport, ChecklistSheet, ChecklistAuditLog entities
+- [x] All repositories, services, controllers
+- [x] ChecklistMasterController: GET /api/checklist-master/sheets endpoint
+- [x] ChecklistSheetController: save, list, get, delete, master layout
+- [x] ChecklistReportController: batch-save, photo, audit, submissions
 
-### Backend Fix (Critical Bug)
-- [x] Fix AttendanceController.checkIn() - Resolved user is now set on attendance object via `attendance.setUser(currentUser)`
-- [x] Fix AttendanceController.checkOut() - Added ownership validation checking that attendance belongs to current user
-- [x] Add AttendanceService.getAttendanceById() - Helper method to look up attendance by ID
+## Frontend — Existing Checklist (Checklist.jsx)
+- [x] Sheet names load from DB (`/api/checklist-master/sheets`) with fallback
+- [x] "+ New Checklist" button navigates to `/new-checklist`
+- [x] "Columns" button opens column builder modal
+- [x] Column builder: add/rename/remove columns (non-locked)
+- [x] Dynamic rows from checklist_master (fixes missing rows issue)
+- [x] Excel-like editable table with inputs, selects, time, photo, location
+- [x] Row photo upload with preview + GPS capture
+- [x] Location capture with reverse geocoding
+- [x] Save via batch-save to backend + master layout save
+- [x] Print/PDF, Preview, Download Excel, Summary cards
+- [x] Saved reports history tab with date filter
+- [x] Audit history modal for each row
+- [x] summary computation fixed
 
-### Frontend Changes
+## Frontend — New Custom Checklist (NewChecklist.jsx)
+- [x] Blank Excel-style grid with 20 minimum rows
+- [x] Default columns: Sr No, Employee, Date, Action
+- [x] Employee dropdown loads from site team
+- [x] Column builder modal (add/rename/remove columns)
+- [x] Photo upload with camera/GPS capture
+- [x] Location capture with GPS
+- [x] Save to backend via `/api/checklist-sheet/save`
+- [x] Print/PDF support
+- [x] Route added: `/new-checklist`
 
-#### 1. attendanceApi.js - Implement Real API Functions
-- [x] Implement `checkIn(location)` - POST /api/attendance/checkin
-- [x] Implement `checkOut(attendanceId)` - PUT /api/attendance/checkout/{attendanceId}
-- [x] Implement `fetchAllAttendance()` - GET /api/attendance
-- [x] Implement `fetchMyAttendance()` - GET /api/attendance/me
-- [x] Implement `fetchMySiteAttendance()` - GET /api/attendance/my-site
+## CSS
+- [x] New checklist button styles
+- [x] Column builder modal styles
+- [x] Back button styles
+- [x] Sheet title input styles
 
-#### 2. useAttendance.js - Add Backend Integration
-- [x] Import new API functions from attendanceApi
-- [x] Add `backendAttendance` state + fetching based on role
-- [x] Added `backendToLocalRecord()` converter for backend-to-UI format
-- [x] Added `mergedAttendance` combining backend + localStorage data
-- [x] Modify punchIn() to also call backend checkIn API after localStorage save
-- [x] Modify punchOut() to also call backend checkOut API after localStorage save
-- [x] Keep all existing localStorage functionality exactly as-is
-- [x] Role-based backend fetching: Director→all, Supervisor→site, Employee→own
+## Director Updated Checklist (UpdatedChecklist.jsx)
+- [x] View all supervisor submissions via `/api/checklist-report/all-submissions`
+- [x] Daily / Weekly / Monthly report filter (Owner Reports tab)
+- [x] Date, Site, Supervisor filters on Updated Checklist tab
+- [x] View modal shows exact Excel sheet (rows, employee, status, photo, location, date)
+- [x] Print (window.print), Excel (CSV download), PDF (print-to-PDF)
+- [x] Director-only access guarded on backend (`/all-submissions` + `/director/view`)
 
-#### 3. attendance.jsx - Update Table Display
-- [x] Table columns: Employee Name, Date, Check In Time, Check Out Time, Status, Location
-- [x] Director sees ALL employees attendance (via backend GET /api/attendance)
-- [x] Supervisor sees site employees (via backend GET /api/attendance/my-site)
-- [x] Employee sees only own records (via backend GET /api/attendance/me)
-- [x] Status badge styling for Present, Checked In, Half Day, Holiday, Week Off, Absent
-- [x] Location display in table
-
-#### 4. attendance.css - Status Badge Styles
-- [x] Added status-badge CSS classes for table status display
+## Build Verification
+- [x] `npm run build` — PASS (vite v8.0.16, 122 modules transformed, built successfully)
+- [ ] Backend restart & live test (run `mvn spring-boot:run` / restart backend and verify endpoints)

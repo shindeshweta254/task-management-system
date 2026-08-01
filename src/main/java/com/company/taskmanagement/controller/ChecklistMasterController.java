@@ -42,11 +42,14 @@ public class ChecklistMasterController {
     public List<ChecklistMaster> getAllChecklist(HttpServletRequest request) {
         User currentUser = accessService.resolveUser(request);
         List<ChecklistMaster> allChecklist = checklistMasterService.getAllChecklist();
-        // Filter by user's site access
+        // If user has no site restrictions, show all
+        boolean userHasNoSiteRestriction = currentUser.getSiteCode() == null
+                || currentUser.getSiteCode().isBlank();
         return allChecklist.stream()
                 .filter(c -> {
                     String siteName = c.getSiteName();
-                    if (siteName == null) return false;
+                    if (userHasNoSiteRestriction) return true;
+                    if (siteName == null || siteName.isBlank()) return true;
                     return accessService.hasSiteAccess(currentUser, siteName);
                 })
                 .collect(Collectors.toList());
@@ -62,38 +65,66 @@ public class ChecklistMasterController {
         List<ChecklistMaster> results =
                 checklistMasterService.getChecklistBySheet(sheetName);
 
-        return results.stream()
+        // If user has no site restrictions (null/blank siteCode), show all
+        boolean userHasNoSiteRestriction = currentUser.getSiteCode() == null
+                || currentUser.getSiteCode().isBlank();
+
+        List<ChecklistMaster> filtered = results.stream()
                 .filter(c -> {
                     String siteName = c.getSiteName();
-                    return siteName != null
-                            && accessService.hasSiteAccess(currentUser, siteName);
+                    // If user has no site restrictions, show all items
+                    if (userHasNoSiteRestriction) return true;
+                    // If checklist item has no site, show to all
+                    if (siteName == null || siteName.isBlank()) return true;
+                    // Otherwise filter by site access
+                    return accessService.hasSiteAccess(currentUser, siteName);
                 })
                 .collect(Collectors.toList());
+
+        // FIX: If filtering by site returns zero rows, fall back to the full
+        // sheet so rows always appear (Excel-like behavior).
+        if (filtered.isEmpty() && !results.isEmpty()) {
+            return results;
+        }
+
+        return filtered;
     }
 
 	@GetMapping("/my-checklists")
 	public List<ChecklistMaster> getMyChecklists(HttpServletRequest request) {
 		User currentUser = accessService.resolveUser(request);
 		List<ChecklistMaster> allChecklist = checklistMasterService.getAllChecklist();
-		// Filter by user's site access
+		// If user has no site restrictions, show all
+		boolean userHasNoSiteRestriction = currentUser.getSiteCode() == null
+				|| currentUser.getSiteCode().isBlank();
 		return allChecklist.stream()
 				.filter(c -> {
 					String siteName = c.getSiteName();
-					if (siteName == null) return false;
+					if (userHasNoSiteRestriction) return true;
+					if (siteName == null || siteName.isBlank()) return true;
 					return accessService.hasSiteAccess(currentUser, siteName);
 				})
 				.collect(Collectors.toList());
+	}
+
+@GetMapping("/sheets")
+	public List<String> getAvailableSheetNames(HttpServletRequest request) {
+		accessService.resolveUser(request);
+		return checklistMasterService.getAllSheetNames();
 	}
 
 	@GetMapping("/my-site")
 	public List<ChecklistMaster> getMySiteChecklists(HttpServletRequest request) {
 		User currentUser = accessService.resolveUser(request);
 		List<ChecklistMaster> allChecklist = checklistMasterService.getAllChecklist();
-		// Filter by user's site access
+		// If user has no site restrictions, show all
+		boolean userHasNoSiteRestriction = currentUser.getSiteCode() == null
+				|| currentUser.getSiteCode().isBlank();
 		return allChecklist.stream()
 				.filter(c -> {
 					String siteName = c.getSiteName();
-					if (siteName == null) return false;
+					if (userHasNoSiteRestriction) return true;
+					if (siteName == null || siteName.isBlank()) return true;
 					return accessService.hasSiteAccess(currentUser, siteName);
 				})
 				.collect(Collectors.toList());

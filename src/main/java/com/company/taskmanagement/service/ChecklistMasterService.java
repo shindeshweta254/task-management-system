@@ -145,4 +145,14 @@ public class ChecklistMasterService {
 
     }
 
+    // ===========================
+    // GET ALL DISTINCT SHEET NAMES
+    // ===========================
+
+    public List<String> getAllSheetNames() {
+
+        return checklistMasterRepository.findDistinctSheetNames();
+
+    }
+
 }

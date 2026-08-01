@@ -9,6 +9,7 @@ import Language from "./Pages/Language/Language";
 
 import Task from "./Pages/Task/task";
 import Checklist from "./Pages/Checklist/Checklist";
+import NewChecklist from "./Pages/Checklist/NewChecklist";
 import Attendance from "./Pages/Attendance/attendance";
 import Calendar from "./Pages/Calender/Calendar";
 import Projects from "./Pages/Project/Project";
@@ -19,6 +20,7 @@ import Reports from "./Pages/Reports/Reports";
 import Profile from "./Pages/Profile/Profile";
 import AddTask from "./Pages/AddTask/AddTask";
 import Notifications from "./Pages/Notifications/Notifications";
+import UpdatedChecklist from "./Pages/UpdatedChecklist/UpdatedChecklist";
 
 function App() {
   return (
@@ -39,6 +41,7 @@ function App() {
 
       <Route path="/task" element={<Task />} />
       <Route path="/checklist" element={<Checklist />} />
+      <Route path="/new-checklist" element={<NewChecklist />} />
       <Route path="/attendance" element={<Attendance />} />
       <Route path="/calendar" element={<Calendar />} />
       <Route path="/projects" element={<Projects />} />
@@ -46,7 +49,8 @@ function App() {
       <Route path="/team/:teamId" element={<TeamDetails />} />
 
       <Route path="/reports" element={<Reports />} />
-<Route path="/add-task" element={<AddTask />} />
+      <Route path="/updated-checklist" element={<UpdatedChecklist />} />
+      <Route path="/add-task" element={<AddTask />} />
       <Route path="/notifications" element={<Notifications />} />
       <Route path="/profile" element={<Profile />} />
     </Routes>

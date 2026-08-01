@@ -11,11 +11,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 import com.company.taskmanagement.entity.Report;
@@ -135,6 +137,68 @@ public class ReportController {
 		}
 		// For employees, return own reports
 		return dailyReportService.getReportsByUser(currentUser.getId());
+	}
+	
+	@PostMapping("/checklist-upload")
+	public Report uploadChecklistReport(
+	        @RequestParam("userId") Long userId,
+	        @RequestParam("completedWork") String completedWork,
+	        @RequestParam("pendingWork") String pendingWork,
+	        @RequestParam("issues") String issues,
+	        @RequestParam("latitude") Double latitude,
+	        @RequestParam("longitude") Double longitude,
+	        @RequestParam(value="locationAddress",required=false) String locationAddress,
+	        @RequestParam("proof") MultipartFile proof,
+	        HttpServletRequest request
+	) throws Exception {
+
+
+	    accessService.resolveAndValidateTargetUser(request,userId);
+
+
+	    Report report=new Report();
+
+	    report.setCompletedWork(completedWork);
+	    report.setPendingWork(pendingWork);
+	    report.setIssues(issues);
+
+	    report.setReportDate(LocalDate.now());
+
+	    report.setLatitude(latitude);
+	    report.setLongitude(longitude);
+	    report.setLocationAddress(locationAddress);
+
+
+	    String folder="uploads/checklist";
+
+	    Path path=Paths.get(folder);
+
+	    if(!Files.exists(path)){
+	        Files.createDirectories(path);
+	    }
+
+
+	    String fileName=
+	    System.currentTimeMillis()+"_"+proof.getOriginalFilename();
+
+
+	    Files.copy(
+	        proof.getInputStream(),
+	        path.resolve(fileName)
+	    );
+
+
+	    report.setProofFileName(fileName);
+	    report.setProofFilePath(path.resolve(fileName).toString());
+
+
+	    User user=new User();
+	    user.setId(userId);
+
+	    report.setUser(user);
+
+
+	    return dailyReportService.saveReport(report);
 	}
 }
 

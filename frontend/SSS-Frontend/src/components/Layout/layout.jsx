@@ -21,6 +21,7 @@ import {
   FaSearch,
   FaHome,
   FaPlus,
+  FaClipboardCheck,
 } from "react-icons/fa";
 
 
@@ -239,10 +240,18 @@ function Layout({ title, children }) {
     },
 
 
-    {
+{
       label: "Upload Excel",
       path: "/director-dashboard?tab=upload-excel",
       icon: <FaFileExcel />,
+      directorOnly: true
+    },
+
+
+    {
+      label: "Updated Checklist",
+      path: "/updated-checklist",
+      icon: <FaClipboardCheck />,
       directorOnly: true
     },
 
