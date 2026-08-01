@@ -10,6 +10,7 @@ import {
   FaUserPlus,
   FaFileExcel,
   FaSyncAlt,
+  FaTachometerAlt,
 } from "react-icons/fa";
 
 import Layout from "../../components/Layout/Layout";
@@ -26,6 +27,8 @@ import {
   fetchStaffUploadsMy,
   uploadStaffHistory,
 } from "../../api/excelUploadHistoryApi";
+
+import { fetchAllAttendance } from "../../api/directorDashboardApi";
 
 const API_BASE_URL = "http://localhost:8080";
 
@@ -180,33 +183,15 @@ function DirectorDashboard() {
   }
 };
 
-  const calculateTodayAttendance = () => {
-    try {
-      const attendanceData =
-        JSON.parse(localStorage.getItem("attendanceData")) || [];
-      const today = new Date().toLocaleDateString("en-IN");
-      return attendanceData.filter(
-        (attendance) =>
-          attendance?.date === today && attendance?.punchIn
-      ).length;
-    } catch (error) {
-      console.error("Attendance calculation error:", error);
-      return 0;
-    }
-  };
-
   const loadDashboardData = useCallback(async () => {
     setLoading(true);
     setPageError("");
-
-    if (searchParams.get("tab") !== "dashboard") {
-      setSearchParams({ tab: "dashboard" });
-    }
 
     try {
       const [
         usersData,
         tasksData,
+        attendanceData,
         totalTasksCount,
         pendingTasksCount,
         completedTasksCount,
@@ -214,6 +199,7 @@ function DirectorDashboard() {
       ] = await Promise.all([
         safeFetch(`${API_BASE_URL}/api/users`, []),
         fetchAllTasks(),
+fetchAllAttendance(),
         safeFetch(`${API_BASE_URL}/api/tasks/count/total`, 0),
         safeFetch(`${API_BASE_URL}/api/tasks/count/pending`, 0),
         safeFetch(`${API_BASE_URL}/api/tasks/count/completed`, 0),
@@ -222,13 +208,22 @@ function DirectorDashboard() {
 
       const validEmployees = Array.isArray(usersData) ? usersData : [];
       const validTasks = Array.isArray(tasksData) ? tasksData : [];
+      const validAttendance = Array.isArray(attendanceData)
+        ? attendanceData
+        : [];
 
       setEmployees(validEmployees);
       setTasks(validTasks);
+      setAttendance(validAttendance);
+
+      const todayISO = new Date().toISOString().split("T")[0];
+      const todaysAttendanceCount = validAttendance.filter(
+        (a) => String(a.date || "").startsWith(todayISO)
+      ).length;
 
       setStats({
         totalEmployees: validEmployees.length,
-        todayAttendance: calculateTodayAttendance(),
+        todayAttendance: todaysAttendanceCount,
         pendingTasks:
           Number(pendingTasksCount) ||
           validTasks.filter(
@@ -416,7 +411,44 @@ function DirectorDashboard() {
     window.URL.revokeObjectURL(url);
   };
 
-const directorTabs = [];
+const directorTabs = [
+  {
+    key: "dashboard",
+    label: "Dashboard",
+    icon: <FaTachometerAlt />,
+    onClick: () => setSearchParams({ tab: "dashboard" }),
+  },
+  {
+    key: "attendance",
+    label: "Attendance",
+    icon: <FaCalendarCheck />,
+    onClick: () => setSearchParams({ tab: "attendance" }),
+  },
+  {
+    key: "employees",
+    label: "Employees",
+    icon: <FaUsers />,
+    onClick: () => setSearchParams({ tab: "employees" }),
+  },
+  {
+    key: "tasks",
+    label: "Tasks",
+    icon: <FaTasks />,
+    onClick: () => setSearchParams({ tab: "tasks" }),
+  },
+  {
+    key: "add-employee",
+    label: "Add Employee",
+    icon: <FaUserPlus />,
+    onClick: () => setSearchParams({ tab: "add-employee" }),
+  },
+  {
+    key: "upload-excel",
+    label: "Upload Excel",
+    icon: <FaFileExcel />,
+    onClick: () => setSearchParams({ tab: "upload-excel" }),
+  },
+];
 
   return (
     <Layout title="Director Dashboard">
@@ -526,6 +558,18 @@ const directorTabs = [];
               </button>
             </div>
             <TaskTable tasks={tasks} />
+          </section>
+        )}
+
+{!loading && activeSection === "attendance" && (
+          <section className="director-card">
+            <div className="director-card-heading">
+              <div>
+                <h2>All Attendance</h2>
+                <p>{attendance.length} records found</p>
+              </div>
+            </div>
+            <AttendanceTable attendance={attendance} />
           </section>
         )}
 
@@ -736,6 +780,124 @@ function TaskTable({ tasks }) {
         </tbody>
       </table>
     </div>
+  );
+}
+
+function AttendanceTable({ attendance }) {
+  const [selfieModal, setSelfieModal] = useState(null);
+
+  const formatTime = (time) => {
+    if (!time) return "-";
+    if (typeof time === "string" && time.length >= 5) return time.substring(0, 5);
+    return String(time);
+  };
+
+  const formatHours = (hours) => {
+    if (hours == null) return "-";
+    const h = Math.floor(hours);
+    const m = Math.round((hours - h) * 60);
+    return `${h}h ${m}m`;
+  };
+
+  const getStatusBadge = (status) => {
+    const s = String(status || "").toUpperCase();
+    if (s === "PRESENT") return <span className="attendance-status present">Present</span>;
+    if (s === "LATE") return <span className="attendance-status late">Late</span>;
+    if (s === "ABSENT") return <span className="attendance-status absent">Absent</span>;
+    if (s === "HALF_DAY") return <span className="attendance-status half-day">Half Day</span>;
+    if (s === "HOLIDAY" || s === "WEEK_OFF") return <span className="attendance-status holiday">{status}</span>;
+    return <span className="attendance-status">{status || "-"}</span>;
+  };
+
+  const getLocationText = (item) => {
+    // Prefer location from attendance table directly
+    const loc = item.location || "";
+    const addr = item.checkInAddress || item.checkOutAddress || item.latestLiveAddress || "";
+    const lat = item.latitude;
+    const lng = item.longitude;
+    if (loc) return loc;
+    if (addr) return addr;
+    if (lat != null && lng != null) return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    return "-";
+  };
+
+  const getSelfieSrc = (item) => {
+    return item.selfie || item.selfieFilePath || item.selfieFileName || null;
+  };
+
+  return (
+    <>
+      <div className="director-table-wrapper">
+        <table className="director-table">
+          <thead>
+            <tr>
+              <th>Employee Name</th>
+              <th>Employee ID</th>
+              <th>Role</th>
+              <th>Date</th>
+              <th>Check-in</th>
+              <th>Check-out</th>
+              <th>Working Hours</th>
+              <th>Status</th>
+              <th>Location</th>
+              <th>Selfie</th>
+            </tr>
+          </thead>
+          <tbody>
+{attendance.length === 0 ? (
+              <tr>
+                <td colSpan={10} className="director-empty-cell">
+                  No attendance records found
+                </td>
+              </tr>
+            ) : (
+              attendance.map((item, idx) => {
+                const selfieSrc = getSelfieSrc(item);
+                return (
+                  <tr key={item.attendanceId || item.id || idx}>
+                    <td>{item.employeeName || "-"}</td>
+                    <td>{item.employeeId || "-"}</td>
+                    <td>{item.roleName || "-"}</td>
+                    <td>{item.date ? String(item.date).substring(0, 10) : "-"}</td>
+                    <td>{formatTime(item.checkInTime)}</td>
+                    <td>{formatTime(item.checkOutTime)}</td>
+                    <td>{formatHours(item.workingHours)}</td>
+                    <td>{getStatusBadge(item.status)}</td>
+                    <td className="location-cell" title={getLocationText(item)}>
+                      {getLocationText(item)}
+                    </td>
+                    <td>
+                      {selfieSrc ? (
+                        <img
+                          src={selfieSrc}
+                          alt="selfie"
+                          className="director-selfie-thumb"
+                          onClick={() => setSelfieModal(selfieSrc)}
+                          style={{ cursor: "pointer" }}
+                        />
+                      ) : (
+                        "-"
+                      )}
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {selfieModal && (
+        <div className="director-modal-overlay" onClick={() => setSelfieModal(null)}>
+          <div className="director-modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="director-modal-close" onClick={() => setSelfieModal(null)}>
+              &times;
+            </button>
+            <img src={selfieModal} alt="Selfie" className="director-selfie-full" />
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
