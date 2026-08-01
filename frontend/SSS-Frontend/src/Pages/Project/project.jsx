@@ -35,7 +35,7 @@ function Projects() {
   const user = getLoggedInUser();
 
   const roleName = String(
-    user?.role?.roleName || ""
+    user?.roleName || user?.role?.roleName || ""
   ).toUpperCase();
 
   const isDirector = [

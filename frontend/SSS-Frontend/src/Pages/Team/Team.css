@@ -312,3 +312,194 @@
     font-size: 13px;
   }
 }
+
+/* ========== TEAM ACTIONS BAR ========== */
+.team-actions-bar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.team-action-btn {
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.team-action-btn.primary {
+  background: #6d5dfc;
+  color: white;
+}
+
+.team-action-btn.upload {
+  background: #1e40af;
+  color: white;
+  cursor: pointer;
+}
+
+.team-action-btn.go {
+  background: #16a34a;
+  color: white;
+}
+
+.team-action-btn.cancel {
+  background: #6b7280;
+  color: white;
+}
+
+.team-file-input {
+  display: none;
+}
+
+.team-upload-section {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.team-message {
+  margin: 8px 0;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #f0fdf4;
+  color: #15803d;
+  font-weight: 600;
+}
+
+/* ========== ADD EMPLOYEE FORM ========== */
+.team-add-form {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 18px;
+}
+
+.team-add-form h3 {
+  margin: 0 0 14px;
+  color: #111827;
+  font-size: 18px;
+}
+
+.team-add-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.team-add-form-grid input {
+  padding: 10px 12px;
+  border: 1px solid #dbe2ef;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.team-add-form-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.team-form-note {
+  margin: 8px 0 0;
+  color: #6b7280;
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* ========== TEAM DETAILS TABLE (in-team page) ========== */
+.team-details-table-wrap {
+  overflow-x: auto;
+  margin-top: 10px;
+}
+
+.team-details-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+.team-details-table thead th {
+  background: #6d5dfc;
+  color: #fff;
+  padding: 12px;
+  text-align: left;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.team-details-table tbody td {
+  padding: 12px;
+  border-bottom: 1px solid #eef2ff;
+  color: #374151;
+  font-size: 13px;
+}
+
+.team-details-table tbody tr:hover td {
+  background: #f6f4ff;
+}
+
+.team-details-table tbody td:nth-child(3) {
+  font-weight: 800;
+}
+
+/* ========== EDIT CONTACT INLINE ========== */
+.edit-contact-row {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.edit-contact-input {
+  width: 110px;
+  padding: 5px 8px;
+  border: 1px solid #dbe2ef;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.save-contact-btn {
+  background: #16a34a;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.cancel-contact-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 5px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+@media (max-width: 768px) {
+  .team-add-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .team-actions-bar {
+    flex-direction: column;
+  }
+  .team-upload-section {
+    width: 100%;
+  }
+}

@@ -1,310 +1,280 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Layout from "../../components/Layout/Layout";
 import "./TeamDetails.css";
 
-import { fetchAllProjects } from "../../api/projectsApi";
-import { fetchAllUsers } from "../../api/userApi";
-
-const OFFICE_KEYWORDS = [
-  "office",
-  "head office",
-  "admin",
-  "hr",
-  "accounts",
-  "management",
-  "director",
-  "reception",
-  "back office",
-];
-
-const normalize = (v) => String(v ?? "").trim().replace(/\s+/g, " ").toLowerCase();
-
-const getId = (e) => e?.id ?? e?.employeeId ?? e?.userId ?? null;
-
-const getProjectIdFromEmployee = (e) => {
-  return (
-    e?.projectId ??
-    e?.project?.id ??
-    e?.project?.projectId ??
-    e?.siteId ??
-    e?.site?.id ??
-    e?.assignedProjectId ??
-    e?.assignedSite ??
-    null
-  );
-};
-
-const getProjectLabelFromEmployee = (e) => {
-  return (
-    e?.projectName ??
-    e?.project?.name ??
-    e?.projectName ??
-    e?.project?.projectName ??
-    e?.siteName ??
-    e?.site?.name ??
-    e?.assignedSite ??
-    null
-  );
-};
-
-const getProjectLabelFromProject = (p) => {
-  return p?.siteName ?? p?.name ?? p?.projectName ?? p?.project?.siteName ?? p?.project?.name ?? null;
-};
-
-const getSupervisorLabel = (team) => {
-  const s =
-    team?.supervisorName ??
-    team?.supervisor?.name ??
-    team?.managerName ??
-    team?.manager?.name ??
-    team?.assignedSupervisor?.name ??
-    team?.assignedSupervisor ??
-    null;
-  return s ? String(s) : "Not assigned";
-};
-
-const getEmployeeProjectId = (user) =>
-  String(
-    user?.projectId ??
-      user?.assignedProjectId ??
-      user?.siteId ??
-      user?.project?.id ??
-      user?.site?.id ??
-      ""
-  );
-
-const getEmployeeProjectName = (user) =>
-  normalize(
-    user?.projectName ??
-      user?.siteName ??
-      user?.projectSite ??
-      user?.assignedSite ??
-      user?.project?.siteName ??
-      user?.project?.projectName ??
-      user?.project?.name ??
-      user?.site?.name ??
-      ""
-  );
-
-const getProjectId = (project) =>
-  String(project?.id ?? project?.projectId ?? project?.siteId ?? "");
-
-const getProjectName = (project) =>
-  normalize(project?.siteName ?? project?.projectName ?? project?.name ?? project?.sheetName ?? "");
-
-const getEmployeesForProject = (project, users) => {
-  const projectId = getProjectId(project);
-  const projectName = getProjectName(project);
-
-  return (users || []).filter((user) => {
-    const employeeProjectId = getEmployeeProjectId(user);
-    const employeeProjectName = getEmployeeProjectName(user);
-
-    const idMatch =
-      projectId &&
-      employeeProjectId &&
-      String(projectId) === String(employeeProjectId);
-
-    const nameMatch =
-      projectName &&
-      employeeProjectName &&
-      String(projectName) === String(employeeProjectName);
-
-    return Boolean(idMatch || nameMatch);
-  });
-};
-
-const getEmployeesForTeam = (team, employees, officeMembers, assignedEmployeeKeys) => {
-  if (!team) return [];
-
-  const employeeKeyOf = (u) => String(u?.id ?? u?.employeeId ?? u?.userId ?? "");
-
-  // Head office filtering: only employees that are NOT assigned to any project
-  // and either have no assignment fields OR belong to an office department/designation.
-  if (team.teamId === "head-office") {
-    return (employees || []).filter((user) => {
-      const employeeKey = employeeKeyOf(user);
-
-      // Must not already belong to any project group
-      if (assignedEmployeeKeys.has(employeeKey)) return false;
-
-      const employeeProjectId = getEmployeeProjectId(user);
-      const employeeProjectName = getEmployeeProjectName(user);
-
-      // Treat as Head Office only when ALL assignment fields are effectively empty
-      const hasNoAssignment = !employeeProjectId && !employeeProjectName;
-
-      const department = normalize(user?.department);
-      const designation = normalize(user?.designation);
-      const role = normalize(user?.role?.roleName ?? user?.roleName);
-
-      const isOfficeDepartment = [
-        "head office",
-        "office",
-        "admin",
-        "administration",
-        "hr",
-        "human resources",
-        "accounts",
-        "management",
-        "director",
-        "reception",
-        "back office",
-      ].some(
-        (term) =>
-          department.includes(term) ||
-          designation.includes(term) ||
-          role.includes(term)
-      );
-
-      return Boolean(hasNoAssignment || isOfficeDepartment);
-    });
-  }
-
-  // Project/site team filtering (strict per-project matching)
-  return getEmployeesForProject(team, employees || []);
-};
+import {
+  fetchAllUsers,
+  fetchUsersBySiteCode,
+  addEmployee,
+  updateUserContact,
+  uploadSiteTeamExcel,
+} from "../../api/userApi";
 
 function TeamDetails() {
   const { teamId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const user = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user")) || {};
+    } catch {
+      return {};
+    }
+  }, []);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [projects, setProjects] = useState([]);
-  const [users, setUsers] = useState([]);
+  const [employees, setEmployees] = useState([]);
 
-  const loadAll = async () => {
+  // Add employee form
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newEmployee, setNewEmployee] = useState({
+    name: "",
+    employeeId: "",
+    email: "",
+    contactNo: "",
+    department: "",
+    designation: "",
+    shift: "",
+  });
+  const [addMsg, setAddMsg] = useState("");
+
+  // Excel upload
+  const [uploadFile, setUploadFile] = useState(null);
+  const [uploadMsg, setUploadMsg] = useState("");
+
+  // Edit contact
+  const [editContactId, setEditContactId] = useState(null);
+  const [editContactValue, setEditContactValue] = useState("");
+
+  const roleName = String(user?.roleName || user?.role?.roleName || "").toUpperCase();
+  const isSupervisor = roleName === "SUPERVISOR";
+  const isDirector = roleName === "DIRECTOR" || roleName === "OWNER/ADMIN" || roleName === "OWNER";
+  const siteCode = decodeURIComponent(teamId || "");
+
+  const loadEmployees = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const [p, u] = await Promise.all([fetchAllProjects(), fetchAllUsers()]);
-      setProjects(Array.isArray(p) ? p : []);
-      setUsers(Array.isArray(u) ? u : []);
+      let data;
+      if (isSupervisor) {
+        // Supervisor can only see his own site team
+        const loggedInUser = JSON.parse(localStorage.getItem("user")) || {};
+        const headers = loggedInUser?.id ? { "X-User-Id": String(loggedInUser.id) } : {};
+        const res = await fetch("http://localhost:8080/api/users/my-site-team", { headers });
+        data = await res.json();
+      } else {
+        // Director: fetch all users and filter by site code
+        data = await fetchAllUsers();
+      }
+      const allUsers = Array.isArray(data) ? data : [];
+      // Filter by site_code
+      const filtered = allUsers.filter((u) => {
+        const usc = u?.siteCode || "";
+        return usc.toUpperCase() === siteCode.toUpperCase();
+      });
+      setEmployees(filtered);
     } catch (e) {
       setError(e?.message || "Failed to load team details");
+      setEmployees([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [siteCode, isSupervisor]);
 
   useEffect(() => {
-    loadAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teamId]);
+    loadEmployees();
+  }, [loadEmployees]);
 
-  const selectedTeam = useMemo(() => {
-    if (!teamId) return null;
-
-    if (String(teamId) === "head-office") {
-      return { teamId: "head-office", siteName: "Head Office" };
-    }
-
-    const selectedId = String(teamId);
-
-    // Find matching team context from available groups/projects
-    const match = (projects || []).find(
-      (p) => {
-        const candidates = [p?.id, p?.projectId, p?._id, p?.siteId];
-        return candidates.some((c) => String(c ?? "") === selectedId);
-      }
-    );
-
-    if (match) {
-      const pid = match?.id ?? match?.projectId ?? match?._id;
-      return {
-        teamId: selectedId,
-        id: match?.id ?? pid,
-        projectId: pid,
-        siteName: match?.siteName ?? match?.name,
-        sheetName: match?.sheetName,
+  // ========== ADD EMPLOYEE ==========
+  const handleAddEmployee = async (e) => {
+    e.preventDefault();
+    setAddMsg("Saving...");
+    try {
+      const empId = newEmployee.employeeId.trim();
+      const payload = {
+        name: newEmployee.name.trim(),
+        employeeId: empId,
+        email: newEmployee.email.trim() || `${empId}@sss.com`,
+        contactNo: newEmployee.contactNo.trim() || null,
+        department: newEmployee.department.trim(),
+        designation: newEmployee.designation.trim(),
+        shift: newEmployee.shift.trim(),
+        siteCode: siteCode,
+        password: `${empId}@123`,
+        status: "ACTIVE",
+        role: { id: 3, roleName: "EMPLOYEE" },
       };
+      await addEmployee(payload);
+      setAddMsg("Employee added successfully ✅");
+      setNewEmployee({ name: "", employeeId: "", email: "", contactNo: "", department: "", designation: "", shift: "" });
+      setShowAddForm(false);
+      loadEmployees();
+    } catch (err) {
+      setAddMsg(`Failed: ${err.message}`);
     }
+  };
 
-    // Fallback: match by siteName label
-    const byLabel = (projects || []).find(
-      (p) => normalize(p?.siteName) === normalize(teamId)
-    );
-
-    if (byLabel) {
-      const pid = byLabel?.id ?? byLabel?.projectId ?? byLabel?._id;
-      return {
-        teamId: selectedId,
-        id: byLabel?.id ?? pid,
-        projectId: pid,
-        siteName: byLabel?.siteName,
-        sheetName: byLabel?.sheetName,
-      };
+  // ========== UPLOAD EXCEL ==========
+  const handleUploadExcel = async (e) => {
+    e.preventDefault();
+    if (!uploadFile) {
+      setUploadMsg("Please select a file.");
+      return;
     }
+    setUploadMsg("Uploading...");
+    try {
+      const result = await uploadSiteTeamExcel(uploadFile);
+      setUploadMsg(typeof result === "string" ? result : "Upload successful ✅");
+      setUploadFile(null);
+      loadEmployees();
+    } catch (err) {
+      setUploadMsg(`Upload failed: ${err.message}`);
+    }
+  };
 
-    return null;
-  }, [teamId, projects]);
-
-  const employeesForTeam = useMemo(() => {
-    if (!selectedTeam) return [];
-    return getEmployeesForTeam(selectedTeam, users);
-  }, [selectedTeam, users]);
-
-  const visibleError = error ? normalize(error) : "";
+  // ========== EDIT CONTACT ==========
+  const handleSaveContact = async (userId) => {
+    try {
+      await updateUserContact(userId, editContactValue);
+      setEditContactId(null);
+      loadEmployees();
+    } catch (err) {
+      alert("Failed to update contact: " + err.message);
+    }
+  };
 
   return (
     <Layout title="Team Details">
       <div className="team-details-page">
         <div className="team-details-card">
           <div className="team-details-header">
-            <button type="button" className="team-details-back" onClick={() => navigate("/team")}>← Back to Teams</button>
-            {selectedTeam ? (
-              <div className="team-details-title">
-                <h2>{selectedTeam?.siteName || "Team"}</h2>
-                <div className="team-details-sub">
-                  Supervisor: {selectedTeam?.teamId === "head-office" ? "Not assigned" : getSupervisorLabel(selectedTeam)}
-                </div>
-                <div className="team-details-count">Total employees: {employeesForTeam.length}</div>
-              </div>
-            ) : (
-              <div className="team-details-title">
-                <h2>Team</h2>
-                <div className="team-details-sub">Team not found.</div>
-              </div>
-            )}
+            <button type="button" className="team-details-back" onClick={() => navigate("/team")}>
+              ← Back to Teams
+            </button>
+            <div className="team-details-title">
+              <h2>{siteCode}</h2>
+              <div className="team-details-count">Total employees: {employees.length}</div>
+            </div>
           </div>
+
+          {/* Add Employee & Upload (Supervisor only) */}
+          {isSupervisor && (
+            <>
+              <div className="team-actions-bar">
+                <button className="team-action-btn primary" onClick={() => setShowAddForm(!showAddForm)}>
+                  + Add Employee
+                </button>
+                <div className="team-upload-section">
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls"
+                    onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                    className="team-file-input"
+                    id="td-excel-upload"
+                  />
+                  <label htmlFor="td-excel-upload" className="team-action-btn upload">
+                    📂 Upload Team Excel
+                  </label>
+                  {uploadFile && (
+                    <button className="team-action-btn go" onClick={handleUploadExcel}>
+                      Upload Now
+                    </button>
+                  )}
+                </div>
+              </div>
+              {uploadMsg && <p className="team-message">{uploadMsg}</p>}
+
+              {showAddForm && (
+                <form className="team-add-form" onSubmit={handleAddEmployee}>
+                  <h3>Add New Employee</h3>
+                  <div className="team-add-form-grid">
+                    <input required placeholder="Employee ID *" value={newEmployee.employeeId}
+                      onChange={(e) => setNewEmployee({ ...newEmployee, employeeId: e.target.value })} />
+                    <input required placeholder="Full Name *" value={newEmployee.name}
+                      onChange={(e) => setNewEmployee({ ...newEmployee, name: e.target.value })} />
+                    <input placeholder="Email" value={newEmployee.email}
+                      onChange={(e) => setNewEmployee({ ...newEmployee, email: e.target.value })} />
+                    <input placeholder="Mobile Number" value={newEmployee.contactNo}
+                      onChange={(e) => setNewEmployee({ ...newEmployee, contactNo: e.target.value })} />
+                    <input placeholder="Department" value={newEmployee.department}
+                      onChange={(e) => setNewEmployee({ ...newEmployee, department: e.target.value })} />
+                    <input placeholder="Designation" value={newEmployee.designation}
+                      onChange={(e) => setNewEmployee({ ...newEmployee, designation: e.target.value })} />
+                    <input placeholder="Shift (Morning/Evening/Night)" value={newEmployee.shift}
+                      onChange={(e) => setNewEmployee({ ...newEmployee, shift: e.target.value })} />
+                  </div>
+                  <div className="team-add-form-actions">
+                    <button type="submit" className="team-action-btn primary">Save Employee</button>
+                    <button type="button" className="team-action-btn cancel" onClick={() => { setShowAddForm(false); setAddMsg(""); }}>Cancel</button>
+                  </div>
+                  {addMsg && <p className="team-message">{addMsg}</p>}
+                  <p className="team-form-note">Site: {siteCode} (auto-assigned)</p>
+                </form>
+              )}
+            </>
+          )}
 
           {loading ? (
             <p className="team-details-loading">Loading...</p>
-          ) : selectedTeam == null ? (
-            <p className="team-details-empty">No team found for this id.</p>
-          ) : employeesForTeam.length === 0 ? (
-            <p className="team-details-empty">{teamId === "head-office" ? "No office staff found" : "No employees assigned to this team."}</p>
+          ) : employees.length === 0 ? (
+            <p className="team-details-empty">No employees found for this site.</p>
           ) : (
             <div className="team-details-table-wrap">
               <table className="team-details-table">
                 <thead>
                   <tr>
-                    <th>Sr. No.</th>
+                    <th>Sr.</th>
                     <th>Employee ID</th>
                     <th>Name</th>
-                    <th>Contact No</th>
                     <th>Department</th>
                     <th>Designation</th>
-                    <th>Role</th>
+                    <th>Shift</th>
+                    <th>Contact</th>
                     <th>Status</th>
                     <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {employeesForTeam.map((u, idx) => (
-                    <tr key={getId(u) || `${u.employeeId || idx}`}>
+                  {employees.map((u, idx) => (
+                    <tr key={u.id || u.employeeId || idx}>
                       <td>{idx + 1}</td>
-                      <td>{u.employeeId || u.id || "-"}</td>
-                      <td>{u.name || "-"}</td>
-                      <td>{u.contactNo || u.phoneNo || "-"}</td>
+                      <td>{u.employeeId || "-"}</td>
+                      <td><strong>{u.name || "-"}</strong></td>
                       <td>{u.department || "-"}</td>
                       <td>{u.designation || "-"}</td>
-                      <td>{u.role?.roleName || "EMPLOYEE"}</td>
-                      <td>{u.status || "-"}</td>
+                      <td>{u.shift || "-"}</td>
                       <td>
-                        <button type="button" className="team-details-action" onClick={() => navigate("/profile")}>View Profile</button>
+                        {editContactId === u.id ? (
+                          <div className="edit-contact-row">
+                            <input
+                              type="text"
+                              value={editContactValue}
+                              onChange={(e) => setEditContactValue(e.target.value)}
+                              className="edit-contact-input"
+                            />
+                            <button className="save-contact-btn" onClick={() => handleSaveContact(u.id)}>Save</button>
+                            <button className="cancel-contact-btn" onClick={() => setEditContactId(null)}>X</button>
+                          </div>
+                        ) : (
+                          <span>{u.contactNo || "-"}</span>
+                        )}
+                      </td>
+                      <td>{u.status || "ACTIVE"}</td>
+                      <td>
+                        {isSupervisor && (
+                          <button
+                            className="team-details-action"
+                            onClick={() => {
+                              setEditContactId(u.id);
+                              setEditContactValue(u.contactNo || "");
+                            }}
+                          >
+                            Edit Contact
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -313,9 +283,7 @@ function TeamDetails() {
             </div>
           )}
 
-          {error && !loading && (
-            <p className="team-details-error">{error}</p>
-          )}
+          {error && !loading && <p className="team-details-error">{error}</p>}
         </div>
       </div>
     </Layout>
@@ -323,4 +291,3 @@ function TeamDetails() {
 }
 
 export default TeamDetails;
-

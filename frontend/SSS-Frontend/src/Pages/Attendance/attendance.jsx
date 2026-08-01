@@ -3,6 +3,32 @@ import Layout from "../../components/Layout/Layout";
 import "./attendance.css";
 import { useAttendance } from "../../hooks/useAttendance";
 
+const format12Hour = (timeStr) => {
+  if (!timeStr) return "-";
+  const parts = String(timeStr).split(":");
+  const h = Number(parts[0]);
+  const m = Number(parts[1]);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return timeStr;
+  const period = h >= 12 ? "PM" : "AM";
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return `${hour12}:${String(m).padStart(2, "0")} ${period}`;
+};
+
+const calculateTotalHours = (checkIn, checkOut) => {
+  if (!checkIn || !checkOut) return "-";
+  const partsIn = String(checkIn).split(":");
+  const partsOut = String(checkOut).split(":");
+  const inMin = Number(partsIn[0]) * 60 + Number(partsIn[1]);
+  const outMin = Number(partsOut[0]) * 60 + Number(partsOut[1]);
+  if (!Number.isFinite(inMin) || !Number.isFinite(outMin)) return "-";
+  const diff = Math.max(0, outMin - inMin);
+  const h = Math.floor(diff / 60);
+  const m = diff % 60;
+  if (h === 0) return `${m} min`;
+  if (m === 0) return `${h} hr`;
+  return `${h} hr ${m} min`;
+};
+
 function Attendance() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -219,6 +245,7 @@ function Attendance() {
                     <th>Date</th>
                     <th>Check In Time</th>
                     <th>Check Out Time</th>
+                    <th>Total Hours</th>
                     <th>Status</th>
                     <th>Location</th>
                   </tr>
@@ -226,7 +253,7 @@ function Attendance() {
                 <tbody>
                   {filteredAttendance.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="empty-row">
+                      <td colSpan={7} className="empty-row">
                         No attendance found
                       </td>
                     </tr>
@@ -265,8 +292,9 @@ function Attendance() {
                         <tr key={index}>
                           <td>{normalized.employeeName || "-"}</td>
                           <td>{normalized.date || "-"}</td>
-                          <td>{checkIn || "-"}</td>
-                          <td>{checkOut || "-"}</td>
+                          <td>{format12Hour(checkIn)}</td>
+                          <td>{format12Hour(checkOut)}</td>
+                          <td>{calculateTotalHours(checkIn, checkOut)}</td>
                           <td>
                             <span className={`status-badge ${status.toLowerCase().replace(/\s+/g, "-")}`}>
                               {status}

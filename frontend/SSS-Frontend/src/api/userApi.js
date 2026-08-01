@@ -39,3 +39,74 @@ export async function addTask(payload) {
   return data;
 }
 
+// ========== TEAM MANAGEMENT APIS ==========
+
+export async function fetchMySiteTeam() {
+  const loggedInUser = JSON.parse(localStorage.getItem("user")) || {};
+  const headers = loggedInUser?.id ? { "X-User-Id": String(loggedInUser.id) } : {};
+  const res = await fetch(`${API_BASE_URL}/api/users/my-site-team`, { headers });
+  const data = await jsonOrText(res);
+  if (!res.ok) throw new Error(`Failed to load site team (${res.status})`);
+  return data;
+}
+
+export async function fetchUsersBySiteCode(siteCode) {
+  const res = await fetch(`${API_BASE_URL}/api/users/site/${encodeURIComponent(siteCode)}`);
+  const data = await jsonOrText(res);
+  if (!res.ok) throw new Error(`Failed to load site users (${res.status})`);
+  return data;
+}
+
+export async function addEmployee(userData) {
+  const loggedInUser = JSON.parse(localStorage.getItem("user")) || {};
+  const headers = {
+    "Content-Type": "application/json",
+    ...(loggedInUser?.id ? { "X-User-Id": String(loggedInUser.id) } : {}),
+  };
+  const res = await fetch(`${API_BASE_URL}/api/users/add-employee`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(userData),
+  });
+  const data = await jsonOrText(res);
+  if (!res.ok) {
+    const msg = typeof data === "string" ? data : JSON.stringify(data);
+    throw new Error(`Add employee failed (${res.status}) ${msg}`);
+  }
+  return data;
+}
+
+export async function updateUserContact(userId, contactNo) {
+  const loggedInUser = JSON.parse(localStorage.getItem("user")) || {};
+  const headers = {
+    "Content-Type": "application/json",
+    ...(loggedInUser?.id ? { "X-User-Id": String(loggedInUser.id) } : {}),
+  };
+  const res = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify({ contactNo }),
+  });
+  const data = await jsonOrText(res);
+  if (!res.ok) throw new Error(`Update contact failed (${res.status})`);
+  return data;
+}
+
+export async function uploadSiteTeamExcel(file) {
+  const loggedInUser = JSON.parse(localStorage.getItem("user")) || {};
+  const formData = new FormData();
+  formData.append("file", file);
+  const headers = loggedInUser?.id ? { "X-User-Id": String(loggedInUser.id) } : {};
+  const res = await fetch(`${API_BASE_URL}/api/users/import-site-team`, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+  const data = await jsonOrText(res);
+  if (!res.ok) {
+    const msg = typeof data === "string" ? data : JSON.stringify(data);
+    throw new Error(`Excel upload failed (${res.status}) ${msg}`);
+  }
+  return data;
+}
+
