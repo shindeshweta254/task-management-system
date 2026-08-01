@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.company.taskmanagement.dto.AttendanceReportDTO;
 import com.company.taskmanagement.dto.UserDTO;
 import com.company.taskmanagement.entity.Attendance;
 import com.company.taskmanagement.entity.User;
@@ -96,5 +97,34 @@ public class AttendanceController {
 		}
 		// For employees, return own attendance
 		return attendanceService.getAttendanceByUser(currentUser.getId());
+	}
+
+/**
+	 * GET /api/attendance/director
+	 *
+	 * Director-only read-only endpoint. Returns attendance of all EMPLOYEE and
+	 * SUPERVISOR users with location (address/coordinates) and selfie data
+	 * from the Report entity when available.
+	 */
+	@GetMapping("/director")
+	public List<AttendanceReportDTO> getDirectorAttendance(HttpServletRequest request) {
+		User currentUser = accessService.resolveUser(request);
+		accessService.validateDirectorDashboardAccess(currentUser);
+		return attendanceService.getDirectorAttendance();
+	}
+
+	/**
+	 * GET /api/attendance/all
+	 *
+	 * Returns ALL attendance records for all users (no role filtering).
+	 * Includes employee name, employee ID, date, check-in/out, status,
+	 * location, latitude/longitude, and selfie data.
+	 * Director/Admin only.
+	 */
+	@GetMapping("/all")
+	public List<AttendanceReportDTO> getAllAttendanceForDirector(HttpServletRequest request) {
+		User currentUser = accessService.resolveUser(request);
+		accessService.validateDirectorDashboardAccess(currentUser);
+		return attendanceService.getAllAttendanceWithDetails();
 	}
 }

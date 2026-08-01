@@ -16,12 +16,16 @@ public class AttendanceReportDTO {
     private Long attendanceId;
     private String employeeName;
     private String employeeId;
+    private String roleName;
     private String site;
     private LocalDate date;
     private LocalTime checkInTime;
     private LocalTime checkOutTime;
     private Double workingHours;
     private String status;
+
+// Location from attendance table directly
+    private String location;
 
     // Human-readable addresses (from Report entity)
     private String checkInAddress;
@@ -41,12 +45,14 @@ public class AttendanceReportDTO {
         dto.attendanceId = attendance.getId();
         dto.employeeName = user != null ? user.getName() : "Unknown";
         dto.employeeId = user != null ? user.getEmployeeId() : "";
+        dto.roleName = user != null && user.getRole() != null ? user.getRole().getRoleName() : "";
         dto.site = user != null ? user.getSiteCode() : "";
         dto.date = attendance.getAttendanceDate();
         dto.checkInTime = attendance.getCheckInTime();
         dto.checkOutTime = attendance.getCheckOutTime();
         dto.workingHours = attendance.getWorkingHours();
         dto.status = attendance.getStatus();
+        dto.location = attendance.getLocation();
 
         // Try to get address from the report (daily report has locationAddress)
         if (report != null) {
@@ -71,6 +77,9 @@ public class AttendanceReportDTO {
     public String getEmployeeId() { return employeeId; }
     public void setEmployeeId(String employeeId) { this.employeeId = employeeId; }
 
+    public String getRoleName() { return roleName; }
+    public void setRoleName(String roleName) { this.roleName = roleName; }
+
     public String getSite() { return site; }
     public void setSite(String site) { this.site = site; }
 
@@ -88,6 +97,9 @@ public class AttendanceReportDTO {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
 
     public String getCheckInAddress() { return checkInAddress; }
     public void setCheckInAddress(String checkInAddress) { this.checkInAddress = checkInAddress; }

@@ -29,12 +29,22 @@ public class Attendance {
 	
 	private Double workingHours;
 
+	private String location;
+
 	public Double getWorkingHours() {
 		return workingHours;
 	}
 
 	public void setWorkingHours(Double workingHours) {
 		this.workingHours = workingHours;
+	}
+
+	public String getLocation() {
+		return location;
+	}
+
+	public void setLocation(String location) {
+		this.location = location;
 	}
 
 	@ManyToOne
