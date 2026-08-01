@@ -33,7 +33,8 @@ public class AttendanceController {
 
 	@PostMapping("/checkin")
 	public Attendance checkIn(@RequestBody Attendance attendance, HttpServletRequest request) {
-		accessService.resolveUser(request);
+		User currentUser = accessService.resolveUser(request);
+		attendance.setUser(currentUser);
 		return attendanceService.checkIn(attendance);
 	}
 
@@ -70,7 +71,11 @@ public class AttendanceController {
 	        @PathVariable Long attendanceId,
 	        HttpServletRequest request) {
 
-		accessService.resolveUser(request);
+		User currentUser = accessService.resolveUser(request);
+		Attendance attendance = attendanceService.getAttendanceById(attendanceId);
+		if (attendance == null || !attendance.getUser().getId().equals(currentUser.getId())) {
+			throw new RuntimeException("Unauthorized: You can only checkout your own attendance");
+		}
 	    return attendanceService.checkOut(attendanceId);
 	}
 

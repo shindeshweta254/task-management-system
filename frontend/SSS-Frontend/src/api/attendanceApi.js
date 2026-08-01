@@ -1,45 +1,74 @@
-import { API_BASE_URL } from "./index";
+import axiosClient from "./axiosClient";
 
-// IMPORTANT:
-// The existing codebase currently stores attendance in localStorage (attendanceData).
-// Backend endpoints for multi-session attendance are not known from the repo scope.
-// Therefore, this API layer only provides safe optional helpers that won't break UI.
-// If backend supports older single-session shape, we keep compatibility via localStorage fallback.
-
-const jsonOrText = async (res) => {
-  const contentType = res.headers.get("content-type") || "";
-  if (contentType.includes("application/json")) return res.json();
-  const text = await res.text();
+/**
+ * Check In (Punch In)
+ * POST /api/attendance/checkin
+ * X-User-Id is automatically added by axiosClient interceptor
+ */
+export async function checkIn(location) {
   try {
-    return JSON.parse(text);
-  } catch {
-    return text;
+    const res = await axiosClient.post("/api/attendance/checkin", { location });
+    return res.data;
+  } catch (error) {
+    console.error("Check-in API error:", error);
+    throw error;
   }
-};
-
-// Placeholder functions (no inventing endpoints). The UI will rely on localStorage.
-// These are still here so hooks/pages can call a single abstraction layer.
-
-export async function fetchAttendanceForUser(/* userId */) {
-  // No known supported endpoint in this project scope.
-  // Return empty and let hook use localStorage.
-  return [];
 }
 
-export async function saveAttendanceForUser(/* userId, payload */) {
-  // No known supported endpoint in this project scope.
-  return { saved: false, reason: "Backend multi-session endpoints not available in this codebase" };
+/**
+ * Check Out (Punch Out)
+ * PUT /api/attendance/checkout/{attendanceId}
+ * X-User-Id is automatically added by axiosClient interceptor
+ */
+export async function checkOut(attendanceId) {
+  try {
+    const res = await axiosClient.put(`/api/attendance/checkout/${attendanceId}`);
+    return res.data;
+  } catch (error) {
+    console.error("Check-out API error:", error);
+    throw error;
+  }
 }
 
-export async function fetchAllEmployeesAttendanceForToday(/* today */) {
-  return [];
+/**
+ * Fetch all attendance (for Director/Owner/Admin)
+ * GET /api/attendance
+ */
+export async function fetchAllAttendance() {
+  try {
+    const res = await axiosClient.get("/api/attendance");
+    return Array.isArray(res.data) ? res.data : [];
+  } catch (error) {
+    console.error("Fetch all attendance API error:", error);
+    return [];
+  }
 }
 
-export async function saveAttendanceForAdmin(/* payload */) {
-  return { saved: false, reason: "Backend multi-session endpoints not available in this codebase" };
+/**
+ * Fetch my own attendance
+ * GET /api/attendance/me
+ */
+export async function fetchMyAttendance() {
+  try {
+    const res = await axiosClient.get("/api/attendance/me");
+    return Array.isArray(res.data) ? res.data : [];
+  } catch (error) {
+    console.error("Fetch my attendance API error:", error);
+    return [];
+  }
 }
 
-export async function fetchDayTypeAndMode(/* userId, date */) {
-  return null;
+/**
+ * Fetch attendance for my site (Supervisor/Manager)
+ * GET /api/attendance/my-site
+ */
+export async function fetchMySiteAttendance() {
+  try {
+    const res = await axiosClient.get("/api/attendance/my-site");
+    return Array.isArray(res.data) ? res.data : [];
+  } catch (error) {
+    console.error("Fetch my site attendance API error:", error);
+    return [];
+  }
 }
 

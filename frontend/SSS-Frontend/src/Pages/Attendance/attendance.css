@@ -219,6 +219,15 @@
 .badge-week-off { background: #f3e8ff; color: #7c3aed; }
 .badge-late     { background: #fff7ed; color: #ea580c; }
 
+/* Status badges in table */
+.status-badge { padding: 4px 12px; border-radius: 20px; font-weight: 600; font-size: 12px; display: inline-block; white-space: nowrap; }
+.status-badge.present { background: #dcfce7; color: #16a34a; }
+.status-badge.checked-in { background: #dbeafe; color: #2563eb; }
+.status-badge.half-day { background: #fef9c3; color: #ca8a04; }
+.status-badge.holiday { background: #e0f2fe; color: #0284c7; }
+.status-badge.week-off { background: #f3e8ff; color: #7c3aed; }
+.status-badge.absent { background: #fee2e2; color: #dc2626; }
+
 /* Edit/Delete buttons */
 .act-btn {
   border: none;

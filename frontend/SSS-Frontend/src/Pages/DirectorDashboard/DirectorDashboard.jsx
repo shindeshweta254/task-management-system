@@ -75,6 +75,7 @@ function DirectorDashboard() {
   const [stats, setStats] = useState(INITIAL_STATS);
   const [employees, setEmployees] = useState([]);
   const [tasks, setTasks] = useState([]);
+  const [attendance, setAttendance] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState("");

@@ -57,7 +57,7 @@ function Attendance() {
     setPunchBusy(true);
     try {
       const photo = captureFromCamera();
-      punchIn(photo);
+      await punchIn(photo);
       alert("Punch In successful ✅");
     } finally {
       setPunchBusy(false);
@@ -68,7 +68,7 @@ function Attendance() {
     setPunchBusy(true);
     try {
       const photo = captureFromCamera();
-      const res = punchOut(photo);
+      const res = await punchOut(photo);
       if (!res?.ok) {
         alert(res?.reason || "Punch Out failed");
       } else {
@@ -215,48 +215,64 @@ function Attendance() {
               <table className="attendance-table">
                 <thead>
                   <tr>
-                    <th>Employee</th>
+                    <th>Employee Name</th>
                     <th>Date</th>
-                    <th>Location</th>
-                    <th>First In</th>
-                    <th>Final Out</th>
-                    <th>Total Work</th>
-                    <th>Break</th>
+                    <th>Check In Time</th>
+                    <th>Check Out Time</th>
                     <th>Status</th>
+                    <th>Location</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredAttendance.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="empty-row">
+                      <td colSpan={6} className="empty-row">
                         No attendance found
                       </td>
                     </tr>
                   ) : (
                     filteredAttendance.map((item, index) => {
-                      const normalized = item; // already normalized by hook
-                      const summary = normalized
-                        ? {
-                            ...todaySummary,
-                            ...todaySummary,
-                          }
-                        : null;
+                      const normalized = item;
+                      const sessions = normalized.sessions || [];
+                      const checkIn = sessions.length > 0
+                        ? sessions
+                            .filter((s) => s.punchIn)
+                            .sort((a, b) => (a.punchIn || "").localeCompare(b.punchIn || ""))[0]?.punchIn
+                        : normalized.punchIn || "";
+                      const checkOut = sessions.length > 0
+                        ? sessions
+                            .filter((s) => s.punchOut)
+                            .sort((a, b) => (a.punchOut || "").localeCompare(b.punchOut || ""))
+                            .pop()?.punchOut
+                        : normalized.punchOut || "";
 
-                      // Calculate per-row using hook util from sessions, but to avoid duplication,
-                      // we rely on the legacy top-level fields if present.
-                      // If sessions-only rows exist, the backend limitation is handled by localStorage fallback.
-                      // For now, show placeholders for late/early/overtime columns removed from this compact UI.
+                      let status = "-";
+                      if (checkIn && checkOut) {
+                        status = "Present";
+                      } else if (checkIn) {
+                        status = "Checked In";
+                      } else if (normalized.dayType === "Holiday") {
+                        status = "Holiday";
+                      } else if (normalized.dayType === "Week Off") {
+                        status = "Week Off";
+                      } else if (normalized.dayMode === "HALF_DAY") {
+                        status = "Half Day";
+                      }
+
+                      const loc = normalized.location || "-";
 
                       return (
                         <tr key={index}>
                           <td>{normalized.employeeName || "-"}</td>
                           <td>{normalized.date || "-"}</td>
-                          <td className="location-cell">{normalized.location || "-"}</td>
-                          <td>{normalized?.sessions?.[0]?.punchIn || normalized.punchIn || "-"}</td>
-                          <td>{normalized?.sessions?.slice().reverse().find((s) => s?.punchOut)?.punchOut || normalized.punchOut || "-"}</td>
-                          <td>-</td>
-                          <td>-</td>
-                          <td>-</td>
+                          <td>{checkIn || "-"}</td>
+                          <td>{checkOut || "-"}</td>
+                          <td>
+                            <span className={`status-badge ${status.toLowerCase().replace(/\s+/g, "-")}`}>
+                              {status}
+                            </span>
+                          </td>
+                          <td className="location-cell">{loc}</td>
                         </tr>
                       );
                     })
@@ -272,4 +288,3 @@ function Attendance() {
 }
 
 export default Attendance;
-

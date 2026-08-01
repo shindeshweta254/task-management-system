@@ -6,64 +6,102 @@ import {
 } from "../api/taskApi";
 
 export function useTasks(user) {
+
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const loadTasks = useCallback(async () => {
+
     setLoading(true);
     setError("");
 
     try {
+
       const roleName = String(
-        user?.role?.roleName || ""
+        user?.roleName ||
+        user?.role?.roleName ||
+        ""
       ).toUpperCase();
+
 
       const userId = user?.id;
 
-      let taskData = [];
+      let taskData = [];   // <-- ye zaroor hona chahiye
 
-      // Only Director sees all tasks; Supervisor/Employee see only their own
+
       const canViewAllTasks =
         roleName === "DIRECTOR" ||
         roleName === "ADMIN";
 
+
       if (canViewAllTasks) {
+
         taskData = await fetchAllTasks();
+
       } else {
+
+
         if (!userId) {
           throw new Error(
             "Logged-in user database ID was not found."
           );
         }
 
-        taskData = await fetchEmployeeTasks(userId);
+
+        taskData =
+          await fetchEmployeeTasks(userId);
+
       }
 
+
       setTasks(
-        Array.isArray(taskData) ? taskData : []
+        Array.isArray(taskData)
+          ? taskData
+          : []
       );
-    } catch (loadError) {
-      console.error("Task loading error:", loadError);
+
+
+    } catch(error) {
+
+      console.error(
+        "Task loading error:",
+        error
+      );
 
       setTasks([]);
+
       setError(
-        loadError?.message ||
-          "Tasks could not be loaded."
+        error.message ||
+        "Tasks could not be loaded."
       );
+
     } finally {
+
       setLoading(false);
+
     }
-  }, [user?.id, user?.role?.roleName]);
+
+
+  },[
+    user?.id,
+    user?.roleName,
+    user?.role?.roleName
+  ]);
+
 
   useEffect(() => {
+
     loadTasks();
-  }, [loadTasks]);
+
+  },[loadTasks]);
+
 
   return {
     tasks,
     loading,
     error,
-    reload: loadTasks,
+    reload: loadTasks
   };
+
 }
