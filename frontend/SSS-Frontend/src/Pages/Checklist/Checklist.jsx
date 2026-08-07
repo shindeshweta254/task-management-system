@@ -278,63 +278,16 @@ useEffect(() => {
     }
   }, []);
 
-  // ========== LOAD PREVIOUSLY SAVED DATA FOR THIS DATE+SHEET ==========
+// ========== LOAD PREVIOUSLY SAVED DATA FOR THIS DATE+SHEET ==========
   const loadSavedEntries = useCallback(async () => {
     try {
       const loggedInUser = JSON.parse(localStorage.getItem("user"));
       if (!loggedInUser?.id || !siteInfo.date) return;
 
-      const response = await fetch(
-        `${API_BASE}/api/checklist-report/my-submissions/date?date=${siteInfo.date}&sheetName=${encodeURIComponent(sheetName)}`,
-        { headers: { "X-User-Id": String(loggedInUser.id) } }
-      );
-      if (!response.ok) return;
-      const data = await response.json();
-      if (!Array.isArray(data) || data.length === 0) return;
-
-      const restored = {};
-      const customReports = [];
-      data.forEach((report) => {
-        const key = report.checklistMasterId ? String(report.checklistMasterId) : `custom-${report.id}`;
-        let extra = {};
-        try { extra = report.extraJson ? JSON.parse(report.extraJson) : {}; } catch (e) { extra = {}; }
-        restored[key] = {
-          status: report.status || "Pending",
-          remark: report.remark || "",
-          employeeName: report.employeeName || "",
-          completedBy: report.completedBy || "",
-          timeIn: report.timeIn || "",
-          timeOut: report.timeOut || "",
-          photoName: report.photoName || "",
-          photoPath: report.photoPath || "",
-          latitude: report.latitude ? String(report.latitude) : "",
-          longitude: report.longitude ? String(report.longitude) : "",
-          locationAddress: report.locationAddress || "",
-          sectionName: report.sectionName || "",
-          taskName: report.taskName || "",
-          frequency: report.frequency || "",
-          updatedBy: report.updatedBy || "",
-          savedReportId: report.id,
-          extra,
-        };
-        if (!report.checklistMasterId) {
-          customReports.push({
-            uid: `custom-${report.id}`,
-            sectionName: report.sectionName || "",
-            checkPoint: report.taskName || "",
-            frequency: report.frequency || "",
-          });
-        }
-      });
-      setEntries((prev) => ({ ...prev, ...restored }));
-
-      if (customReports.length > 0) {
-        setCustomRows((prev) => {
-          const existingUids = new Set(prev.map((r) => r.uid));
-          const newRows = customReports.filter((r) => !existingUids.has(r.uid));
-          return [...prev, ...newRows];
-        });
-      }
+// NOTE: GET /api/checklist-report/my-submissions/date does not exist on the
+      // backend yet (returns 404). Disabled to avoid spurious 404 requests.
+      // Re-enable when the backend endpoint exists.
+      return;
     } catch (error) {
       console.log("Load saved entries error:", error);
     }
@@ -494,9 +447,9 @@ useEffect(() => {
       const formData = new FormData();
       formData.append("file", file);
       const loggedInUser = JSON.parse(localStorage.getItem("user"));
-      const res = await fetch(`${API_BASE}/api/checklist-report/photo`, {
+const res = await fetch(`${API_BASE}/api/checklist-report/photo`, {
         method: "POST",
-        headers: { "X-User-Id": String(loggedInUser?.id || "") },
+        headers: { "X-User-Id": String(loggedInUser?.id || localStorage.getItem("userId") || "") },
         body: formData,
       });
       if (res.ok) {
@@ -532,8 +485,9 @@ useEffect(() => {
   };
 
   // ========== SAVE CHECKLIST ==========
-  const handleSave = async () => {
+const handleSave = async () => {
     try {
+      const user = JSON.parse(localStorage.getItem("user"));
       const loggedInUser = JSON.parse(localStorage.getItem("user"));
       if (!loggedInUser?.id) { alert("Login required"); return; }
 
@@ -568,11 +522,14 @@ useEffect(() => {
         });
       });
 
+      const userId = user?.id;
+      console.log("Saving checklist with userId:", userId);
+
       const res = await fetch(`${API_BASE}/api/checklist-report/batch-save`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-User-Id": String(loggedInUser.id),
+          "X-User-Id": String(userId),
         },
         body: JSON.stringify(entriesList),
       });
@@ -588,7 +545,7 @@ useEffect(() => {
             siteName: siteInfo.siteName || "",
             reportDate: siteInfo.date,
           };
-          await fetch(`${API_BASE}/api/checklist-sheet/save`, {
+await fetch(`${API_BASE}/api/checklist-report/batch-save`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -748,8 +705,8 @@ useEffect(() => {
     }
     try {
       const loggedInUser = JSON.parse(localStorage.getItem("user"));
-      const res = await fetch(`${API_BASE}/api/checklist-report/audit/report/${reportId}`, {
-        headers: { "X-User-Id": String(loggedInUser.id) },
+const res = await fetch(`${API_BASE}/api/checklist-report/audit/report/${reportId}`, {
+        headers: { "X-User-Id": String(loggedInUser?.id || localStorage.getItem("userId") || "") },
       });
       const data = await res.json();
       setAuditRows(Array.isArray(data) ? data : []);
@@ -762,17 +719,22 @@ useEffect(() => {
   };
 
   // ========== HISTORY ==========
-  const loadSavedReports = async (from, to) => {
+const loadSavedReports = async (from, to) => {
     setSavedReportsLoading(true);
     try {
-      const loggedInUser = JSON.parse(localStorage.getItem("user"));
-      if (!loggedInUser?.id) { setSavedReports([]); setSavedReportsLoading(false); return; }
+      const loggedInUser = JSON.parse(localStorage.getItem("user")) || {};
+      const userId =
+        loggedInUser?.id ||
+        localStorage.getItem("userId") ||
+        loggedInUser?.uid ||
+        "";
+      if (!userId) { setSavedReports([]); setSavedReportsLoading(false); return; }
 
       let url = `${API_BASE}/api/checklist-report/my-submissions`;
       if (from && to) {
         url = `${API_BASE}/api/checklist-report/my-submissions/date-range?from=${from}&to=${to}`;
       }
-      const response = await fetch(url, { headers: { "X-User-Id": String(loggedInUser.id) } });
+      const response = await fetch(url, { headers: { "X-User-Id": String(userId) } });
       const data = await response.json();
       setSavedReports(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -788,9 +750,9 @@ useEffect(() => {
     try {
       const loggedInUser = JSON.parse(localStorage.getItem("user"));
       if (!loggedInUser?.id) return;
-      const response = await fetch(`${API_BASE}/api/checklist-report/${reportId}`, {
+const response = await fetch(`${API_BASE}/api/checklist-report/${reportId}`, {
         method: "DELETE",
-        headers: { "X-User-Id": String(loggedInUser.id) },
+        headers: { "X-User-Id": String(loggedInUser?.id || localStorage.getItem("userId") || "") },
       });
       if (!response.ok) throw new Error("Delete failed");
       alert("Deleted!");

@@ -6,6 +6,7 @@ import {
   fetchAllAttendance,
   fetchMyAttendance,
   fetchMySiteAttendance,
+  updateAttendanceStatus,
 } from "../api/attendanceApi";
 
 function getUserFromStorage() {
@@ -13,6 +14,51 @@ function getUserFromStorage() {
     return JSON.parse(localStorage.getItem("user")) || {};
   } catch {
     return {};
+  }
+}
+
+/**
+ * Capture live GPS coordinates from the device.
+ * Resolves with { latitude, longitude } or null on failure/denial.
+ */
+function captureGpsPosition() {
+  return new Promise((resolve) => {
+    if (!navigator?.geolocation) {
+      resolve(null);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        resolve({
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+        });
+      },
+      () => resolve(null),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  });
+}
+
+/**
+ * Reverse-geocode coordinates into a human-readable address.
+ * Falls back to a "lat, lng" string if the geocoding call fails.
+ */
+async function reverseGeocode(latitude, longitude) {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+    );
+    const data = await res.json();
+    const addr = data.address || {};
+    const parts = [
+      addr.road || addr.neighbourhood || addr.suburb,
+      addr.city || addr.town || addr.village || addr.county,
+      addr.state,
+    ].filter(Boolean);
+    return parts.join(", ") || data.display_name || `${latitude}, ${longitude}`;
+  } catch {
+    return `${latitude}, ${longitude}`;
   }
 }
 
@@ -36,27 +82,45 @@ function backendToLocalRecord(att) {
   const dateStr = dateObj.toLocaleDateString("en-IN");
   const checkInStr = att.checkInTime ? att.checkInTime.substring(0, 5) : "";
   const checkOutStr = att.checkOutTime ? att.checkOutTime.substring(0, 5) : "";
-  return {
+  // Prefer the new attendance selfie URLs; fall back to legacy fields if present.
+  const checkInSelfie = att.checkInSelfieUrl || att.checkInSelfiePath || "";
+  const checkOutSelfie = att.checkOutSelfieUrl || att.checkOutSelfiePath || "";
+return {
     id: att.id,
     employeeName: att.user?.name || "Unknown",
     userId: att.user?.id || null,
-    date: dateStr,
+date: dateStr,
     location: att.location || "",
     punchIn: checkInStr,
     punchOut: checkOutStr,
     status: att.status || "",
     workingHours: att.workingHours || 0,
+    checkInSelfieUrl: checkInSelfie,
+    checkOutSelfieUrl: checkOutSelfie,
     sessions: checkInStr
       ? [
           {
             punchIn: checkInStr,
             punchOut: checkOutStr,
-            punchInPhoto: "",
-            punchOutPhoto: "",
+            punchInPhoto: toAbsoluteSelfie(checkInSelfie),
+            punchOutPhoto: toAbsoluteSelfie(checkOutSelfie),
           },
         ]
       : [],
   };
+}
+
+/**
+ * Convert a backend selfie path/URL into an absolute URL for <img> src.
+ * Bare filenames / uploads paths are resolved against the backend root.
+ */
+function toAbsoluteSelfie(raw) {
+  if (!raw) return "";
+  if (/^(https?:|data:|blob:)/i.test(raw)) return raw;
+  const path = String(raw).replace(/\\/g, "/");
+  if (path.startsWith("uploads/")) return `http://localhost:8080/${path}`;
+  if (path.startsWith("/")) return `http://localhost:8080${path}`;
+  return `http://localhost:8080/uploads/attendance/${path}`;
 }
 
 export function useAttendance() {
@@ -151,7 +215,7 @@ export function useAttendance() {
     );
   }, []);
 
-  const persist = useCallback((nextAttendance) => {
+const persist = useCallback((nextAttendance) => {
     setAttendance(nextAttendance);
     try {
       localStorage.setItem("attendanceData", JSON.stringify(nextAttendance));
@@ -159,6 +223,19 @@ export function useAttendance() {
       // swallow to keep UI working
     }
   }, []);
+
+// Reusable helper to reload attendance from the DATABASE (source of truth).
+  const reloadBackendAttendance = useCallback(async () => {
+    let data = [];
+    if (canSeeAll || userRoleUpper === "DIRECTOR") {
+      data = await fetchAllAttendance();
+    } else if (userRoleUpper === "SUPERVISOR" || userRoleUpper === "MANAGER") {
+      data = await fetchMySiteAttendance();
+    } else {
+      data = await fetchMyAttendance();
+    }
+    setBackendAttendance(Array.isArray(data) ? data : []);
+  }, [canSeeAll, userRoleUpper]);
 
   // Merge backend attendance with localStorage attendance for display
   const mergedAttendance = useMemo(() => {
@@ -232,7 +309,7 @@ export function useAttendance() {
     return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
   }, []);
 
-  const markHalfDay = useCallback(() => {
+const markHalfDay = useCallback(async () => {
     const nowTime = getCurrentTimeHHMM();
     const photoPlaceholder = "";
 
@@ -259,6 +336,7 @@ export function useAttendance() {
       ...base,
       location,
       dayMode: "HALF_DAY",
+      status: "HALF_DAY",
       punchInPhoto: base.punchInPhoto,
       punchOutPhoto: base.punchOutPhoto,
     };
@@ -266,11 +344,19 @@ export function useAttendance() {
     if (idx !== -1) next[idx] = updated;
     else next.push(updated);
     persist(next);
-  }, [attendance, getCurrentTimeHHMM, location, persist, today, userId, userName]);
+
+    // Persist status to DB
+    try {
+      await updateAttendanceStatus("HALF_DAY", location);
+      await reloadBackendAttendance();
+    } catch (e) {
+      console.error("Failed to persist HALF_DAY status:", e);
+    }
+  }, [attendance, getCurrentTimeHHMM, location, persist, reloadBackendAttendance, today, userId, userName]);
 
   const recDayTypeDefault = () => "Working Day";
 
-  const markHoliday = useCallback(() => {
+  const markHoliday = useCallback(async () => {
     const next = attendance.map(normalizeAttendanceRecord);
     const idx = next.findIndex((i) => i.date === today && i.employeeName === userName);
 
@@ -290,15 +376,24 @@ export function useAttendance() {
       ...base,
       location,
       dayType: "Holiday",
+      status: "HOLIDAY",
       dayMode: "FULL_DAY",
     };
 
     if (idx !== -1) next[idx] = updated;
     else next.push(updated);
     persist(next);
-  }, [attendance, location, persist, today, userId, userName]);
 
-  const markWeekOff = useCallback(() => {
+    // Persist status to DB
+    try {
+      await updateAttendanceStatus("HOLIDAY", location);
+      await reloadBackendAttendance();
+    } catch (e) {
+      console.error("Failed to persist HOLIDAY status:", e);
+    }
+  }, [attendance, location, persist, reloadBackendAttendance, today, userId, userName]);
+
+  const markWeekOff = useCallback(async () => {
     const next = attendance.map(normalizeAttendanceRecord);
     const idx = next.findIndex((i) => i.date === today && i.employeeName === userName);
 
@@ -318,13 +413,22 @@ export function useAttendance() {
       ...base,
       location,
       dayType: "Week Off",
+      status: "WEEK_OFF",
       dayMode: "FULL_DAY",
     };
 
     if (idx !== -1) next[idx] = updated;
     else next.push(updated);
     persist(next);
-  }, [attendance, location, persist, today, userId, userName]);
+
+    // Persist status to DB
+    try {
+      await updateAttendanceStatus("WEEK_OFF", location);
+      await reloadBackendAttendance();
+    } catch (e) {
+      console.error("Failed to persist WEEK_OFF status:", e);
+    }
+  }, [attendance, location, persist, reloadBackendAttendance, today, userId, userName]);
 
   const clearData = useCallback(() => {
     if (!window.confirm("Sab attendance data delete hoga. Sure ho?")) return;
@@ -332,9 +436,22 @@ export function useAttendance() {
     setAttendance([]);
   }, []);
 
-  const punchIn = useCallback(
+const punchIn = useCallback(
     async (photo) => {
       const time = getCurrentTimeHHMM();
+
+// Capture live GPS location (lat/lng) and reverse-geocode to an address.
+      const gps = await captureGpsPosition();
+      let liveLat = null;
+      let liveLng = null;
+      let liveLoc = location;
+      if (gps) {
+        liveLat = gps.latitude;
+        liveLng = gps.longitude;
+        liveLoc = await reverseGeocode(liveLat, liveLng);
+        setLocation(liveLoc);
+      }
+      console.log("PUNCH IN DEBUG -> location:", liveLoc, "| latitude:", liveLat, "| longitude:", liveLng, "| selfie:", photo ? "captured" : "none");
 
       const next = attendance.map(normalizeAttendanceRecord);
       const idx = next.findIndex((i) => i.date === today && i.employeeName === userName);
@@ -343,7 +460,7 @@ export function useAttendance() {
         employeeName: userName,
         userId,
         date: today,
-        location,
+        location: liveLoc,
         dayType: "Working Day",
         dayMode: "FULL_DAY",
         sessions: [],
@@ -377,7 +494,7 @@ export function useAttendance() {
         punchOutPhoto: lastOut?.punchOutPhoto || "",
       };
 
-      const finalRec = { ...updated, ...legacy, location };
+      const finalRec = { ...updated, ...legacy, location: liveLoc };
 
       if (idx !== -1) next[idx] = finalRec;
       else next.push(finalRec);
@@ -385,9 +502,9 @@ export function useAttendance() {
       // Save to localStorage first (existing functionality)
       persist(next);
 
-      // Also save to MySQL via backend API
+// Also save to MySQL via backend API (with live GPS coordinates)
       try {
-        const result = await apiCheckIn(location);
+        const result = await apiCheckIn(liveLoc, liveLat, liveLng, photo);
         if (result && result.id) {
           backendAttendanceIdRef.current = result.id;
           // Reload backend attendance to sync
@@ -406,82 +523,96 @@ export function useAttendance() {
         // Don't block UI - localStorage data is already saved
       }
 
-      return true;
+return true;
     },
     [attendance, canSeeAll, getCurrentTimeHHMM, location, persist, today, userId, userName, userRoleUpper]
   );
 
-  const punchOut = useCallback(
+const punchOut = useCallback(
     async (photo) => {
-      const time = getCurrentTimeHHMM();
-
-      const next = attendance.map(normalizeAttendanceRecord);
-      const idx = next.findIndex((i) => i.date === today && i.employeeName === userName);
-      if (idx === -1) {
-        return { ok: false, reason: "Pehle punch in karo" };
+      // Determine a valid (numeric) attendance ID to call checkout with.
+      // Never pass null/undefined/NaN — otherwise the request becomes
+      // PUT /api/attendance/checkout/undefined which yields a 404.
+      let attendanceId = backendAttendanceIdRef.current;
+      if (attendanceId == null || Number.isNaN(Number(attendanceId))) {
+        // Fallback: Find the attendance ID from backend attendance matching today
+        const todayISO = new Date().toISOString().split("T")[0];
+        const found = backendAttendance.find(
+          (a) => a.attendanceDate === todayISO && a.user?.id === userId
+        );
+        attendanceId = found && found.id ? found.id : null;
       }
 
-      const updated = upsertSessionForSameDay({
-        record: next[idx],
-        newSession: { type: "Punch Out", time, photo, createdAt: Date.now() },
-      });
+      if (attendanceId == null || Number.isNaN(Number(attendanceId))) {
+        return { ok: false, reason: "No active punch-in found for checkout. Pehle punch in karo." };
+      }
 
-      const sessions = updated.sessions || [];
-      const lastOut = sessions
-        .filter((s) => s.punchOut)
-        .slice()
-        .sort((a, b) => (a.punchOut || "").localeCompare(b.punchOut || ""))
-        .pop();
-      const firstIn = sessions
-        .filter((s) => s.punchIn)
-        .slice()
-        .sort((a, b) => (a.punchIn || "").localeCompare(b.punchIn || ""))[0];
+// Capture live GPS location (lat/lng) for checkout.
+      const gps = await captureGpsPosition();
+      let liveLat = null;
+      let liveLng = null;
+      let liveLoc = null;
+      if (gps) {
+        liveLat = gps.latitude;
+        liveLng = gps.longitude;
+        liveLoc = await reverseGeocode(liveLat, liveLng);
+        setLocation(liveLoc);
+      }
+      console.log("PUNCH OUT DEBUG -> location:", liveLoc, "| latitude:", liveLat, "| longitude:", liveLng, "| selfie:", photo ? "captured" : "none");
 
-      const legacy = {
-        punchIn: firstIn?.punchIn || "",
-        punchOut: lastOut?.punchOut || "",
-        punchInPhoto: firstIn?.punchInPhoto || "",
-        punchOutPhoto: lastOut?.punchOutPhoto || "",
-      };
-
-      next[idx] = { ...updated, ...legacy, location };
-
-      // Save to localStorage first (existing functionality)
-      persist(next);
-
-      // Also update MySQL via backend API
+      let updatedAttendance;
       try {
-        // Try to find the attendance record for today from backend and call checkout
-        const attendanceId = backendAttendanceIdRef.current;
-        if (attendanceId) {
-          await apiCheckOut(attendanceId);
-        } else {
-          // Fallback: Find the attendance ID from backend attendance matching today
-          const todayISO = new Date().toISOString().split("T")[0];
-          const found = backendAttendance.find(
-            (a) => a.attendanceDate === todayISO && a.user?.id === userId
-          );
-          if (found && found.id) {
-            await apiCheckOut(found.id);
-          }
-        }
-        // Reload backend attendance
-        let data = [];
-        if (canSeeAll || userRoleUpper === "DIRECTOR") {
-          data = await fetchAllAttendance();
-        } else if (userRoleUpper === "SUPERVISOR" || userRoleUpper === "MANAGER") {
-          data = await fetchMySiteAttendance();
-        } else {
-          data = await fetchMyAttendance();
-        }
-        setBackendAttendance(Array.isArray(data) ? data : []);
+// Perform the backend checkout. Only a successful HTTP 200 equals success.
+        updatedAttendance = await apiCheckOut(attendanceId, liveLoc, liveLat, liveLng, photo);
       } catch (e) {
-        console.error("Backend check-out failed, data saved to localStorage only:", e);
+        // API actually failed -> localStorage fallback keeps data locally, but do NOT report success.
+        const msg =
+          e?.response?.data?.message || e?.message || "Backend check-out failed";
+        console.error("Backend check-out failed, saved locally only:", e);
+        const time = getCurrentTimeHHMM();
+        setAttendance((prev) => {
+          const next = prev.map(normalizeAttendanceRecord);
+          const idx = next.findIndex((i) => i.date === today && i.employeeName === userName);
+          if (idx !== -1) {
+            next[idx] = {
+              ...next[idx],
+              punchOut: time,
+              punchOutPhoto: photo || next[idx].punchOutPhoto,
+            };
+          }
+          return next;
+        });
+        return { ok: false, reason: msg };
+      }
+
+      // Success: update attendance state immediately with the API response.
+      if (updatedAttendance) {
+        const rec = backendToLocalRecord(updatedAttendance);
+        if (rec) {
+          setAttendance((prev) => {
+            const next = prev.map(normalizeAttendanceRecord);
+            const idx = next.findIndex(
+              (i) =>
+                i.date === rec.date &&
+                (i.employeeName === rec.employeeName || i.userId === rec.userId)
+            );
+            if (idx !== -1) next[idx] = { ...next[idx], ...rec };
+            else next.push(rec);
+            return next;
+          });
+        }
+      }
+
+      // Re-fetch attendance from the database (source of truth) to refresh the table.
+      try {
+        await reloadBackendAttendance();
+      } catch (e) {
+        console.error("Failed to reload backend attendance after checkout:", e);
       }
 
       return { ok: true };
     },
-    [attendance, backendAttendance, canSeeAll, getCurrentTimeHHMM, location, persist, today, userId, userName, userRoleUpper]
+    [backendAttendance, userId, userName, today, getCurrentTimeHHMM, reloadBackendAttendance]
   );
 
   return {

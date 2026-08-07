@@ -390,7 +390,7 @@ function Layout({ title, children }) {
           <div className="logo-text">
 
             <h2>
-              SSS FMS Facility
+              SSS FMS PVT. LTD.
             </h2>
 
             <p>

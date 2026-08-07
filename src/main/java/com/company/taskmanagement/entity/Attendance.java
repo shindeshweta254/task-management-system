@@ -29,7 +29,28 @@ public class Attendance {
 	
 	private Double workingHours;
 
-	private String location;
+private String location;
+
+
+	private String checkInSelfiePath;
+
+	private String checkOutSelfiePath;
+
+	public String getCheckInSelfiePath() {
+		return checkInSelfiePath;
+	}
+
+	public void setCheckInSelfiePath(String checkInSelfiePath) {
+		this.checkInSelfiePath = checkInSelfiePath;
+	}
+
+	public String getCheckOutSelfiePath() {
+		return checkOutSelfiePath;
+	}
+
+	public void setCheckOutSelfiePath(String checkOutSelfiePath) {
+		this.checkOutSelfiePath = checkOutSelfiePath;
+	}
 
 	public Double getWorkingHours() {
 		return workingHours;
@@ -39,13 +60,15 @@ public class Attendance {
 		this.workingHours = workingHours;
 	}
 
-	public String getLocation() {
+public String getLocation() {
 		return location;
 	}
 
 	public void setLocation(String location) {
 		this.location = location;
 	}
+
+	
 
 	@ManyToOne
 	@JoinColumn(name = "user_id")

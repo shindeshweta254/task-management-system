@@ -4,8 +4,10 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.company.taskmanagement.entity.Attendance;
 
@@ -21,6 +23,17 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 	@Query("SELECT a FROM Attendance a WHERE a.user.siteCode = :siteCode")
 	List<Attendance> findByUserSiteCode(@Param("siteCode") String siteCode);
 
-	@Query("SELECT COUNT(a) FROM Attendance a WHERE a.user.siteCode = :siteCode AND a.attendanceDate = :date")
+@Query("SELECT COUNT(a) FROM Attendance a WHERE a.user.siteCode = :siteCode AND a.attendanceDate = :date")
 	long countByUserSiteCodeAndAttendanceDate(@Param("siteCode") String siteCode, @Param("date") LocalDate date);
+
+	@Modifying
+	@Transactional
+	@Query("DELETE FROM Attendance a WHERE YEAR(a.attendanceDate) = :year AND MONTH(a.attendanceDate) = :month")
+	int deleteByYearAndMonth(@Param("year") int year, @Param("month") int month);
+	Attendance findTopByUserIdAndAttendanceDateOrderByIdDesc(
+	        Long userId,
+	        LocalDate attendanceDate
+	);
+	
 }
+	

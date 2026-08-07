@@ -38,8 +38,13 @@ export async function importProjectsFromExcel(file) {
   const formData = new FormData();
   formData.append("file", file);
 
+  let loggedInUser;
+  try { loggedInUser = JSON.parse(localStorage.getItem("user")); } catch { loggedInUser = null; }
+  const headers = loggedInUser?.id ? { "X-User-Id": String(loggedInUser.id) } : {};
+
   const res = await fetch(`${API_BASE_URL}/api/projects/import`, {
     method: "POST",
+    headers,
     body: formData,
   });
 

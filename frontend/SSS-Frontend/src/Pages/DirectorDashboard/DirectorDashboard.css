@@ -525,6 +525,17 @@
   transform: scale(1.1);
 }
 
+/* "No Selfie" fallback text */
+.director-no-selfie {
+  display: inline-flex;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #f1f3f7;
+  color: #8a93a5;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 /* Selfie full-size modal */
 .director-modal-overlay {
   position: fixed;
@@ -576,6 +587,104 @@
   max-height: 80vh;
   border-radius: 10px;
   display: block;
+}
+
+/* ========== Clear Attendance Data ========== */
+
+.director-clear-data-btn {
+  min-height: 42px;
+  padding: 10px 17px;
+  border: 0;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #ef4444, #f87171);
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.director-clear-data-btn:hover {
+  transform: translateY(-1px);
+}
+
+.director-clear-modal {
+  width: min(440px, 92vw);
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.director-clear-modal h3 {
+  margin: 0 0 16px;
+  color: #172033;
+}
+
+.director-clear-label {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 14px;
+  color: #40495c;
+  font-weight: 700;
+}
+
+.director-clear-label select,
+.director-clear-label input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #d7ddeb;
+  border-radius: 10px;
+  outline: none;
+  background: #ffffff;
+  color: #182033;
+  box-sizing: border-box;
+}
+
+.director-clear-label select:focus,
+.director-clear-label input:focus {
+  border-color: #6256e7;
+  box-shadow: 0 0 0 3px rgba(98, 86, 231, 0.12);
+}
+
+.director-clear-confirm {
+  margin: 6px 0 16px;
+  padding: 13px 14px;
+  border-radius: 10px;
+  background: #fff3d6;
+  color: #8a5a12;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.director-clear-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.director-clear-cancel,
+.director-clear-delete {
+  min-height: 42px;
+  padding: 10px 17px;
+  border: 0;
+  border-radius: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.director-clear-cancel {
+  background: #eef0f5;
+  color: #3f485a;
+}
+
+.director-clear-delete {
+  background: linear-gradient(135deg, #ef4444, #f87171);
+  color: #ffffff;
+}
+
+.director-clear-delete:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 

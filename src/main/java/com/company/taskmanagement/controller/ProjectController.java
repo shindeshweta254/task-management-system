@@ -36,10 +36,18 @@ public class ProjectController {
     @Autowired
     private AccessService accessService;
 
-    @GetMapping
+@GetMapping
     public List<Project> getAllProjects(HttpServletRequest request) {
         User currentUser = accessService.resolveUser(request);
         List<Project> allProjects = projectService.getAllProjects();
+
+        // Elevated users (Director, Admin, SP001) see ALL projects.
+        // siteCode may be blank for these roles, which would otherwise
+        // filter out every project via hasSiteAccess().
+        if (accessService.hasElevatedAccess(currentUser)) {
+            return allProjects;
+        }
+
         // Filter projects by user's site access
         return allProjects.stream()
                 .filter(p -> {

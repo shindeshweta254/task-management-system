@@ -171,9 +171,9 @@ function NewChecklist() {
       const formData = new FormData();
       formData.append("file", file);
       const loggedInUser = JSON.parse(localStorage.getItem("user"));
-      const res = await fetch(`${API_BASE}/api/checklist-report/photo`, {
+const res = await fetch(`${API_BASE}/api/checklist-report/photo`, {
         method: "POST",
-        headers: { "X-User-Id": String(loggedInUser?.id || "") },
+        headers: { "X-User-Id": String(loggedInUser?.id || localStorage.getItem("userId") || "") },
         body: formData,
       });
       if (res.ok) {
@@ -315,11 +315,11 @@ function NewChecklist() {
         reportDate: new Date().toISOString().split("T")[0],
       };
 
-      const sheetRes = await fetch(`${API_BASE}/api/checklist-sheet/save`, {
+const sheetRes = await fetch(`${API_BASE}/api/checklist-sheet/save`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-User-Id": String(loggedInUser.id),
+          "X-User-Id": String(loggedInUser?.id || localStorage.getItem("userId") || ""),
         },
         body: JSON.stringify(payload),
       });
@@ -331,11 +331,11 @@ function NewChecklist() {
 
       // Save entries if any
       if (entriesList.length > 0) {
-        const res = await fetch(`${API_BASE}/api/checklist-report/batch-save`, {
+const res = await fetch(`${API_BASE}/api/checklist-report/batch-save`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-User-Id": String(loggedInUser.id),
+            "X-User-Id": String(loggedInUser?.id || localStorage.getItem("userId") || ""),
           },
           body: JSON.stringify(entriesList),
         });

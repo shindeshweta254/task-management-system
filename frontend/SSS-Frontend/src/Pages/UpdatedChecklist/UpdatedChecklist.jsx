@@ -56,8 +56,8 @@ function UpdatedChecklist() {
     setError("");
     try {
       const loggedInUser = JSON.parse(localStorage.getItem("user"));
-      const res = await fetch(`${API_BASE}/api/checklist-report/all-submissions`, {
-        headers: { "X-User-Id": String(loggedInUser.id) },
+const res = await fetch(`${API_BASE}/api/checklist-report/all-submissions`, {
+        headers: { "X-User-Id": String(loggedInUser?.id || localStorage.getItem("userId") || "") },
       });
       if (!res.ok) throw new Error("Failed to load submissions");
       const data = await res.json();
@@ -71,8 +71,19 @@ function UpdatedChecklist() {
     }
   }, []);
 
-  useEffect(() => {
+useEffect(() => {
     if (activeTab === "updated") loadSubmissions();
+  }, [activeTab, loadSubmissions]);
+
+  // Auto-refresh: poll the backend every few seconds so newly saved checklists
+  // appear in the Director "Updated Checklist" section WITHOUT a manual refresh.
+  useEffect(() => {
+    if (activeTab !== "updated") return;
+    loadSubmissions();
+    const interval = setInterval(() => {
+      loadSubmissions();
+    }, 8000);
+    return () => clearInterval(interval);
   }, [activeTab, loadSubmissions]);
 
   // ========== DERIVE FILTER OPTIONS ==========
@@ -146,8 +157,8 @@ function UpdatedChecklist() {
     setError("");
     try {
       const loggedInUser = JSON.parse(localStorage.getItem("user"));
-      const res = await fetch(`${API_BASE}/api/checklist-report/all-submissions`, {
-        headers: { "X-User-Id": String(loggedInUser.id) },
+const res = await fetch(`${API_BASE}/api/checklist-report/all-submissions`, {
+        headers: { "X-User-Id": String(loggedInUser?.id || localStorage.getItem("userId") || "") },
       });
       if (!res.ok) throw new Error("Failed to load reports");
       const data = (await res.json()) || [];

@@ -36,9 +36,9 @@ public class AttendanceReportDTO {
     private Double latitude;
     private Double longitude;
 
-    // Selfie / proof file
-    private String selfieFileName;
-    private String selfieFilePath;
+// Selfie / proof file (from Attendance record - punch in/out selfies)
+    private String checkInSelfieUrl;
+    private String checkOutSelfieUrl;
 
     public static AttendanceReportDTO fromAttendanceAndReport(Attendance attendance, Report report, User user) {
         AttendanceReportDTO dto = new AttendanceReportDTO();
@@ -54,18 +54,51 @@ public class AttendanceReportDTO {
         dto.status = attendance.getStatus();
         dto.location = attendance.getLocation();
 
-        // Try to get address from the report (daily report has locationAddress)
+// Use attendance punch-in/punch-out selfie paths only.
+        // Convert relative file path to accessible URL path (e.g. uploads/attendance/xxx.jpg).
+        dto.checkInSelfieUrl = toSelfieUrl(attendance.getCheckInSelfiePath());
+        dto.checkOutSelfieUrl = toSelfieUrl(attendance.getCheckOutSelfiePath());
+
+      
+        dto.latestLiveAddress = attendance.getLocation();
+
+        // Fall back to report address only if attendance has no live location.
         if (report != null) {
             dto.checkInAddress = report.getLocationAddress();
             dto.checkOutAddress = report.getLocationAddress();
-            dto.latestLiveAddress = report.getLocationAddress();
-            dto.latitude = report.getLatitude();
-            dto.longitude = report.getLongitude();
-            dto.selfieFileName = report.getProofFileName();
-            dto.selfieFilePath = report.getProofFilePath();
+            if (dto.latitude == null) dto.latitude = report.getLatitude();
+            if (dto.longitude == null) dto.longitude = report.getLongitude();
+            if ((dto.latestLiveAddress == null || dto.latestLiveAddress.isBlank()) && report.getLocationAddress() != null) {
+                dto.latestLiveAddress = report.getLocationAddress();
+            }
         }
 
         return dto;
+    }
+
+    /**
+     * Convert a stored selfie file path (e.g. uploads/attendance/123.jpg) into
+     * a URL-accessible path relative to the backend root.
+     */
+    private static String toSelfieUrl(String path) {
+        if (path == null || path.isBlank()) {
+            return null;
+        }
+        // Normalize Windows backslashes to forward slashes
+        String normalized = path.replace("\\", "/");
+        // If it already starts with uploads/, serve via static handler
+        if (normalized.startsWith("uploads/")) {
+            return "/" + normalized;
+        }
+        // If it's a bare filename, assume it's under uploads/attendance/
+        if (!normalized.contains("/")) {
+            return "/uploads/attendance/" + normalized;
+        }
+        // Otherwise wrap as-is
+        if (!normalized.startsWith("/")) {
+            return "/" + normalized;
+        }
+        return normalized;
     }
 
     public Long getAttendanceId() { return attendanceId; }
@@ -116,10 +149,10 @@ public String getLocation() { return location; }
     public Double getLongitude() { return longitude; }
     public void setLongitude(Double longitude) { this.longitude = longitude; }
 
-    public String getSelfieFileName() { return selfieFileName; }
-    public void setSelfieFileName(String selfieFileName) { this.selfieFileName = selfieFileName; }
+public String getCheckInSelfieUrl() { return checkInSelfieUrl; }
+    public void setCheckInSelfieUrl(String checkInSelfieUrl) { this.checkInSelfieUrl = checkInSelfieUrl; }
 
-    public String getSelfieFilePath() { return selfieFilePath; }
-    public void setSelfieFilePath(String selfieFilePath) { this.selfieFilePath = selfieFilePath; }
+    public String getCheckOutSelfieUrl() { return checkOutSelfieUrl; }
+    public void setCheckOutSelfieUrl(String checkOutSelfieUrl) { this.checkOutSelfieUrl = checkOutSelfieUrl; }
 }
 

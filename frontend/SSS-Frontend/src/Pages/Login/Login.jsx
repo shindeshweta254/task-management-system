@@ -77,7 +77,8 @@ function Login() {
         return;
       }
 
-      localStorage.setItem("user", JSON.stringify(user));
+localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("userId", String(user.id));
 
       setMessage("Login Successful ✅");
 

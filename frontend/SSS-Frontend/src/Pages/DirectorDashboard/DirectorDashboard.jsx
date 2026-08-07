@@ -7,10 +7,6 @@ import {
   FaCheckCircle,
   FaHourglassHalf,
   FaFlag,
-  FaUserPlus,
-  FaFileExcel,
-  FaSyncAlt,
-  FaTachometerAlt,
 } from "react-icons/fa";
 
 import Layout from "../../components/Layout/Layout";
@@ -28,7 +24,7 @@ import {
   uploadStaffHistory,
 } from "../../api/excelUploadHistoryApi";
 
-import { fetchAllAttendance } from "../../api/directorDashboardApi";
+import { deleteAttendanceByMonth } from "../../api/attendanceApi";
 
 const API_BASE_URL = "http://localhost:8080";
 
@@ -110,6 +106,12 @@ function DirectorDashboard() {
   const [excelModalTable, setExcelModalTable] = useState([]);
   const [historyBusy, setHistoryBusy] = useState(false);
 
+  const [clearDataOpen, setClearDataOpen] = useState(false);
+  const [clearMonth, setClearMonth] = useState("");
+  const [clearYear, setClearYear] = useState(new Date().getFullYear());
+  const [clearBusy, setClearBusy] = useState(false);
+  const [clearMessage, setClearMessage] = useState("");
+
   const readResponse = async (response, fallbackValue) => {
     const responseText = await response.text();
 
@@ -163,7 +165,7 @@ function DirectorDashboard() {
   }
 };
 
-  const fetchAllTasks = async () => {
+const fetchAllTasks = async () => {
   try {
     const loggedInUser = JSON.parse(localStorage.getItem("user")) || {};
 
@@ -183,6 +185,26 @@ function DirectorDashboard() {
   }
 };
 
+const fetchAllAttendanceSafe = async () => {
+  try {
+    const loggedInUser = JSON.parse(localStorage.getItem("user")) || {};
+
+const response = await fetch(`${API_BASE_URL}/api/attendance/director`, {
+      headers: {
+        "X-User-Id": String(
+          loggedInUser?.id || loggedInUser?.userId || ""
+        ),
+        "Content-Type": "application/json",
+      },
+    });
+
+    return await readResponse(response, []);
+  } catch (error) {
+    console.error("All attendance API failed:", error);
+    return [];
+  }
+};
+
   const loadDashboardData = useCallback(async () => {
     setLoading(true);
     setPageError("");
@@ -197,9 +219,9 @@ function DirectorDashboard() {
         completedTasksCount,
         deadlineTasksCount,
       ] = await Promise.all([
-        safeFetch(`${API_BASE_URL}/api/users`, []),
+safeFetch(`${API_BASE_URL}/api/users`, []),
         fetchAllTasks(),
-fetchAllAttendance(),
+        fetchAllAttendanceSafe(),
         safeFetch(`${API_BASE_URL}/api/tasks/count/total`, 0),
         safeFetch(`${API_BASE_URL}/api/tasks/count/pending`, 0),
         safeFetch(`${API_BASE_URL}/api/tasks/count/completed`, 0),
@@ -413,40 +435,10 @@ fetchAllAttendance(),
 
 const directorTabs = [
   {
-    key: "dashboard",
-    label: "Dashboard",
-    icon: <FaTachometerAlt />,
-    onClick: () => setSearchParams({ tab: "dashboard" }),
-  },
-  {
     key: "attendance",
     label: "Attendance",
     icon: <FaCalendarCheck />,
     onClick: () => setSearchParams({ tab: "attendance" }),
-  },
-  {
-    key: "employees",
-    label: "Employees",
-    icon: <FaUsers />,
-    onClick: () => setSearchParams({ tab: "employees" }),
-  },
-  {
-    key: "tasks",
-    label: "Tasks",
-    icon: <FaTasks />,
-    onClick: () => setSearchParams({ tab: "tasks" }),
-  },
-  {
-    key: "add-employee",
-    label: "Add Employee",
-    icon: <FaUserPlus />,
-    onClick: () => setSearchParams({ tab: "add-employee" }),
-  },
-  {
-    key: "upload-excel",
-    label: "Upload Excel",
-    icon: <FaFileExcel />,
-    onClick: () => setSearchParams({ tab: "upload-excel" }),
   },
 ];
 
@@ -454,7 +446,7 @@ const directorTabs = [
     <Layout title="Director Dashboard">
       <main className="director-dashboard-page">
         <div className="director-tabs">
-          <div className="director-tabs-scroll">
+<div className="director-tabs-scroll">
             {directorTabs.map((tab) => (
               <button
                 key={tab.key}
@@ -469,23 +461,6 @@ const directorTabs = [
               </button>
             ))}
           </div>
-
-<button
-            type="button"
-            className="director-tab-button"
-            onClick={() => navigate("/add-task")}
-          >
-            <FaTasks />
-            <span>Add Task</span>
-          </button>
-          <button
-            type="button"
-            className="director-refresh-button"
-            onClick={loadDashboardData}
-            title="Refresh dashboard"
-          >
-            <FaSyncAlt />
-          </button>
         </div>
 
         {pageError && (
@@ -568,8 +543,144 @@ const directorTabs = [
                 <h2>All Attendance</h2>
                 <p>{attendance.length} records found</p>
               </div>
+              <button
+                type="button"
+                className="director-clear-data-btn"
+                onClick={() => {
+                  setClearMessage("");
+                  setClearMonth("");
+                  setClearDataOpen(true);
+                }}
+              >
+                🗑 Clear Data
+              </button>
             </div>
+
+            {clearMessage && (
+              <p className="director-message">{clearMessage}</p>
+            )}
+
             <AttendanceTable attendance={attendance} />
+
+            {clearDataOpen && (
+              <div
+                className="director-modal-overlay"
+                onClick={() => {
+                  if (!clearBusy) setClearDataOpen(false);
+                }}
+              >
+                <div
+                  className="director-modal-content director-clear-modal"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    className="director-modal-close"
+                    onClick={() => {
+                      if (!clearBusy) setClearDataOpen(false);
+                    }}
+                  >
+                    &times;
+                  </button>
+
+                  <h3>Clear Attendance Data</h3>
+
+                  <label className="director-clear-label">
+                    Select Month
+                    <select
+                      value={clearMonth}
+                      onChange={(e) => setClearMonth(e.target.value)}
+                      disabled={clearBusy}
+                    >
+                      <option value="">-- Select Month --</option>
+                      {[
+                        "January",
+                        "February",
+                        "March",
+                        "April",
+                        "May",
+                        "June",
+                        "July",
+                        "August",
+                        "September",
+                        "October",
+                        "November",
+                        "December",
+                      ].map((name, i) => (
+                        <option key={name} value={i + 1}>
+                          {name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="director-clear-label">
+                    Year
+                    <input
+                      type="number"
+                      value={clearYear}
+                      min={2000}
+                      max={2100}
+                      onChange={(e) => setClearYear(Number(e.target.value))}
+                      disabled={clearBusy}
+                    />
+                  </label>
+
+                  {clearMonth && (
+                    <p className="director-clear-confirm">
+                      Are you sure you want to permanently delete all attendance
+                      records for the selected month? This action cannot be
+                      undone.
+                    </p>
+                  )}
+
+                  <div className="director-clear-actions">
+                    <button
+                      type="button"
+                      className="director-clear-cancel"
+                      onClick={() => setClearDataOpen(false)}
+                      disabled={clearBusy}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="director-clear-delete"
+                      onClick={async () => {
+                        if (!clearMonth || clearBusy) return;
+                        setClearBusy(true);
+                        setClearMessage("");
+                        try {
+                          const result = await deleteAttendanceByMonth(
+                            clearYear,
+                            Number(clearMonth)
+                          );
+                          setClearMessage(
+                            `✅ ${String(result)}`
+                          );
+                          setClearDataOpen(false);
+                          setClearMonth("");
+                          await loadDashboardData();
+                        } catch (error) {
+                          console.error("Clear data error:", error);
+                          setClearMessage(
+                            `❌ ${
+                              error?.response?.data?.message ||
+                              error?.message ||
+                              "Failed to clear attendance data"
+                            }`
+                          );
+                        } finally {
+                          setClearBusy(false);
+                        }
+                      }}
+                      disabled={!clearMonth || clearBusy}
+                    >
+                      {clearBusy ? "Deleting..." : "Permanently Delete"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </section>
         )}
 
@@ -809,20 +920,55 @@ function AttendanceTable({ attendance }) {
     return <span className="attendance-status">{status || "-"}</span>;
   };
 
-  const getLocationText = (item) => {
-    // Prefer location from attendance table directly
+const getLocationText = (item) => {
+    // Prefer location from attendance table directly.
+    // Do NOT show latitude/longitude anywhere in the UI.
     const loc = item.location || "";
     const addr = item.checkInAddress || item.checkOutAddress || item.latestLiveAddress || "";
-    const lat = item.latitude;
-    const lng = item.longitude;
     if (loc) return loc;
     if (addr) return addr;
-    if (lat != null && lng != null) return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
     return "-";
   };
 
-  const getSelfieSrc = (item) => {
-    return item.selfie || item.selfieFilePath || item.selfieFileName || null;
+// Build a browser-accessible URL for a stored selfie path.
+  // If the path starts with /uploads, prepend the backend origin.
+  const getSelfieUrl = (path) => {
+    if (!path) return null;
+    const raw = String(path).replace(/\\/g, "/").trim();
+    if (!raw) return null;
+    // Already absolute/data URL -> use as-is
+    if (/^(https?:|data:|blob:)/i.test(raw)) return raw;
+    // Starts with /uploads -> backend origin + path
+    if (raw.startsWith("/uploads")) {
+      return `${API_BASE_URL}${raw}`;
+    }
+    // Relative uploads path -> backend origin + / + path
+    if (raw.startsWith("uploads/")) {
+      return `${API_BASE_URL}/${raw}`;
+    }
+    // Leading slash -> backend origin + path
+    if (raw.startsWith("/")) {
+      return `${API_BASE_URL}${raw}`;
+    }
+    return raw;
+  };
+
+  // Render a single selfie thumbnail with "No Selfie" fallback.
+  // Clicking opens the full image preview in a new tab.
+  const renderSelfieCell = (path) => {
+    const url = getSelfieUrl(path);
+    if (!url) {
+      return <span className="director-no-selfie">No Selfie</span>;
+    }
+    return (
+      <img
+        src={url}
+        alt="selfie"
+        className="director-selfie-thumb"
+        onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
+        style={{ cursor: "pointer" }}
+      />
+    );
   };
 
   return (
@@ -837,22 +983,22 @@ function AttendanceTable({ attendance }) {
               <th>Date</th>
               <th>Check-in</th>
               <th>Check-out</th>
-              <th>Working Hours</th>
-              <th>Status</th>
+<th>Working Hours</th>
+<th>Status</th>
               <th>Location</th>
-              <th>Selfie</th>
+              <th>Punch In Selfie</th>
+              <th>Punch Out Selfie</th>
             </tr>
           </thead>
           <tbody>
 {attendance.length === 0 ? (
               <tr>
-                <td colSpan={10} className="director-empty-cell">
+                <td colSpan={11} className="director-empty-cell">
                   No attendance records found
                 </td>
               </tr>
             ) : (
               attendance.map((item, idx) => {
-                const selfieSrc = getSelfieSrc(item);
                 return (
                   <tr key={item.attendanceId || item.id || idx}>
                     <td>{item.employeeName || "-"}</td>
@@ -866,19 +1012,8 @@ function AttendanceTable({ attendance }) {
                     <td className="location-cell" title={getLocationText(item)}>
                       {getLocationText(item)}
                     </td>
-                    <td>
-                      {selfieSrc ? (
-                        <img
-                          src={selfieSrc}
-                          alt="selfie"
-                          className="director-selfie-thumb"
-                          onClick={() => setSelfieModal(selfieSrc)}
-                          style={{ cursor: "pointer" }}
-                        />
-                      ) : (
-                        "-"
-                      )}
-                    </td>
+                    <td>{renderSelfieCell(item.checkInSelfiePath || item.checkInSelfieUrl)}</td>
+                    <td>{renderSelfieCell(item.checkOutSelfiePath || item.checkOutSelfieUrl)}</td>
                   </tr>
                 );
               })

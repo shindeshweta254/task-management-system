@@ -29,6 +29,38 @@ const calculateTotalHours = (checkIn, checkOut) => {
   return `${h} hr ${m} min`;
 };
 
+const API_BASE_URL = "http://localhost:8080";
+
+// Convert a stored selfie path into an accessible image URL.
+// Handles: uploads/attendance/file.jpg, /uploads/attendance/file.jpg, bare filename.jpg
+const toSelfieSrc = (raw) => {
+  if (!raw) return "";
+  if (/^(https?:|data:|blob:)/i.test(raw)) return raw;
+  const path = String(raw).replace(/\\/g, "/");
+  if (path.startsWith("uploads/")) return `${API_BASE_URL}/${path}`;
+  if (path.startsWith("/uploads/")) return `${API_BASE_URL}${path}`;
+  if (path.startsWith("/")) return `${API_BASE_URL}${path}`;
+  // Bare filename -> assume under uploads/attendance/
+  return `${API_BASE_URL}/uploads/attendance/${path}`;
+};
+
+// Render a selfie thumbnail or "No Selfie" placeholder.
+const renderSelfieCell = (path) => {
+  const url = toSelfieSrc(path);
+  if (!url) {
+    return <span className="att-no-selfie">No Selfie</span>;
+  }
+  return (
+    <img
+      src={url}
+      alt="selfie"
+      className="table-img"
+      onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
+      style={{ cursor: "pointer" }}
+    />
+  );
+};
+
 function Attendance() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -240,7 +272,7 @@ function Attendance() {
             <div className="table-wrapper">
               <table className="attendance-table">
                 <thead>
-                  <tr>
+<tr>
                     <th>Employee Name</th>
                     <th>Date</th>
                     <th>Check In Time</th>
@@ -248,12 +280,14 @@ function Attendance() {
                     <th>Total Hours</th>
                     <th>Status</th>
                     <th>Location</th>
+                    <th>Punch In Selfie</th>
+                    <th>Punch Out Selfie</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredAttendance.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="empty-row">
+                      <td colSpan={9} className="empty-row">
                         No attendance found
                       </td>
                     </tr>
@@ -286,7 +320,29 @@ function Attendance() {
                         status = "Half Day";
                       }
 
-                      const loc = normalized.location || "-";
+// Location: display only the actual attendance.location address.
+                      // Do NOT show latitude/longitude anywhere in the UI.
+                      const loc =
+                        normalized.location ||
+                        normalized.checkInAddress ||
+                        normalized.checkOutAddress ||
+                        normalized.latestLiveAddress ||
+                        "-";
+
+                      // Resolve selfie paths from sessions (fall back to top-level fields).
+                      // Sessions already carry absolute URLs via toAbsoluteSelfie().
+                      const checkInSelfie =
+                        sessions.find((s) => s?.punchInPhoto)?.punchInPhoto ||
+                        normalized.checkInSelfieUrl ||
+                        normalized.checkInSelfiePath ||
+                        normalized.checkInSelfiePhoto ||
+                        "";
+                      const checkOutSelfie =
+                        sessions.find((s) => s?.punchOutPhoto)?.punchOutPhoto ||
+                        normalized.checkOutSelfieUrl ||
+                        normalized.checkOutSelfiePath ||
+                        normalized.checkOutSelfiePhoto ||
+                        "";
 
                       return (
                         <tr key={index}>
@@ -301,6 +357,8 @@ function Attendance() {
                             </span>
                           </td>
                           <td className="location-cell">{loc}</td>
+                          <td>{renderSelfieCell(checkInSelfie)}</td>
+                          <td>{renderSelfieCell(checkOutSelfie)}</td>
                         </tr>
                       );
                     })

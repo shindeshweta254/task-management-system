@@ -208,10 +208,11 @@ export async function fetchDeadlineToday() {
  Director Dashboard Attendance
 
  Backend:
- GET /api/attendance/all
+ GET /api/attendance
 
  Controller:
  AttendanceController.java
+ (existing @GetMapping returns all attendance records)
 
  Director:
  ALL employee attendance
@@ -224,7 +225,7 @@ export async function fetchAllAttendance() {
 
 
   const res = await fetch(
-    `${API_BASE_URL}/api/attendance/all`,
+    `${API_BASE_URL}/api/attendance`,
     {
       headers:getAuthHeaders()
     }

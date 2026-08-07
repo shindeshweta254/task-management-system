@@ -52,11 +52,11 @@ public class AccessService {
 
     // ========== USER RESOLUTION ==========
 
-    /**
+/**
      * Resolve the current user from the X-User-Id header.
-     * Throws 401 if header missing, user not found, or user is inactive.
+     * Throws if header missing or user not found.
      */
-    public User resolveUser(HttpServletRequest request) {
+public User resolveUser(HttpServletRequest request) {
         String userIdStr = request.getHeader(USER_ID_HEADER);
         if (userIdStr == null || userIdStr.isBlank()) {
             throw new UnauthorizedException("Missing X-User-Id header");
