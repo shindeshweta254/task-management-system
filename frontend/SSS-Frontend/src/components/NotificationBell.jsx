@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { FaBell } from "react-icons/fa";
+import { getAuthHeaders } from "../api/index";
 
 function NotificationBell() {
   const [notifications, setNotifications] = useState([]);
@@ -33,7 +34,8 @@ function NotificationBell() {
     try {
       // Fetch unread count
       const countResponse = await fetch(
-        `http://localhost:8080/api/notifications/user/${userId}/unread-count`
+        `http://localhost:8080/api/notifications/user/${userId}/unread-count`,
+        { headers: getAuthHeaders() }
       );
       if (countResponse.ok) {
         const count = await countResponse.json();
@@ -53,7 +55,8 @@ function NotificationBell() {
     try {
       // Fetch notifications list
       const listResponse = await fetch(
-        `http://localhost:8080/api/notifications/user/${userId}`
+        `http://localhost:8080/api/notifications/user/${userId}`,
+        { headers: getAuthHeaders() }
       );
       console.log("Notification API response status:", listResponse.status);
       if (listResponse.ok) {
@@ -115,7 +118,7 @@ function NotificationBell() {
       try {
         await fetch(
           `http://localhost:8080/api/notifications/${notification.id}/read`,
-          { method: "PUT" }
+          { method: "PUT", headers: getAuthHeaders() }
         );
         fetchNotifications();
       } catch (err) {
@@ -139,7 +142,7 @@ function NotificationBell() {
     try {
       await fetch(
         `http://localhost:8080/api/notifications/user/${userId}/read-all`,
-        { method: "PUT" }
+        { method: "PUT", headers: getAuthHeaders() }
       );
       fetchNotifications();
     } catch (err) {

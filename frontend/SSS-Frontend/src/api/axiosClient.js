@@ -1,42 +1,50 @@
 import axios from "axios";
+import { API_BASE_URL, getAuthHeaders } from "./index";
 
 const axiosClient = axios.create({
-    baseURL: "http://localhost:8080",
-    headers: {
-        "Content-Type": "application/json"
-    }
+  baseURL: API_BASE_URL,
 });
 
-
 axiosClient.interceptors.request.use(
-    (config) => {
+  (config) => {
+    const authHeaders = getAuthHeaders();
 
-        const user = JSON.parse(
-            localStorage.getItem("user")
-        );
+    config.headers = {
+      ...(config.headers || {}),
+      ...authHeaders,
+    };
 
-
-        if (user && user.id) {
-
-            config.headers["X-User-Id"] = user.id;
-
-        }
-
-
-        console.log(
-            "Sending Header X-User-Id:",
-            config.headers["X-User-Id"]
-        );
-
-
-        return config;
-    },
-
-
-    (error) => {
-        return Promise.reject(error);
-    }
+    return config;
+  },
+  (error) => Promise.reject(error)
 );
 
+// Response interceptor
+axiosClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status;
+
+    if (status === 401) {
+      console.error(
+        "401 Unauthorized:",
+        "axiosClient.js:",
+        "Intercepted by axiosClient.js. ",
+            "No automatic redirect to login page from axios interceptor.", // Explicitly confirm no redirect
+        error?.config?.url,
+        error?.response?.data
+      );
+
+      // IMPORTANT:
+      // Do NOT clear token here.
+      // Do NOT redirect to login here.
+      //
+      // We will fix the actual JWT/Spring Security
+      // 401 issue separately.
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 export default axiosClient;

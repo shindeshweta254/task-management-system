@@ -18,11 +18,17 @@ import com.company.taskmanagement.repository.UserRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+
 /**
  * Central authorization service for the entire application.
  *
- * Resolves the current user from the X-User-Id header,
- * validates site access, record ownership, and role-based permissions.
+ * Resolves the current user from the JWT SecurityContext first,
+ * and falls back to the legacy X-User-Id header for backward
+ * compatibility. Also validates site access, record ownership,
+ * and role-based permissions.
  */
 @Service
 public class AccessService {
@@ -52,11 +58,23 @@ public class AccessService {
 
     // ========== USER RESOLUTION ==========
 
-/**
-     * Resolve the current user from the X-User-Id header.
-     * Throws if header missing or user not found.
+    /**
+     * Resolve the current user.
+     *
+     * 1. Prefers the JWT-authenticated user from the SecurityContext.
+     * 2. Falls back to the legacy X-User-Id header for backward compatibility.
+     *
+     * Throws if the user cannot be resolved or is not active.
      */
-public User resolveUser(HttpServletRequest request) {
+    public User resolveUser(HttpServletRequest request) {
+
+        // 1. Prefer the JWT-authenticated principal from the SecurityContext.
+        User authUser = resolveUserFromSecurityContext();
+        if (authUser != null) {
+            return authUser;
+        }
+
+        // 2. Backward-compatible fallback: X-User-Id header.
         String userIdStr = request.getHeader(USER_ID_HEADER);
         if (userIdStr == null || userIdStr.isBlank()) {
             throw new UnauthorizedException("Missing X-User-Id header");
@@ -74,6 +92,47 @@ public User resolveUser(HttpServletRequest request) {
 
         if (!"ACTIVE".equalsIgnoreCase(user.getStatus())) {
             throw new UnauthorizedException("User account is not active");
+        }
+
+        return user;
+    }
+
+    /**
+     * Resolve the currently authenticated (JWT) user from the SecurityContext.
+     * Returns null when there is no authenticated principal.
+     */
+    private User resolveUserFromSecurityContext() {
+
+        Authentication auth =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null
+                || !auth.isAuthenticated()
+                || "anonymousUser".equals(auth.getPrincipal())) {
+            return null;
+        }
+
+        Object principal = auth.getPrincipal();
+        String employeeId = null;
+
+        if (principal instanceof UserDetails userDetails) {
+            employeeId = userDetails.getUsername();
+        } else if (principal instanceof String) {
+            employeeId = (String) principal;
+        }
+
+        if (employeeId == null || employeeId.isBlank()) {
+            return null;
+        }
+
+        User user = null;
+        List<User> users = userRepository.findByEmployeeId(employeeId);
+        if (users != null && !users.isEmpty()) {
+            user = users.get(0);
+        }
+
+        if (user == null || !"ACTIVE".equalsIgnoreCase(user.getStatus())) {
+            return null;
         }
 
         return user;

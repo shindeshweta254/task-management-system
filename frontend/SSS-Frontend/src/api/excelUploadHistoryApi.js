@@ -1,25 +1,4 @@
-import { API_BASE_URL } from "./index";
-
-
-const jsonOrText = async (res) => {
-
-  const contentType = res.headers.get("content-type") || "";
-
-  if (contentType.includes("application/json")) {
-    return res.json();
-  }
-
-
-  const text = await res.text();
-
-
-  try {
-    return JSON.parse(text);
-  } catch {
-    return text;
-  }
-
-};
+import { API_BASE_URL, apiFetch } from "./index";
 
 
 
@@ -60,9 +39,7 @@ export async function uploadStaffHistory({
     {
       method: "POST",
 
-      headers: {
-        "X-User-Id": String(uploadedByUserId),
-      },
+      headers: getAuthHeaders(),
 
       body: formData,
     }
@@ -154,9 +131,7 @@ export async function uploadProjectHistory({
     {
       method:"POST",
 
-      headers:{
-        "X-User-Id":String(uploadedByUserId),
-      },
+      headers: getAuthHeaders(),
 
       body:formData,
     }
@@ -196,36 +171,6 @@ export async function uploadProjectHistory({
 // ================= AUTH HEADER =================
 
 
-function getAuthHeaders(){
-
-
-  let loggedInUser = null;
-
-
-  try{
-
-    loggedInUser =
-      JSON.parse(
-        localStorage.getItem("user")
-      );
-
-  }
-  catch{
-
-    loggedInUser=null;
-
-  }
-
-
-
-  return loggedInUser?.id
-    ? {
-        "X-User-Id":
-        String(loggedInUser.id)
-      }
-    : {};
-
-}
 
 
 
@@ -276,34 +221,9 @@ export async function fetchStaffUploadsAll(){
 
 export async function fetchStaffUploadsMy(userId){
 
-
-  const res = await fetch(
-    `${API_BASE_URL}/api/excel-uploads/staff/my?userId=${encodeURIComponent(userId)}`,
-    {
-      headers:getAuthHeaders()
-    }
-  );
-
-
-
-  if(res.status===404)
-    return [];
-
-
-
-  const data =
-    await jsonOrText(res);
-
-
-
-  if(!res.ok)
-    return [];
-
-
-
-  return Array.isArray(data)
-    ? data
-    : [];
+  if (!userId) return [];
+  const data = await apiFetch(`${API_BASE_URL}/api/excel-uploads/staff/my?userId=${encodeURIComponent(userId)}`);
+  return Array.isArray(data) ? data : [];
 
 }
 
@@ -315,34 +235,9 @@ export async function fetchStaffUploadsMy(userId){
 
 export async function fetchStaffUploadsBySite(siteName){
 
-
-  const res = await fetch(
-    `${API_BASE_URL}/api/excel-uploads/staff/site/${encodeURIComponent(siteName)}`,
-    {
-      headers:getAuthHeaders()
-    }
-  );
-
-
-
-  if(res.status===404)
-    return [];
-
-
-
-  const data =
-    await jsonOrText(res);
-
-
-
-  if(!res.ok)
-    return [];
-
-
-
-  return Array.isArray(data)
-    ? data
-    : [];
+  if (!siteName) return [];
+  const data = await apiFetch(`${API_BASE_URL}/api/excel-uploads/staff/site/${encodeURIComponent(siteName)}`);
+  return Array.isArray(data) ? data : [];
 
 }
 
@@ -358,33 +253,8 @@ export async function fetchStaffUploadsBySite(siteName){
 export async function fetchProjectUploadsAll(){
 
 
-  const res = await fetch(
-    `${API_BASE_URL}/api/excel-uploads/project/all`,
-    {
-      headers:getAuthHeaders()
-    }
-  );
-
-
-
-  if(res.status===404)
-    return [];
-
-
-
-  const data =
-    await jsonOrText(res);
-
-
-
-  if(!res.ok)
-    return [];
-
-
-
-  return Array.isArray(data)
-    ? data
-    : [];
+  const data = await apiFetch(`${API_BASE_URL}/api/excel-uploads/project/all`);
+  return Array.isArray(data) ? data : [];
 
 }
 
@@ -396,34 +266,9 @@ export async function fetchProjectUploadsAll(){
 
 export async function fetchProjectUploadsMy(userId){
 
-
-  const res = await fetch(
-    `${API_BASE_URL}/api/excel-uploads/project/my?userId=${encodeURIComponent(userId)}`,
-    {
-      headers:getAuthHeaders()
-    }
-  );
-
-
-
-  if(res.status===404)
-    return [];
-
-
-
-  const data =
-    await jsonOrText(res);
-
-
-
-  if(!res.ok)
-    return [];
-
-
-
-  return Array.isArray(data)
-    ? data
-    : [];
+  if (!userId) return [];
+  const data = await apiFetch(`${API_BASE_URL}/api/excel-uploads/project/my?userId=${encodeURIComponent(userId)}`);
+  return Array.isArray(data) ? data : [];
 
 }
 
@@ -435,34 +280,9 @@ export async function fetchProjectUploadsMy(userId){
 
 export async function fetchProjectUploadsBySite(siteName){
 
-
-  const res = await fetch(
-    `${API_BASE_URL}/api/excel-uploads/project/site/${encodeURIComponent(siteName)}`,
-    {
-      headers:getAuthHeaders()
-    }
-  );
-
-
-
-  if(res.status===404)
-    return [];
-
-
-
-  const data =
-    await jsonOrText(res);
-
-
-
-  if(!res.ok)
-    return [];
-
-
-
-  return Array.isArray(data)
-    ? data
-    : [];
+  if (!siteName) return [];
+  const data = await apiFetch(`${API_BASE_URL}/api/excel-uploads/project/site/${encodeURIComponent(siteName)}`);
+  return Array.isArray(data) ? data : [];
 
 }
 
@@ -479,28 +299,9 @@ export async function fetchProjectUploadsBySite(siteName){
 export async function fetchStaffExcelRows(id){
 
 
-  const res = await fetch(
-    `${API_BASE_URL}/api/excel-uploads/staff/${id}/rows`,
-    {
-      headers:getAuthHeaders()
-    }
-  );
-
-
-
-  const data =
-    await jsonOrText(res);
-
-
-
-  if(!res.ok)
-    throw new Error(
-      "Failed to load staff excel rows"
-    );
-
-
-
-  return data?.rows || [];
+  const data = await apiFetch(`${API_BASE_URL}/api/excel-uploads/staff/${id}/rows`);
+  if (!data) throw new Error("Failed to load staff excel rows");
+  return data.rows || [];
 
 }
 
@@ -512,29 +313,9 @@ export async function fetchStaffExcelRows(id){
 
 export async function fetchProjectExcelRows(id){
 
-
-  const res = await fetch(
-    `${API_BASE_URL}/api/excel-uploads/project/${id}/rows`,
-    {
-      headers:getAuthHeaders()
-    }
-  );
-
-
-
-  const data =
-    await jsonOrText(res);
-
-
-
-  if(!res.ok)
-    throw new Error(
-      "Failed to load project excel rows"
-    );
-
-
-
-  return data?.rows || [];
+  const data = await apiFetch(`${API_BASE_URL}/api/excel-uploads/project/${id}/rows`);
+  if (!data) throw new Error("Failed to load project excel rows");
+  return data.rows || [];
 
 }
 
@@ -551,22 +332,8 @@ export async function fetchProjectExcelRows(id){
 export async function downloadStaffExcel(id){
 
 
-  const res = await fetch(
-    `${API_BASE_URL}/api/excel-uploads/staff/${id}/download`,
-    {
-      headers:getAuthHeaders()
-    }
-  );
-
-
-  if(!res.ok)
-    throw new Error(
-      "Failed to download staff excel"
-    );
-
-
-
-  return await res.blob();
+  const response = await apiFetch(`${API_BASE_URL}/api/excel-uploads/staff/${id}/download`, { responseType: 'blob' });
+  return response;
 
 }
 
@@ -577,23 +344,7 @@ export async function downloadStaffExcel(id){
 
 export async function downloadProjectExcel(id){
 
-
-  const res = await fetch(
-    `${API_BASE_URL}/api/excel-uploads/project/${id}/download`,
-    {
-      headers:getAuthHeaders()
-    }
-  );
-
-
-
-  if(!res.ok)
-    throw new Error(
-      "Failed to download project excel"
-    );
-
-
-
-  return await res.blob();
+  const response = await apiFetch(`${API_BASE_URL}/api/excel-uploads/project/${id}/download`, { responseType: 'blob' });
+  return response;
 
 }

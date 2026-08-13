@@ -9,13 +9,7 @@ import com.company.taskmanagement.entity.User;
 public interface UserRepository
 		extends JpaRepository<User, Long> {
 
-	User findByEmployeeId(String employeeId);
-
-	User findByEmployeeIdAndEmailAndPassword(
-			String employeeId,
-			String email,
-			String password
-	);
+	List<User> findByEmployeeId(String employeeId);
 
 	long countByRoleRoleName(String string);
 

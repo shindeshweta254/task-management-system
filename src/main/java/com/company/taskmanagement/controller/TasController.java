@@ -5,11 +5,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import com.company.taskmanagement.dto.UserDTO;
 import com.company.taskmanagement.entity.Task;
 import com.company.taskmanagement.entity.User;
+import com.company.taskmanagement.repository.UserRepository;
 import com.company.taskmanagement.service.AccessService;
 import com.company.taskmanagement.service.TaskService;
 
@@ -34,6 +38,9 @@ public class TasController {
 
     @Autowired
     private AccessService accessService;
+
+    @Autowired
+    private UserRepository userRepository;
 
 
     @PostMapping
@@ -84,6 +91,37 @@ public class TasController {
             HttpServletRequest request
     ){
 
+        // 1. Prefer the authenticated JWT user from the SecurityContext.
+        User authenticatedUser =
+                resolveUserFromSecurityContext();
+
+        if (authenticatedUser != null) {
+
+            // An authenticated employee may only view their OWN tasks.
+            if (authenticatedUser.getId().equals(userId)) {
+                return taskService
+                        .getTasksByEmployee(userId);
+            }
+
+            // Supervisors / managers / elevated roles may view site employees' tasks.
+            if (accessService.isDirector(authenticatedUser)
+                    || accessService.isSP001(authenticatedUser)
+                    || accessService.isSP002(authenticatedUser)
+                    || accessService.isAdmin(authenticatedUser)
+                    || accessService.isSupervisor(authenticatedUser)
+                    || accessService.isManager(authenticatedUser)
+                    || accessService.hasElevatedAccess(authenticatedUser)
+                    || accessService.isGlobalSupervisor(authenticatedUser)) {
+
+                return taskService
+                        .getTasksByEmployee(userId);
+            }
+
+            throw new com.company.taskmanagement.exception.ForbiddenException(
+                    "Access denied to tasks of employee: " + userId);
+        }
+
+        // 2. Backward-compatible fallback: X-User-Id header.
         accessService
                 .resolveAndValidateTargetUser(
                         request,
@@ -94,6 +132,43 @@ public class TasController {
         return taskService
                 .getTasksByEmployee(userId);
 
+    }
+
+    /**
+     * Resolve the current logged-in user from the JWT SecurityContext.
+     * Returns null when no authenticated user is present.
+     */
+    private User resolveUserFromSecurityContext() {
+
+        Authentication auth =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null
+                || !auth.isAuthenticated()
+                || "anonymousUser"
+                        .equals(auth.getPrincipal())) {
+            return null;
+        }
+
+        Object principal = auth.getPrincipal();
+
+        String employeeId = null;
+
+        if (principal instanceof UserDetails userDetails) {
+            employeeId = userDetails.getUsername();
+        } else if (principal instanceof String) {
+            employeeId = (String) principal;
+        }
+
+        if (employeeId == null || employeeId.isBlank()) {
+            return null;
+        }
+
+        List<User> users = userRepository.findByEmployeeId(employeeId);
+        if (users == null || users.isEmpty()) {
+            return null;
+        }
+        return users.get(0);
     }
 
 

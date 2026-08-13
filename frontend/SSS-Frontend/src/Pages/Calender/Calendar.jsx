@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import Layout from "../../components/Layout/Layout";
 import "./Calendar.css";
 import { FaCalendarAlt, FaChevronLeft, FaChevronRight, FaPlus } from "react-icons/fa";
+import axiosClient from "../../api/axiosClient";
 
 function Calendar() {
   const [year, setYear] = useState(new Date().getFullYear());
@@ -88,9 +89,9 @@ function Calendar() {
   const fetchEvents = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:8080/api/schedules${userId ? `/user/${userId}` : ""}`);
-      if (!res.ok) throw new Error("Schedule API not available");
-      const data = await res.json();
+      const endpoint = userId ? `/api/schedules/user/${userId}` : "/api/schedules";
+      const res = await axiosClient.get(endpoint);
+      const data = res.data;
       const normalized = Array.isArray(data) ? data : [];
       setEvents(normalized);
       writeLocalSchedules(normalized);
@@ -147,7 +148,7 @@ function Calendar() {
 
     try {
       // PUT/DELETE endpoint assumption; replace with real endpoint later.
-      await fetch(`http://localhost:8080/api/schedules/${id}`, { method: "DELETE" });
+      await axiosClient.delete(`/api/schedules/${id}`);
     } catch {
       // backend failed => local already updated
     }
@@ -166,14 +167,10 @@ function Calendar() {
 
     if (formMode === "create") {
       try {
-        const res = await fetch("http://localhost:8080/api/schedules", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+        const res = await axiosClient.post("/api/schedules", payload);
 
-        if (res.ok) {
-          const created = await res.json();
+        if (res.status >= 200 && res.status < 300) {
+          const created = res.data;
           setEvents((prev) => {
             const next = [created, ...prev];
             writeLocalSchedules(next);
@@ -196,16 +193,12 @@ function Calendar() {
           return next;
         });
       }
-    } else {
+} else {
       try {
-        const res = await fetch(`http://localhost:8080/api/schedules/${activeId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+        const res = await axiosClient.put(`/api/schedules/${activeId}`, payload);
 
-        if (res.ok) {
-          const updated = await res.json();
+        if (res.status >= 200 && res.status < 300) {
+          const updated = res.data;
           setEvents((prev) => {
             const next = prev.map((x) => (x.id ?? x.scheduleId ?? x._id) === activeId ? updated : x);
             writeLocalSchedules(next);

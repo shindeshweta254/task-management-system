@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Layout from "../../Components/Layout/Layout";
 import { t } from "../../i18n/translator";
+import axiosClient from "../../api/axiosClient";
 import "./reports.css";
 
 import {
@@ -61,10 +62,9 @@ function Reports() {
     if (!userId) return;
     const fetchReports = async () => {
       try {
-        const headers = userId ? { "X-User-Id": String(userId) } : {};
-        const url = isOwner ? `${API_BASE}/reports` : `${API_BASE}/reports/user/${userId}`;
-        const res = await fetch(url, { headers });
-        const data = await res.json();
+        const url = isOwner ? "/api/reports" : `/api/reports/user/${userId}`;
+        const res = await axiosClient.get(url);
+        const data = res.data;
         if (isOwner) setAllReports(data || []);
         else setMyReports(data || []);
       } catch (e) { /* ignore */ }
@@ -102,14 +102,12 @@ function Reports() {
       form.append("longitude", String(coords.longitude));
       form.append("locationAddress", locationAddress || "");
       form.append("proof", proofFile);
-      const res = await fetch(`${API_BASE}/reports/upload`, { method: "POST", body: form });
-      if (!res.ok) { const txt = await res.text(); throw new Error(txt || "Upload failed"); }
+      const res = await axiosClient.post("/api/reports/upload", form);
       setMessage("Saved successfully ✅");
       setCompletedWork(""); setPendingWork(""); setIssues("");
       setProofFile(null); setCoords(null); setLocationAddress("");
-      const refreshHeaders = userId ? { "X-User-Id": String(userId) } : {};
-      const refresh = await fetch(`${API_BASE}/reports/user/${userId}`, { headers: refreshHeaders });
-      const data = await refresh.json();
+      const refresh = await axiosClient.get(`/api/reports/user/${userId}`);
+      const data = refresh.data;
       setMyReports(data || []);
     } catch (err) {
       setMessage(err?.message || "Upload failed");

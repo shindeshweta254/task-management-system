@@ -1,112 +1,53 @@
-import { API_BASE_URL } from "./index";
-
-const jsonOrText = async (res) => {
-  const contentType = res.headers.get("content-type") || "";
-  if (contentType.includes("application/json")) return res.json();
-  const text = await res.text();
-  try {
-    return JSON.parse(text);
-  } catch {
-    return text;
-  }
-};
+import { API_BASE_URL, apiFetch } from "./index";
 
 export async function fetchAllUsers() {
-  let loggedInUser;
-  try { loggedInUser = JSON.parse(localStorage.getItem("user")); } catch { loggedInUser = null; }
-  const headers = loggedInUser?.id ? { "X-User-Id": String(loggedInUser.id) } : {};
-  const res = await fetch(`${API_BASE_URL}/api/users`, { headers });
-  const data = await jsonOrText(res);
-  if (!res.ok) {
-    const msg = typeof data === "string" ? data : JSON.stringify(data);
-    throw new Error(`Failed to load users (${res.status}) ${msg}`);
-  }
+  const data = await apiFetch(`${API_BASE_URL}/api/users`);
   return data;
 }
 
 export async function addTask(payload) {
-  const res = await fetch(`${API_BASE_URL}/api/tasks`, {
+  return apiFetch(`${API_BASE_URL}/api/tasks`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-
-  const data = await jsonOrText(res);
-  if (!res.ok) {
-    const msg = typeof data === "string" ? data : JSON.stringify(data);
-    throw new Error(`Task create failed (${res.status}) ${msg}`);
-  }
-  return data;
 }
 
 // ========== TEAM MANAGEMENT APIS ==========
 
 export async function fetchMySiteTeam() {
-  const loggedInUser = JSON.parse(localStorage.getItem("user")) || {};
-  const headers = loggedInUser?.id ? { "X-User-Id": String(loggedInUser.id) } : {};
-  const res = await fetch(`${API_BASE_URL}/api/users/my-site-team`, { headers });
-  const data = await jsonOrText(res);
-  if (!res.ok) throw new Error(`Failed to load site team (${res.status})`);
+  const data = await apiFetch(`${API_BASE_URL}/api/users/my-site-team`);
   return data;
 }
 
 export async function fetchUsersBySiteCode(siteCode) {
-  const res = await fetch(`${API_BASE_URL}/api/users/site/${encodeURIComponent(siteCode)}`);
-  const data = await jsonOrText(res);
-  if (!res.ok) throw new Error(`Failed to load site users (${res.status})`);
+  const data = await apiFetch(
+    `${API_BASE_URL}/api/users/site/${encodeURIComponent(siteCode)}`,
+  );
   return data;
 }
 
 export async function addEmployee(userData) {
-  const loggedInUser = JSON.parse(localStorage.getItem("user")) || {};
-  const headers = {
-    "Content-Type": "application/json",
-    ...(loggedInUser?.id ? { "X-User-Id": String(loggedInUser.id) } : {}),
-  };
-  const res = await fetch(`${API_BASE_URL}/api/users/add-employee`, {
+  return apiFetch(`${API_BASE_URL}/api/users/add-employee`, {
     method: "POST",
-    headers,
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(userData),
   });
-  const data = await jsonOrText(res);
-  if (!res.ok) {
-    const msg = typeof data === "string" ? data : JSON.stringify(data);
-    throw new Error(`Add employee failed (${res.status}) ${msg}`);
-  }
-  return data;
 }
 
 export async function updateUserContact(userId, contactNo) {
-  const loggedInUser = JSON.parse(localStorage.getItem("user")) || {};
-  const headers = {
-    "Content-Type": "application/json",
-    ...(loggedInUser?.id ? { "X-User-Id": String(loggedInUser.id) } : {}),
-  };
-  const res = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+  return apiFetch(`${API_BASE_URL}/api/users/${userId}`, {
     method: "PUT",
-    headers,
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ contactNo }),
   });
-  const data = await jsonOrText(res);
-  if (!res.ok) throw new Error(`Update contact failed (${res.status})`);
-  return data;
 }
 
 export async function uploadSiteTeamExcel(file) {
-  const loggedInUser = JSON.parse(localStorage.getItem("user")) || {};
   const formData = new FormData();
-  formData.append("file", file);
-  const headers = loggedInUser?.id ? { "X-User-Id": String(loggedInUser.id) } : {};
-  const res = await fetch(`${API_BASE_URL}/api/users/import-site-team`, {
+  formData.append("file", file); // Ensure 'file' is the correct field name for the backend
+  return apiFetch(`${API_BASE_URL}/api/users/import-site-team`, {
     method: "POST",
-    headers,
     body: formData,
   });
-  const data = await jsonOrText(res);
-  if (!res.ok) {
-    const msg = typeof data === "string" ? data : JSON.stringify(data);
-    throw new Error(`Excel upload failed (${res.status}) ${msg}`);
-  }
-  return data;
 }
-

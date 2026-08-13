@@ -25,7 +25,7 @@ function Login() {
 
     try {
       const response = await fetch(
-        "http://localhost:8080/api/users/login",
+        "http://localhost:8080/api/auth/login",
         {
           method: "POST",
           headers: {
@@ -34,7 +34,7 @@ function Login() {
           body: JSON.stringify({
             employeeId: employeeId.trim(),
             email: email.trim(),
-            password,
+            password: password,
           }),
         }
       );
@@ -63,9 +63,30 @@ function Login() {
         return;
       }
 
-      const user = await response.json();
+      const loginResponse = await response.json();
+
+      const token = loginResponse?.token || "";
+      const tokenType =
+        loginResponse?.tokenType || "Bearer";
+
+      const user =
+        loginResponse?.user || loginResponse;
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("tokenType", tokenType);
+      localStorage.setItem(
+        "user",
+        JSON.stringify(user)
+      );
+      localStorage.setItem(
+        "userId",
+        String(user?.id || "")
+      );
+
       const roleName = String(
-        user?.roleName || user?.role?.roleName || ""
+        user?.roleName ||
+        user?.role?.roleName ||
+        ""
       ).toUpperCase();
 
       if (
@@ -73,19 +94,17 @@ function Login() {
         roleName &&
         role.toUpperCase() !== roleName
       ) {
-        setMessage("Selected role does not match ❌");
+        setMessage(
+          "Selected role does not match ❌"
+        );
         return;
       }
-
-localStorage.setItem("user", JSON.stringify(user));
-      localStorage.setItem("userId", String(user.id));
 
       setMessage("Login Successful ✅");
 
       setTimeout(() => {
-        const savedLanguage = localStorage.getItem(
-          "app_language"
-        );
+        const savedLanguage =
+          localStorage.getItem("app_language");
 
         if (!savedLanguage) {
           navigate("/select-language");
@@ -102,6 +121,7 @@ localStorage.setItem("user", JSON.stringify(user));
           navigate("/dashboard");
         }
       }, 500);
+
     } catch (error) {
       console.error("Login error:", error);
 
@@ -111,7 +131,9 @@ localStorage.setItem("user", JSON.stringify(user));
 
       const isNetworkError =
         errorMessage.includes("Failed to fetch") ||
-        errorMessage.includes("ERR_CONNECTION_REFUSED") ||
+        errorMessage.includes(
+          "ERR_CONNECTION_REFUSED"
+        ) ||
         errorMessage.includes("NetworkError") ||
         errorMessage.includes("ECONNREFUSED");
 
@@ -128,6 +150,7 @@ localStorage.setItem("user", JSON.stringify(user));
   return (
     <div className="login-page">
       <div className="login-card">
+
         <div className="login-logo-wrapper">
           <img
             src="/logo.png"
@@ -136,7 +159,9 @@ localStorage.setItem("user", JSON.stringify(user));
           />
         </div>
 
-        <h1>{t("auth.loginTitle")}</h1>
+        <h1>
+          {t("auth.loginTitle")}
+        </h1>
 
         <p className="subtitle">
           {t("auth.subtitle")}
@@ -147,6 +172,7 @@ localStorage.setItem("user", JSON.stringify(user));
         </p>
 
         <form onSubmit={handleLogin}>
+
           <div className="input-group">
             <label htmlFor="employeeId">
               {t("auth.employeeId")}
@@ -225,6 +251,7 @@ localStorage.setItem("user", JSON.stringify(user));
             </label>
 
             <div className="password-box">
+
               <input
                 id="password"
                 type={
@@ -262,6 +289,7 @@ localStorage.setItem("user", JSON.stringify(user));
                   <FaEye />
                 )}
               </button>
+
             </div>
           </div>
 
@@ -286,6 +314,7 @@ localStorage.setItem("user", JSON.stringify(user));
               {message}
             </p>
           )}
+
         </form>
 
         <div className="remember-me">
@@ -319,11 +348,14 @@ localStorage.setItem("user", JSON.stringify(user));
           <button
             type="button"
             className="signup-button"
-            onClick={() => navigate("/signup")}
+            onClick={() =>
+              navigate("/signup")
+            }
           >
             Create Account
           </button>
         </p>
+
       </div>
     </div>
   );

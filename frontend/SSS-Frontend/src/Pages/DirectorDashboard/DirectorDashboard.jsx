@@ -21,10 +21,11 @@ import {
   fetchStaffUploadsAll,
   fetchStaffUploadsBySite,
   fetchStaffUploadsMy,
-  uploadStaffHistory,
+  // uploadStaffHistory, // This is now handled by apiFetch in excelUploadHistoryApi.js
 } from "../../api/excelUploadHistoryApi";
 
 import { deleteAttendanceByMonth } from "../../api/attendanceApi";
+import { getAuthHeaders } from "../../api/index";
 
 const API_BASE_URL = "http://localhost:8080";
 
@@ -145,15 +146,12 @@ function DirectorDashboard() {
     }
   };
 
-  const safeFetch = async (url, fallbackValue) => {
-  try {
-    const loggedInUser = JSON.parse(localStorage.getItem("user")) || {};
 
+const safeFetch = async (url, fallbackValue) => {
+  try {
     const response = await fetch(url, {
       headers: {
-        "X-User-Id": String(
-          loggedInUser?.id || loggedInUser?.userId || ""
-        ),
+        ...getAuthHeaders(),
         "Content-Type": "application/json",
       },
     });
@@ -167,13 +165,9 @@ function DirectorDashboard() {
 
 const fetchAllTasks = async () => {
   try {
-    const loggedInUser = JSON.parse(localStorage.getItem("user")) || {};
-
     const response = await fetch(`${API_BASE_URL}/api/tasks/all`, {
       headers: {
-        "X-User-Id": String(
-          loggedInUser?.id || loggedInUser?.userId || ""
-        ),
+        ...getAuthHeaders(),
         "Content-Type": "application/json",
       },
     });
@@ -187,13 +181,9 @@ const fetchAllTasks = async () => {
 
 const fetchAllAttendanceSafe = async () => {
   try {
-    const loggedInUser = JSON.parse(localStorage.getItem("user")) || {};
-
-const response = await fetch(`${API_BASE_URL}/api/attendance/director`, {
+    const response = await fetch(`${API_BASE_URL}/api/attendance/director`, {
       headers: {
-        "X-User-Id": String(
-          loggedInUser?.id || loggedInUser?.userId || ""
-        ),
+        ...getAuthHeaders(),
         "Content-Type": "application/json",
       },
     });
@@ -209,8 +199,17 @@ const response = await fetch(`${API_BASE_URL}/api/attendance/director`, {
     setLoading(true);
     setPageError("");
 
-    try {
-      const [
+    Promise.allSettled([
+      safeFetch(`${API_BASE_URL}/api/users`, []),
+      fetchAllTasks(),
+      fetchAllAttendanceSafe(),
+      safeFetch(`${API_BASE_URL}/api/tasks/count/total`, 0),
+      safeFetch(`${API_BASE_URL}/api/tasks/count/pending`, 0),
+      safeFetch(`${API_BASE_URL}/api/tasks/count/completed`, 0),
+      safeFetch(`${API_BASE_URL}/api/tasks/deadline-today`, 0),
+    ])
+      .then((results) => {
+        const [
         usersData,
         tasksData,
         attendanceData,
@@ -218,53 +217,48 @@ const response = await fetch(`${API_BASE_URL}/api/attendance/director`, {
         pendingTasksCount,
         completedTasksCount,
         deadlineTasksCount,
-      ] = await Promise.all([
-safeFetch(`${API_BASE_URL}/api/users`, []),
-        fetchAllTasks(),
-        fetchAllAttendanceSafe(),
-        safeFetch(`${API_BASE_URL}/api/tasks/count/total`, 0),
-        safeFetch(`${API_BASE_URL}/api/tasks/count/pending`, 0),
-        safeFetch(`${API_BASE_URL}/api/tasks/count/completed`, 0),
-        safeFetch(`${API_BASE_URL}/api/tasks/deadline-today`, 0),
-      ]);
+      ] = results;
 
-      const validEmployees = Array.isArray(usersData) ? usersData : [];
-      const validTasks = Array.isArray(tasksData) ? tasksData : [];
-      const validAttendance = Array.isArray(attendanceData)
-        ? attendanceData
-        : [];
+        const extractValue = (result, fallback) =>
+          result.status === "fulfilled" ? result.value : fallback;
 
-      setEmployees(validEmployees);
-      setTasks(validTasks);
-      setAttendance(validAttendance);
+        const validEmployees = extractValue(usersData, []);
+        const validTasks = extractValue(tasksData, []);
+        const validAttendance = extractValue(attendanceData, []);
 
-      const todayISO = new Date().toISOString().split("T")[0];
-      const todaysAttendanceCount = validAttendance.filter(
-        (a) => String(a.date || "").startsWith(todayISO)
-      ).length;
+        setEmployees(Array.isArray(validEmployees) ? validEmployees : []);
+        setTasks(Array.isArray(validTasks) ? validTasks : []);
+        setAttendance(Array.isArray(validAttendance) ? validAttendance : []);
 
-      setStats({
-        totalEmployees: validEmployees.length,
-        todayAttendance: todaysAttendanceCount,
-        pendingTasks:
-          Number(pendingTasksCount) ||
-          validTasks.filter(
-            (task) => String(task?.status).toUpperCase() === "PENDING"
-          ).length,
-        completedTasks:
-          Number(completedTasksCount) ||
-          validTasks.filter(
-            (task) => String(task?.status).toUpperCase() === "COMPLETED"
-          ).length,
-        totalTasks: Number(totalTasksCount) || validTasks.length,
-        deadlines: Number(deadlineTasksCount) || 0,
+        const todayISO = new Date().toISOString().split("T")[0];
+        const todaysAttendanceCount = validAttendance.filter(
+          (a) => String(a.date || "").startsWith(todayISO)
+        ).length;
+
+        setStats({
+          totalEmployees: validEmployees.length,
+          todayAttendance: todaysAttendanceCount,
+          pendingTasks:
+            extractValue(pendingTasksCount, 0) ||
+            validTasks.filter((task) => String(task?.status).toUpperCase() === "PENDING").length,
+          completedTasks:
+            extractValue(completedTasksCount, 0) ||
+            validTasks.filter((task) => String(task?.status).toUpperCase() === "COMPLETED").length,
+          totalTasks: extractValue(totalTasksCount, 0) || validTasks.length,
+          deadlines: extractValue(deadlineTasksCount, 0) || 0,
+        });
+
+        // Log any errors without redirecting
+        results.forEach((result) => {
+          if (result.status === "rejected") {
+            console.error("Dashboard API call failed:", result.reason);
+            setPageError("Dashboard ke kuch parts load nahi hue. Console check karein.");
+          }
+        });
+      })
+      .finally(() => {
+        setLoading(false);
       });
-    } catch (error) {
-      console.error("Director dashboard loading error:", error);
-      setPageError("Dashboard data load nahi hua. Backend API check karein.");
-    } finally {
-      setLoading(false);
-    }
   }, []);
 
   useEffect(() => {
@@ -278,12 +272,11 @@ safeFetch(`${API_BASE_URL}/api/users`, []),
     try {
       const employeeIdValue = newEmployee.employeeId.trim();
 
-      const response = await fetch(`${API_BASE_URL}/api/users`, {
-        method: "POST",
-       headers: {
-  "Content-Type": "application/json",
-  "X-User-Id": String(user?.id || user?.userId || ""),
-},
+      await apiFetch(`${API_BASE_URL}/api/users`, {
+        headers: {
+          ...getAuthHeaders(),
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           name: newEmployee.name.trim(),
           employeeId: employeeIdValue,
@@ -296,7 +289,7 @@ safeFetch(`${API_BASE_URL}/api/users`, []),
         }),
       });
 
-      await readResponse(response, "Employee added successfully");
+      // apiFetch handles response parsing and error throwing
 
       setEmployeeMessage("Employee added successfully ✅");
 
@@ -362,43 +355,16 @@ safeFetch(`${API_BASE_URL}/api/users`, []),
     const uploadedByRole = user?.role?.roleName || "";
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/users/import-staff`, {
-  method: "POST",
-  headers: {
-    "X-User-Id": String(user?.id || user?.userId || ""),
-  },
-  body: formData,
-});
-
-      const result = await readResponse(response, "Excel import successful");
-
-      await uploadStaffHistory({
-        file: staffExcelFile,
-        uploadedByUserId,
-        uploadedByName,
-        uploadedByRole,
+      const result = await apiFetch(`${API_BASE_URL}/api/users/import-staff`, {
+        method: "POST",
+        body: formData,
       });
 
       setStaffExcelMessage(`✅ ${String(result)}`);
       setStaffExcelFile(null);
-
       await Promise.all([loadDashboardData(), loadExcelHistories()]);
     } catch (error) {
       console.error("Staff Excel upload error:", error);
-
-      try {
-        if (staffExcelFile) {
-          await uploadStaffHistory({
-            file: staffExcelFile,
-            uploadedByUserId,
-            uploadedByName,
-            uploadedByRole,
-          });
-        }
-      } catch (e) {
-        console.error("Failed to save failed staff upload history", e);
-      }
-
       setStaffExcelMessage(`❌ ${error?.message || "Upload failed"}`);
     }
   };
@@ -1037,8 +1003,3 @@ const getLocationText = (item) => {
 }
 
 export default DirectorDashboard;
-
-
-
-
-

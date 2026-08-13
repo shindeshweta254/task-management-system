@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../../components/Layout/Layout";
+import { getAuthHeaders } from "../../api/index";
 import "./Checklist.css";
 import {
   FaSave,
@@ -51,7 +52,7 @@ function NewChecklist() {
     try {
       const loggedInUser = JSON.parse(localStorage.getItem("user"));
       if (!loggedInUser?.id) return;
-      const headers = { "X-User-Id": String(loggedInUser.id) };
+      const headers = getAuthHeaders();
       let data = null;
       try {
         const res = await fetch(`${API_BASE}/api/users/my-site-team`, { headers });
@@ -170,10 +171,9 @@ function NewChecklist() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const loggedInUser = JSON.parse(localStorage.getItem("user"));
-const res = await fetch(`${API_BASE}/api/checklist-report/photo`, {
+      const res = await fetch(`${API_BASE}/api/checklist-report/photo`, {
         method: "POST",
-        headers: { "X-User-Id": String(loggedInUser?.id || localStorage.getItem("userId") || "") },
+        headers: getAuthHeaders(),
         body: formData,
       });
       if (res.ok) {
@@ -314,13 +314,9 @@ const res = await fetch(`${API_BASE}/api/checklist-report/photo`, {
         siteName: user.siteName || "",
         reportDate: new Date().toISOString().split("T")[0],
       };
-
-const sheetRes = await fetch(`${API_BASE}/api/checklist-sheet/save`, {
+      const sheetRes = await fetch(`${API_BASE}/api/checklist-sheet/save`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-User-Id": String(loggedInUser?.id || localStorage.getItem("userId") || ""),
-        },
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify(payload),
       });
 
@@ -331,12 +327,9 @@ const sheetRes = await fetch(`${API_BASE}/api/checklist-sheet/save`, {
 
       // Save entries if any
       if (entriesList.length > 0) {
-const res = await fetch(`${API_BASE}/api/checklist-report/batch-save`, {
+        const res = await fetch(`${API_BASE}/api/checklist-report/batch-save`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-User-Id": String(loggedInUser?.id || localStorage.getItem("userId") || ""),
-          },
+          headers: getAuthHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify(entriesList),
         });
 

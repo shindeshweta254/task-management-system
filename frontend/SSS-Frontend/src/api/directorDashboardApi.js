@@ -1,46 +1,6 @@
-import { API_BASE_URL } from "./index";
+import { API_BASE_URL, apiFetch } from "./index";
 
 
-const jsonOrText = async (res) => {
-
-  const contentType = res.headers.get("content-type") || "";
-
-  if (contentType.includes("application/json")) {
-    return res.json();
-  }
-
-  const text = await res.text();
-
-  try {
-    return JSON.parse(text);
-  } catch {
-    return text;
-  }
-
-};
-
-
-
-function getAuthHeaders() {
-
-  let loggedInUser;
-
-  try {
-    loggedInUser = JSON.parse(
-      localStorage.getItem("user")
-    );
-  } catch {
-    loggedInUser = null;
-  }
-
-
-  return loggedInUser?.id
-    ? {
-        "X-User-Id": String(loggedInUser.id)
-      }
-    : {};
-
-}
 
 
 
@@ -48,24 +8,8 @@ function getAuthHeaders() {
 
 export async function fetchAllUsers() {
 
-  const res = await fetch(
-    `${API_BASE_URL}/api/users`,
-    {
-      headers: getAuthHeaders()
-    }
-  );
-
-
-  if (!res.ok) {
-
-    throw new Error(
-      `Failed to load users (${res.status})`
-    );
-
-  }
-
-
-  return res.json();
+  const data = await apiFetch(`${API_BASE_URL}/api/users`);
+  return data;
 
 }
 
@@ -264,34 +208,13 @@ export async function fetchAllAttendance() {
 
 export async function addUser(userPayload) {
 
-
-  const res = await fetch(
-    `${API_BASE_URL}/api/users`,
-    {
-      method:"POST",
-
-      headers:{
-        "Content-Type":"application/json",
-        ...getAuthHeaders()
-      },
-
-      body:JSON.stringify(userPayload)
-
-    }
-  );
-
-
-  const data = await jsonOrText(res);
-
-
-
-  if(!res.ok)
-    throw new Error(
-      `Failed to add employee (${res.status})`
-    );
-
-
-  return data;
+  return apiFetch(`${API_BASE_URL}/api/users`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(userPayload),
+  });
 
 }
 
@@ -311,32 +234,10 @@ export async function importStaffFromExcel(file) {
     file
   );
 
-
-  const res = await fetch(
-    `${API_BASE_URL}/api/users/import-staff`,
-    {
-      method:"POST",
-
-      headers:getAuthHeaders(),
-
-      body:formData
-    }
-  );
-
-
-  const data = await jsonOrText(res);
-
-
-
-  if(!res.ok)
-    throw new Error(
-      typeof data === "string"
-        ? data
-        : JSON.stringify(data)
-    );
-
-
-  return data;
+  return apiFetch(`${API_BASE_URL}/api/users/import-staff`, {
+    method: "POST",
+    body: formData,
+  });
 
 }
 
@@ -356,34 +257,9 @@ export async function importProjectsFromExcel(file) {
     file
   );
 
-
-
-  const res = await fetch(
-    `${API_BASE_URL}/api/projects/import`,
-    {
-      method:"POST",
-
-      headers:getAuthHeaders(),
-
-      body:formData
-    }
-  );
-
-
-
-  const data = await jsonOrText(res);
-
-
-
-  if(!res.ok)
-    throw new Error(
-      typeof data === "string"
-        ? data
-        : JSON.stringify(data)
-    );
-
-
-
-  return data;
+  return apiFetch(`${API_BASE_URL}/api/projects/import`, {
+    method: "POST",
+    body: formData,
+  });
 
 }

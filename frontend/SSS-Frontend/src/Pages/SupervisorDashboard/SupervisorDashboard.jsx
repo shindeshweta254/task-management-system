@@ -2,6 +2,7 @@ import Layout from "../../components/Layout/Layout";
 import "./SupervisorDashboard.css";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getAuthHeaders } from "../../api/index";
 import { FaUsers, FaCalendarCheck, FaHourglassHalf, FaCheckCircle, FaClipboardList, FaUserCheck } from "react-icons/fa";
 
 function SupervisorDashboard() {
@@ -35,8 +36,7 @@ function SupervisorDashboard() {
 
   useEffect(() => {
     const loadStats = async () => {
-      const userId = getUserId(user);
-      const headers = userId ? { "X-User-Id": String(userId), "Content-Type": "application/json" } : {};
+      const headers = getAuthHeaders({ "Content-Type": "application/json" });
 
       const fetchNumber = async (url) => {
         try {
@@ -94,7 +94,7 @@ function SupervisorDashboard() {
         const id = getUserId(user);
         if (!id) return;
         const res = await fetch(`http://localhost:8080/api/tasks/employee/${id}`, {
-          headers: { "X-User-Id": String(id), "Content-Type": "application/json" },
+          headers: getAuthHeaders({ "Content-Type": "application/json" }),
         });
         if (!res.ok) { setMyTasks([]); return; }
         const data = await res.json();

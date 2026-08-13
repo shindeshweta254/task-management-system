@@ -14,8 +14,7 @@ import {
 import Layout from "../../components/Layout/Layout";
 import "../DirectorDashboard/DirectorDashboard.css";
 import "./Dashboard.css";
-
-const API_BASE_URL = "http://localhost:8080";
+import axiosClient from "../../api/axiosClient";
 
 const INITIAL_STATS = {
   totalTasks: 0,
@@ -83,11 +82,8 @@ function Dashboard() {
       const [tasksData] = await Promise.all([
         (async () => {
           try {
-            const res = await fetch(`${API_BASE_URL}/api/tasks/employee/${userId}`, {
-              headers: { "X-User-Id": String(userId), "Content-Type": "application/json" },
-            });
-            if (!res.ok) return [];
-            const data = await res.json();
+            const res = await axiosClient.get(`/api/tasks/employee/${userId}`);
+            const data = res.data;
             return Array.isArray(data) ? data : [];
           } catch {
             return [];

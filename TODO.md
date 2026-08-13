@@ -1,37 +1,31 @@
-# Attendance Location & Selfie Saving/Display Fix
+# Backend JWT Authentication - Implementation TODO
 
-## Original Issue
-- Attendance history showed wrong/empty location.
-- Punch In Selfie and Punch Out Selfie showed "No Selfie".
-- Database attendance records had NULL location and selfie paths.
+## Progress
+- [x] 1. Add JWT dependencies to pom.xml (jjwt-api, jjwt-impl, jjwt-jackson 0.11.5)
+- [x] 2. Add jwt.secret and jwt.expiration to application.properties
+- [x] 3. Create JwtUtil.java
+- [x] 4. Create JwtAuthenticationFilter.java
+- [x] 5. Create JwtAuthenticationEntryPoint.java
+- [x] 6. Create CustomUserDetailsService.java
+- [x] 7. Create PasswordConfig.java
+- [x] 8. Create JwtResponse.java (dto)
+- [x] 9. Update SecurityConfig.java (stateless, JWT filter, BCrypt, permit login/uploads)
+- [x] 10. Update UserController.java login to return JwtResponse
+- [x] 11. Run Maven compile to verify (BUILD SUCCESS, 107 files compiled)
 
-## Root Cause
-`axiosClient.js` sets a global default `Content-Type: application/json`. When sending a
-`FormData` body, axios 1.x converts it to JSON (via the default `transformRequest`), so the
-backend's `@RequestParam location` and `MultipartFile selfie` both arrive as NULL.
+## Fix: Employee Task API 401
+- [x] 12. Update TasController.getTasksByEmployee() to resolve the authenticated
+       (JWT) user from SecurityContextHolder first, with X-User-Id fallback.
+- [x] 13. Update Dashboard.jsx to use axiosClient (which sends the JWT
+       Authorization: Bearer header) instead of raw `fetch` with only X-User-Id.
 
-## Fixes Applied (source)
-- [x] 1. `attendanceApi.js` — Override global JSON Content-Type to `multipart/form-data`
-      for both `POST /api/attendance/checkin` and `PUT /api/attendance/checkout/{id}`,
-      so `location` and `selfie` are sent as a real multipart request.
-- [x] 2. `attendance.jsx` — Location display now shows only the actual address
-      (`location`/`checkInAddress`/`checkOutAddress`/`latestLiveAddress`), no lat/lng fallback.
-- [x] 3. `DirectorDashboard.jsx` — `getLocationText` now shows only the address, no lat/lng fallback.
+## Note
+All frontend API calls that used raw `fetch` with X-User-Id were also migrated to
+use `axiosClient` (which attaches the JWT Bearer token automatically) for:
+- Reports.jsx
+- Notifications.jsx
+- UpdatedChecklist.jsx
+- Dashboard.jsx
+This preserves existing X-User-Id fallback behavior on the backend via
+JwtAuthenticationFilter's backward-compatible fallback.
 
-## Backend (already correct, verified)
-- [x] 4. `AttendanceController` saves `location`, `checkInSelfiePath`, `checkOutSelfiePath`
-      from multipart parts.
-- [x] 5. `AttendanceService` persists these fields on checkIn/checkOut.
-- [x] 6. `/uploads/**` static handler serves selfie images (CorsConfig).
-- [x] 7. `mvnw clean compile` succeeded — backend compiles cleanly.
-- [x] 8. Frontend `vite build` succeeded — `dist/` generated with `attendance.jsx`,
-      `DirectorDashboard.jsx`, and `attendanceApi.js` changes.
-- [ ] 9. **REQUIRED on machine**: Restart the backend server so it loads the freshly
-      compiled classes (the running server was executing stale `target/classes`).
-
-## Not Changed (per requirements)
-- Authentication
-- X-User-Id logic
-- Attendance status logic
-- Working hours logic
-- Database tables/schema

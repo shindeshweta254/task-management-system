@@ -6,8 +6,7 @@ import {
   FaCalendarCheck,
   FaTasks,
 } from "react-icons/fa";
-
-const API_BASE = "http://localhost:8080";
+import axiosClient from "../../api/axiosClient";
 
 function Notifications() {
 
@@ -41,26 +40,12 @@ function Notifications() {
 
       try {
 
-        const res = await fetch(
-          `${API_BASE}/api/tasks/employee/${userId}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              "X-User-Id": String(userId),
-            },
-          }
+const res = await axiosClient.get(
+          `/api/tasks/employee/${userId}`
         );
 
 
-        if (!res.ok) {
-          throw new Error(
-            `Failed to load tasks (${res.status})`
-          );
-        }
-
-
-        const data = await res.json();
+        const data = res.data;
 
 
         setTasks(

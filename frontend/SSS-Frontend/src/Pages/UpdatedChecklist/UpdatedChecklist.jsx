@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Layout from "../../components/Layout/Layout";
+import axiosClient from "../../api/axiosClient";
 import "./UpdatedChecklist.css";
 import {
   FaEye,
@@ -55,12 +56,8 @@ function UpdatedChecklist() {
     setLoading(true);
     setError("");
     try {
-      const loggedInUser = JSON.parse(localStorage.getItem("user"));
-const res = await fetch(`${API_BASE}/api/checklist-report/all-submissions`, {
-        headers: { "X-User-Id": String(loggedInUser?.id || localStorage.getItem("userId") || "") },
-      });
-      if (!res.ok) throw new Error("Failed to load submissions");
-      const data = await res.json();
+      const res = await axiosClient.get("/api/checklist-report/all-submissions");
+      const data = res.data;
       setSubmissions(Array.isArray(data) ? data : []);
     } catch (e) {
       console.error("Load submissions error:", e);
@@ -156,12 +153,8 @@ useEffect(() => {
     setLoading(true);
     setError("");
     try {
-      const loggedInUser = JSON.parse(localStorage.getItem("user"));
-const res = await fetch(`${API_BASE}/api/checklist-report/all-submissions`, {
-        headers: { "X-User-Id": String(loggedInUser?.id || localStorage.getItem("userId") || "") },
-      });
-      if (!res.ok) throw new Error("Failed to load reports");
-      const data = (await res.json()) || [];
+      const res = await axiosClient.get("/api/checklist-report/all-submissions");
+      const data = res.data || [];
 
       let filtered = data;
       if (reportType === "daily") {

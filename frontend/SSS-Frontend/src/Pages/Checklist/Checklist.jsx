@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../../components/Layout/Layout";
+import { getAuthHeaders } from "../../api/index";
 import "./Checklist.css";
 import {
   FaEdit,
@@ -115,16 +116,20 @@ function Checklist() {
     try {
       const loggedInUser = JSON.parse(localStorage.getItem("user"));
       if (!loggedInUser?.id) return;
-      const headers = { "X-User-Id": String(loggedInUser.id) };
+      const headers = getAuthHeaders();
       let data = null;
       try {
-        const res = await fetch(`${API_BASE}/api/users/my-site-team`, { headers });
+        const res = await fetch(`${API_BASE}/api/users/my-site-team`, {
+          headers,
+        });
         if (res.ok) data = await res.json();
       } catch (e) {
         // fall through to all users
       }
       if (!Array.isArray(data)) {
-        const res = await fetch(`${API_BASE}/api/users`, { headers });
+        const res = await fetch(`${API_BASE}/api/users`, {
+          headers,
+        });
         data = await res.json();
       }
       setEmployees(Array.isArray(data) ? data : []);
@@ -144,7 +149,7 @@ useEffect(() => {
       const loggedInUser = JSON.parse(localStorage.getItem("user"));
       if (!loggedInUser?.id) return;
       const res = await fetch(`${API_BASE}/api/checklist-master/sheets`, {
-        headers: { "X-User-Id": String(loggedInUser.id) },
+        headers: getAuthHeaders(),
       });
       if (res.ok) {
         const data = await res.json();
@@ -230,7 +235,7 @@ useEffect(() => {
 
       const response = await fetch(
         `${API_BASE}/api/checklist-master/sheet?sheetName=${encodeURIComponent(sheet)}`,
-        { headers: { "X-User-Id": String(loggedInUser.id) } }
+        { headers: getAuthHeaders() }
       );
       const text = await response.text();
       let data = [];
@@ -260,7 +265,7 @@ useEffect(() => {
       if (!loggedInUser?.id) return;
       const res = await fetch(
         `${API_BASE}/api/checklist-sheet/master?sheetName=${encodeURIComponent(sheet)}&date=${date}`,
-        { headers: { "X-User-Id": String(loggedInUser.id) } }
+        { headers: getAuthHeaders() }
       );
       const data = await res.json();
       if (data && data.found && data.columnsJson) {
@@ -449,7 +454,7 @@ useEffect(() => {
       const loggedInUser = JSON.parse(localStorage.getItem("user"));
 const res = await fetch(`${API_BASE}/api/checklist-report/photo`, {
         method: "POST",
-        headers: { "X-User-Id": String(loggedInUser?.id || localStorage.getItem("userId") || "") },
+        headers: getAuthHeaders(),
         body: formData,
       });
       if (res.ok) {
@@ -527,10 +532,7 @@ const handleSave = async () => {
 
       const res = await fetch(`${API_BASE}/api/checklist-report/batch-save`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-User-Id": String(userId),
-        },
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify(entriesList),
       });
 
@@ -547,10 +549,7 @@ const handleSave = async () => {
           };
 await fetch(`${API_BASE}/api/checklist-report/batch-save`, {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-User-Id": String(loggedInUser.id),
-            },
+            headers: getAuthHeaders({ "Content-Type": "application/json" }),
             body: JSON.stringify(layoutPayload),
           });
         } catch (layoutErr) {
@@ -706,7 +705,7 @@ await fetch(`${API_BASE}/api/checklist-report/batch-save`, {
     try {
       const loggedInUser = JSON.parse(localStorage.getItem("user"));
 const res = await fetch(`${API_BASE}/api/checklist-report/audit/report/${reportId}`, {
-        headers: { "X-User-Id": String(loggedInUser?.id || localStorage.getItem("userId") || "") },
+        headers: getAuthHeaders(),
       });
       const data = await res.json();
       setAuditRows(Array.isArray(data) ? data : []);
@@ -734,7 +733,7 @@ const loadSavedReports = async (from, to) => {
       if (from && to) {
         url = `${API_BASE}/api/checklist-report/my-submissions/date-range?from=${from}&to=${to}`;
       }
-      const response = await fetch(url, { headers: { "X-User-Id": String(userId) } });
+      const response = await fetch(url, { headers: getAuthHeaders() });
       const data = await response.json();
       setSavedReports(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -752,7 +751,7 @@ const loadSavedReports = async (from, to) => {
       if (!loggedInUser?.id) return;
 const response = await fetch(`${API_BASE}/api/checklist-report/${reportId}`, {
         method: "DELETE",
-        headers: { "X-User-Id": String(loggedInUser?.id || localStorage.getItem("userId") || "") },
+        headers: getAuthHeaders(),
       });
       if (!response.ok) throw new Error("Delete failed");
       alert("Deleted!");

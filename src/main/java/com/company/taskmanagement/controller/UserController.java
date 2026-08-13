@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,9 +18,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.company.taskmanagement.dto.JwtResponse;
 import com.company.taskmanagement.dto.LoginRequest;
 import com.company.taskmanagement.dto.UserDTO;
 import com.company.taskmanagement.entity.User;
+import com.company.taskmanagement.security.JwtUtil;
 import com.company.taskmanagement.service.AccessService;
 import com.company.taskmanagement.service.UserService;
 
@@ -33,8 +36,13 @@ public class UserController {
 	@Autowired
 	private UserService userService;
 
-	@Autowired
+@Autowired
 	private AccessService accessService;
+@Autowired
+private PasswordEncoder passwordEncoder;
+
+	@Autowired
+	private JwtUtil jwtUtil;
 
 	@PostMapping
 	public User saveUser(@RequestBody User user) {
@@ -51,13 +59,15 @@ public class UserController {
 				.collect(Collectors.toList());
 	}
 
-	@PostMapping("/login")
-	public UserDTO login(@RequestBody LoginRequest loginRequest) {
-		return userService.login(
+@PostMapping("/login")
+	public JwtResponse login(@RequestBody LoginRequest loginRequest) {
+		UserDTO user = userService.login(
 				loginRequest.getEmployeeId(),
 				loginRequest.getEmail(),
 				loginRequest.getPassword()
 		);
+		String token = jwtUtil.generateToken(user.getEmployeeId());
+		return new JwtResponse(token, "Bearer", user);
 	}
 
 	@PostMapping("/import-staff")
@@ -177,5 +187,18 @@ public UserDTO getEmployeeProfile(
 
 	    return userService.getSupervisorEmployees(userId);
 
+	}
+	@PostMapping("/reset-password/{userId}")
+	public String resetPassword(@PathVariable Long userId) {
+
+	    User user = userService.getUserById(userId);
+
+	    user.setPassword(
+	        passwordEncoder.encode("sss@123")
+	    );
+
+	    userService.saveUser(user);
+
+	    return "Password reset successful";
 	}
 }

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Layout from "../../components/Layout/Layout";
+import { getAuthHeaders } from "../../api/index";
 import "./TeamDetails.css";
 
 import {
@@ -62,7 +63,7 @@ function TeamDetails() {
       if (isSupervisor) {
         // Supervisor can only see his own site team
         const loggedInUser = JSON.parse(localStorage.getItem("user")) || {};
-        const headers = loggedInUser?.id ? { "X-User-Id": String(loggedInUser.id) } : {};
+        const headers = getAuthHeaders();
         const res = await fetch("http://localhost:8080/api/users/my-site-team", { headers });
         data = await res.json();
       } else {
