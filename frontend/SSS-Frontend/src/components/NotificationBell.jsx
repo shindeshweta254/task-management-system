@@ -34,7 +34,7 @@ function NotificationBell() {
     try {
       // Fetch unread count
       const countResponse = await fetch(
-        `http://localhost:8080/api/notifications/user/${userId}/unread-count`,
+        `https://task-management-system-production-7694.up.railway.app/api/notifications/user/${userId}/unread-count`,
         { headers: getAuthHeaders() }
       );
       if (countResponse.ok) {
@@ -55,7 +55,7 @@ function NotificationBell() {
     try {
       // Fetch notifications list
       const listResponse = await fetch(
-        `http://localhost:8080/api/notifications/user/${userId}`,
+        `https://task-management-system-production-7694.up.railway.app/api/notifications/user/${userId}`,
         { headers: getAuthHeaders() }
       );
       console.log("Notification API response status:", listResponse.status);
@@ -117,7 +117,7 @@ function NotificationBell() {
     if (!notification.read) {
       try {
         await fetch(
-          `http://localhost:8080/api/notifications/${notification.id}/read`,
+          `https://task-management-system-production-7694.up.railway.app/api/notifications/${notification.id}/read`,
           { method: "PUT", headers: getAuthHeaders() }
         );
         fetchNotifications();
@@ -141,7 +141,7 @@ function NotificationBell() {
 
     try {
       await fetch(
-        `http://localhost:8080/api/notifications/user/${userId}/read-all`,
+        `https://task-management-system-production-7694.up.railway.app/api/notifications/user/${userId}/read-all`,
         { method: "PUT", headers: getAuthHeaders() }
       );
       fetchNotifications();

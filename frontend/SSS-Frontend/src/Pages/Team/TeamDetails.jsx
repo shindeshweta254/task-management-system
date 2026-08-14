@@ -64,7 +64,7 @@ function TeamDetails() {
         // Supervisor can only see his own site team
         const loggedInUser = JSON.parse(localStorage.getItem("user")) || {};
         const headers = getAuthHeaders();
-        const res = await fetch("http://localhost:8080/api/users/my-site-team", { headers });
+        const res = await fetch("https://task-management-system-production-7694.up.railway.app/api/users/my-site-team", { headers });
         data = await res.json();
       } else {
         // Director: fetch all users and filter by site code

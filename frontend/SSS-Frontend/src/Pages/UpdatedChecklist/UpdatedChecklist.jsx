@@ -14,7 +14,7 @@ import {
   FaSyncAlt,
 } from "react-icons/fa";
 
-const API_BASE = "http://localhost:8080";
+const API_BASE = "https://task-management-system-production-7694.up.railway.app";
 
 function UpdatedChecklist() {
   const user = useMemo(() => {

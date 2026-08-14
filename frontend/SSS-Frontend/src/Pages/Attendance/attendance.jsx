@@ -29,7 +29,7 @@ const calculateTotalHours = (checkIn, checkOut) => {
   return `${h} hr ${m} min`;
 };
 
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = "https://task-management-system-production-7694.up.railway.app";
 
 // Convert a stored selfie path into an accessible image URL.
 // Handles: uploads/attendance/file.jpg, /uploads/attendance/file.jpg, bare filename.jpg

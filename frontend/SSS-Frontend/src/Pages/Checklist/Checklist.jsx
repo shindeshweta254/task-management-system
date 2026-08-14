@@ -20,7 +20,7 @@ import {
   FaColumns,
 } from "react-icons/fa";
 
-const API_BASE = "http://localhost:8080";
+const API_BASE_URL = "https://task-management-system-production-7694.up.railway.app";
 
 // Excel-like minimum rows always displayed
 const MIN_ROWS = 30;

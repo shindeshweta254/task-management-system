@@ -27,7 +27,7 @@ import {
 import { deleteAttendanceByMonth } from "../../api/attendanceApi";
 import { getAuthHeaders } from "../../api/index";
 
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = "https://task-management-system-production-7694.up.railway.app";
 
 const INITIAL_STATS = {
   totalEmployees: 0,

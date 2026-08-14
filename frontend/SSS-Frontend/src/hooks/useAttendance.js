@@ -117,10 +117,18 @@ date: dateStr,
 function toAbsoluteSelfie(raw) {
   if (!raw) return "";
   if (/^(https?:|data:|blob:)/i.test(raw)) return raw;
+
   const path = String(raw).replace(/\\/g, "/");
-  if (path.startsWith("uploads/")) return `http://localhost:8080/${path}`;
-  if (path.startsWith("/")) return `http://localhost:8080${path}`;
-  return `http://localhost:8080/uploads/attendance/${path}`;
+
+  if (path.startsWith("uploads/")) {
+    return `https://task-management-system-production-7694.up.railway.app/${path}`;
+  }
+
+  if (path.startsWith("/")) {
+    return `https://task-management-system-production-7694.up.railway.app${path}`;
+  }
+
+  return `https://task-management-system-production-7694.up.railway.app/uploads/attendance/${path}`;
 }
 
 export function useAttendance() {

@@ -14,7 +14,7 @@ import {
   FaArrowLeft,
 } from "react-icons/fa";
 
-const API_BASE = "http://localhost:8080";
+const API_BASE_URL = "https://task-management-system-production-7694.up.railway.app";
 
 // Default columns for a new blank checklist
 const DEFAULT_COLUMNS = [

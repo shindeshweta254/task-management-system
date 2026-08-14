@@ -13,7 +13,7 @@ import {
   uploadWorkProof,
 } from "../../api/workProofApi";
 
-const API_BASE = "http://localhost:8080/api";
+const API_BASE = "https://task-management-system-production-7694.up.railway.app/api";
 
 function Reports() {
   const user = useMemo(() => {

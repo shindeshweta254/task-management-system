@@ -53,8 +53,8 @@ function SupervisorDashboard() {
       const fetchUsers = async () => {
         try {
           const url = siteCode
-            ? `http://localhost:8080/api/users/site/${encodeURIComponent(siteCode)}`
-            : "http://localhost:8080/api/users";
+            ? `https://task-management-system-production-7694.up.railway.app/api/users/site/${encodeURIComponent(siteCode)}`
+            : "https://task-management-system-production-7694.up.railway.app/api/users";
           const res = await fetch(url, { headers });
           if (!res.ok) return [];
           const data = await res.json();
@@ -67,9 +67,9 @@ function SupervisorDashboard() {
       try {
         const [users, pending, completed, attendance] = await Promise.all([
           fetchUsers(),
-          fetchNumber("http://localhost:8080/api/tasks/count/pending"),
-          fetchNumber("http://localhost:8080/api/tasks/count/completed"),
-          fetchNumber("http://localhost:8080/api/dashboard/todays-attendance"),
+          fetchNumber("https://task-management-system-production-7694.up.railway.app/api/tasks/count/pending"),
+          fetchNumber("https://task-management-system-production-7694.up.railway.app/api/tasks/count/completed"),
+          fetchNumber("https://task-management-system-production-7694.up.railway.app/api/dashboard/todays-attendance"),
         ]);
 
         setStats({
@@ -93,7 +93,7 @@ function SupervisorDashboard() {
       try {
         const id = getUserId(user);
         if (!id) return;
-        const res = await fetch(`http://localhost:8080/api/tasks/employee/${id}`, {
+        const res = await fetch(`https://task-management-system-production-7694.up.railway.app/api/tasks/employee/${id}`, {
           headers: getAuthHeaders({ "Content-Type": "application/json" }),
         });
         if (!res.ok) { setMyTasks([]); return; }

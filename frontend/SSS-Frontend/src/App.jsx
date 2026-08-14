@@ -12,12 +12,14 @@ import Checklist from "./Pages/Checklist/Checklist";
 import NewChecklist from "./Pages/Checklist/NewChecklist";
 import Attendance from "./Pages/Attendance/attendance";
 import Calendar from "./Pages/Calender/Calendar";
-import Projects from "./Pages/Project/Project";
-import Team from "./Pages/Team/Team";
+
+import Projects from "./Pages/Project/project";
+import Team from "./Pages/Team/team";
 import TeamDetails from "./Pages/Team/TeamDetails";
 
-import Reports from "./Pages/Reports/Reports";
-import Profile from "./Pages/Profile/Profile";
+import Reports from "./Pages/Reports/reports";
+import Profile from "./Pages/Profile/profile";
+
 import AddTask from "./Pages/AddTask/AddTask";
 import Notifications from "./Pages/Notifications/Notifications";
 import UpdatedChecklist from "./Pages/UpdatedChecklist/UpdatedChecklist";
@@ -30,10 +32,12 @@ function App() {
       <Route path="/select-language" element={<Language />} />
 
       <Route path="/dashboard" element={<Dashboard />} />
+
       <Route
         path="/director-dashboard"
         element={<DirectorDashboard />}
       />
+
       <Route
         path="/supervisor-dashboard"
         element={<SupervisorDashboard />}

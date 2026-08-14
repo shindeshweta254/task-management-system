@@ -16,7 +16,7 @@ function Signup() {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://localhost:8080/api/users", {
+      const response = await fetch("https://task-management-system-production-7694.up.railway.app/api/users", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
