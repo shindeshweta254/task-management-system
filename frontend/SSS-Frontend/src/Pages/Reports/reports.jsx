@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import Layout from "../../Components/Layout/Layout";
+import Layout from "../../components/Layout/Layout";
 import { t } from "../../i18n/translator";
 import axiosClient from "../../api/axiosClient";
 import "./reports.css";
