@@ -66,14 +66,15 @@ public class SecurityConfig {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:5173",
-                "http://localhost:5174",
-                "http://localhost:5175",
-                "http://localhost:5176",
-                "http://localhost:5177"
-        ));
-
+     configuration.setAllowedOrigins(List.of(
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5175",
+        "http://localhost:5176",
+        "http://localhost:5177",
+        "https://sss-fms-india-90a76.firebaseapp.com",
+        "https://sss-fms-india-90a76.web.app"
+));
         configuration.setAllowedMethods(List.of(
                 "GET",
                 "POST",
