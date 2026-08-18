@@ -1,4 +1,4 @@
-﻿package com.company.taskmanagement.security;
+package com.company.taskmanagement.security;
 
 import java.util.List;
 
