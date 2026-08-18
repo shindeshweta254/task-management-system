@@ -1,4 +1,4 @@
-package com.company.taskmanagement.security;
+﻿package com.company.taskmanagement.security;
 
 import java.util.List;
 
@@ -68,6 +68,7 @@ public class SecurityConfig {
 
      configuration.setAllowedOrigins(List.of(
         "http://localhost",
+        "https://localhost",
         "http://localhost:5173",
         "http://localhost:5174",
         "http://localhost:5175",
@@ -84,7 +85,7 @@ public class SecurityConfig {
                 "OPTIONS"
         ));
 
-        // Explicitly list allowed headers â€” no wildcard allowed when credentials=true per CORS spec
+        // Explicitly list allowed headers Ã¢â‚¬â€ no wildcard allowed when credentials=true per CORS spec
         configuration.setAllowedHeaders(List.of(
                 "Authorization",
                 "Content-Type",
@@ -105,6 +106,9 @@ public class SecurityConfig {
         return source;
     }
 }
+
+
+
 
 
 
