@@ -67,6 +67,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
      configuration.setAllowedOrigins(List.of(
+        "http://localhost",
         "http://localhost:5173",
         "http://localhost:5174",
         "http://localhost:5175",
@@ -83,7 +84,7 @@ public class SecurityConfig {
                 "OPTIONS"
         ));
 
-        // Explicitly list allowed headers — no wildcard allowed when credentials=true per CORS spec
+        // Explicitly list allowed headers â€” no wildcard allowed when credentials=true per CORS spec
         configuration.setAllowedHeaders(List.of(
                 "Authorization",
                 "Content-Type",
@@ -104,3 +105,7 @@ public class SecurityConfig {
         return source;
     }
 }
+
+
+
+
