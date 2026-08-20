@@ -59,6 +59,19 @@ private PasswordEncoder passwordEncoder;
 				.collect(Collectors.toList());
 	}
 
+/**
+ * Returns all users for task/checklist assignment dropdowns.
+ */
+@GetMapping("/task-assignees")
+public List<UserDTO> getTaskAssignees(HttpServletRequest request) {
+        accessService.resolveUser(request);
+
+        List<User> allUsers = userService.getAllUsers();
+
+        return allUsers.stream()
+                        .map(UserDTO::fromUser)
+                        .collect(Collectors.toList());
+}
 @PostMapping("/login")
 	public JwtResponse login(@RequestBody LoginRequest loginRequest) {
 		UserDTO user = userService.login(
@@ -202,3 +215,4 @@ public UserDTO getEmployeeProfile(
 	    return "Password reset successful";
 	}
 }
+

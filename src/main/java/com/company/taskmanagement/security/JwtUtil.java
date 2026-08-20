@@ -1,7 +1,6 @@
 package com.company.taskmanagement.security;
 
 import java.nio.charset.StandardCharsets;
-import java.security.Key;
 import java.util.Date;
 
 import javax.crypto.SecretKey;
@@ -30,6 +29,7 @@ public class JwtUtil {
     public String generateToken(String username) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
+
         return Jwts.builder()
                 .subject(username)
                 .issuedAt(now)
@@ -45,8 +45,11 @@ public class JwtUtil {
     public boolean validateToken(String token) {
         try {
             getClaims(token);
+            System.out.println("JWT VALID");
             return true;
         } catch (Exception e) {
+            System.out.println("JWT VALIDATION FAILED: " + e.getClass().getName());
+            System.out.println("JWT ERROR: " + e.getMessage());
             return false;
         }
     }

@@ -44,10 +44,13 @@ protected void doFilterInternal(
         throws ServletException, IOException {
 
     String path = request.getServletPath();
+    System.out.println("========== JWT FILTER ==========");
+    System.out.println("REQUEST PATH: " + path);
+    System.out.println("AUTH HEADER: " + request.getHeader("Authorization"));
 
     // LOGIN / AUTH endpoints are completely public.
     // Do not check JWT or X-User-Id here.
-    if (path.startsWith("/api/auth/")) {
+    if (path.equals("/api/auth/login")) {
         filterChain.doFilter(request, response);
         return;
     }
@@ -57,9 +60,13 @@ protected void doFilterInternal(
 
         String token = getTokenFromRequest(request);
 
+        System.out.println("TOKEN FOUND: " + StringUtils.hasText(token));
+
         if (StringUtils.hasText(token) && jwtUtil.validateToken(token)) {
+            System.out.println("TOKEN VALIDATED SUCCESSFULLY");
 
             String username = jwtUtil.extractUsername(token);
+            System.out.println("JWT USERNAME: " + username);
 
             UserDetails userDetails =
                     customUserDetailsService.loadUserByUsername(username);
@@ -150,3 +157,5 @@ protected void doFilterInternal(
         return null;
     }
 }
+
+

@@ -39,7 +39,7 @@ public class AccessService {
     private static final String SP001 = "SP001";
     private static final String SP002 = "SP002";
 
-    // Global supervisors – these supervisors see ALL sites.
+    // Global supervisors â€“ these supervisors see ALL sites.
     // Add their employee IDs here (case-insensitive).
     private static final Set<String> GLOBAL_SUPERVISOR_EMPLOYEE_IDS = Set.of(
         "SP003"  // Replace with actual global supervisor employee IDs
@@ -400,34 +400,82 @@ public class AccessService {
      * Filter a list of users to only those accessible by the current user.
      */
     public List<User> filterUsersByAccess(User currentUser, List<User> allUsers) {
-        // SP001, Admin, Director, Global Supervisor see all
-        if (isSP001(currentUser) || isAdmin(currentUser) || isDirector(currentUser) || isGlobalSupervisor(currentUser)) {
+
+        // Director -> ALL employees
+        if (isDirector(currentUser)) {
             return allUsers;
         }
-        // SP002 sees all (operational only - no director confidential)
+
+        // SP001 -> ALL employees
+        if (isSP001(currentUser)) {
+            return allUsers;
+        }
+
+        // SP002 -> ALL employees
         if (isSP002(currentUser)) {
             return allUsers;
         }
-        // Others see only users in their permitted sites
+
+        // Normal Employee -> ALL employees
+        if (isEmployee(currentUser)) {
+            return allUsers;
+        }
+
+        // Admin -> ALL employees
+        if (isAdmin(currentUser)) {
+            return allUsers;
+        }
+
+        // Supervisor -> site-wise access
+        if (isSupervisor(currentUser)) {
+
+            Set<String> supervisorSites = getPermittedSites(currentUser);
+
+            // Supervisor with ALL -> ALL employees
+            if (supervisorSites.contains("ALL")) {
+                return allUsers;
+            }
+
+            return allUsers.stream()
+                    .filter(u -> u.getSiteCode() != null && !u.getSiteCode().isBlank())
+                    .filter(u -> {
+                        Set<String> employeeSites = getPermittedSites(u);
+
+                        for (String site : employeeSites) {
+                            if (supervisorSites.contains(site.toUpperCase())) {
+                                return true;
+                            }
+                        }
+
+                        return false;
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        // Other users with ALL -> ALL employees
         Set<String> permittedSites = getPermittedSites(currentUser);
+
         if (permittedSites.contains("ALL")) {
             return allUsers;
         }
+
+        // Other site-based users
         return allUsers.stream()
-                .filter(u -> u.getSiteCode() != null)
+                .filter(u -> u.getSiteCode() != null && !u.getSiteCode().isBlank())
                 .filter(u -> {
                     Set<String> userSites = getPermittedSites(u);
+
                     for (String site : userSites) {
                         if (permittedSites.contains(site.toUpperCase())) {
                             return true;
                         }
                     }
+
                     return false;
                 })
                 .collect(Collectors.toList());
     }
-
-    /**
+/**
      * Filter a list of tasks to only those accessible by the current user.
      * Uses the assignedTo user's site_code for site-based filtering.
      */
@@ -470,4 +518,5 @@ public class AccessService {
                 .collect(Collectors.toList());
     }
 }
+
 
