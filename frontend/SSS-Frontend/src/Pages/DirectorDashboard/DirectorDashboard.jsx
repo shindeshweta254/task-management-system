@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   FaUsers,
@@ -230,7 +230,7 @@ const fetchAllAttendanceSafe = async () => {
         setTasks(Array.isArray(validTasks) ? validTasks : []);
         setAttendance(Array.isArray(validAttendance) ? validAttendance : []);
 
-        const todayISO = new Date().toISOString().split("T")[0];
+        const todayISO = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
         const todaysAttendanceCount = validAttendance.filter(
           (a) => String(a.date || "").startsWith(todayISO)
         ).length;
@@ -291,7 +291,7 @@ const fetchAllAttendanceSafe = async () => {
 
       // apiFetch handles response parsing and error throwing
 
-      setEmployeeMessage("Employee added successfully ✅");
+      setEmployeeMessage("Employee added successfully âœ…");
 
       setNewEmployee({
         name: "",
@@ -305,7 +305,7 @@ const fetchAllAttendanceSafe = async () => {
       await loadDashboardData();
     } catch (error) {
       console.error("Add employee error:", error);
-      setEmployeeMessage(error?.message || "Employee add nahi hua ❌");
+      setEmployeeMessage(error?.message || "Employee add nahi hua âŒ");
     }
   };
 
@@ -360,12 +360,12 @@ const fetchAllAttendanceSafe = async () => {
         body: formData,
       });
 
-      setStaffExcelMessage(`✅ ${String(result)}`);
+      setStaffExcelMessage(`âœ… ${String(result)}`);
       setStaffExcelFile(null);
       await Promise.all([loadDashboardData(), loadExcelHistories()]);
     } catch (error) {
       console.error("Staff Excel upload error:", error);
-      setStaffExcelMessage(`❌ ${error?.message || "Upload failed"}`);
+      setStaffExcelMessage(`âŒ ${error?.message || "Upload failed"}`);
     }
   };
 
@@ -446,7 +446,7 @@ const directorTabs = [
                 <div className="director-avatar">{initials}</div>
                 <div>
                   <h1>
-                    Welcome, {userName}! <span>👋</span>
+                    Welcome, {userName}! <span>ðŸ‘‹</span>
                   </h1>
                   <p>
                     ID: {employeeId}
@@ -518,7 +518,7 @@ const directorTabs = [
                   setClearDataOpen(true);
                 }}
               >
-                🗑 Clear Data
+                ðŸ—‘ Clear Data
               </button>
             </div>
 
@@ -621,7 +621,7 @@ const directorTabs = [
                             Number(clearMonth)
                           );
                           setClearMessage(
-                            `✅ ${String(result)}`
+                            `âœ… ${String(result)}`
                           );
                           setClearDataOpen(false);
                           setClearMonth("");
@@ -629,7 +629,7 @@ const directorTabs = [
                         } catch (error) {
                           console.error("Clear data error:", error);
                           setClearMessage(
-                            `❌ ${
+                            `âŒ ${
                               error?.response?.data?.message ||
                               error?.message ||
                               "Failed to clear attendance data"
@@ -865,8 +865,23 @@ function AttendanceTable({ attendance }) {
 
   const formatTime = (time) => {
     if (!time) return "-";
-    if (typeof time === "string" && time.length >= 5) return time.substring(0, 5);
-    return String(time);
+
+    const timeString = String(time);
+    const parts = timeString.split(":");
+
+    if (parts.length < 2) return timeString;
+
+    const hour = Number(parts[0]);
+    const minute = Number(parts[1]);
+
+    if (Number.isNaN(hour) || Number.isNaN(minute)) {
+      return timeString;
+    }
+
+    const suffix = hour >= 12 ? "PM" : "AM";
+    const displayHour = hour % 12 || 12;
+
+    return `${String(displayHour).padStart(2, "0")}:${String(minute).padStart(2, "0")} ${suffix}`;
   };
 
   const formatHours = (hours) => {
@@ -1003,3 +1018,5 @@ const getLocationText = (item) => {
 }
 
 export default DirectorDashboard;
+
+
