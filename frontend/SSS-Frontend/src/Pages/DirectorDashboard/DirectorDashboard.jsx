@@ -181,7 +181,7 @@ const fetchAllTasks = async () => {
 
 const fetchAllAttendanceSafe = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/attendance/director`, {
+    const response = await fetch(`${API_BASE_URL}/api/attendance/all`, {
       headers: {
         ...getAuthHeaders(),
         "Content-Type": "application/json",
@@ -866,24 +866,31 @@ function AttendanceTable({ attendance }) {
   const formatTime = (time) => {
     if (!time) return "-";
 
-    const timeString = String(time);
-    const parts = timeString.split(":");
+    // Spring Boot LocalTime normally arrives as HH:mm:ss or HH:mm:ss.SSSSSS
+    const value = String(time).trim();
 
-    if (parts.length < 2) return timeString;
+    // If backend ever sends a full ISO datetime, extract the time portion.
+    const match = value.match(/(?:T|\s)?(\d{1,2}):(\d{2})(?::(\d{2}))?/);
 
-    const hour = Number(parts[0]);
-    const minute = Number(parts[1]);
+    if (!match) {
+      return value;
+    }
+
+    let hour = Number(match[1]);
+    const minute = Number(match[2]);
 
     if (Number.isNaN(hour) || Number.isNaN(minute)) {
-      return timeString;
+      return value;
     }
+
+    // Normalize 0-23 hour range.
+    hour = ((hour % 24) + 24) % 24;
 
     const suffix = hour >= 12 ? "PM" : "AM";
     const displayHour = hour % 12 || 12;
 
     return `${String(displayHour).padStart(2, "0")}:${String(minute).padStart(2, "0")} ${suffix}`;
   };
-
   const formatHours = (hours) => {
     if (hours == null) return "-";
     const h = Math.floor(hours);
@@ -1018,5 +1025,8 @@ const getLocationText = (item) => {
 }
 
 export default DirectorDashboard;
+
+
+
 
 

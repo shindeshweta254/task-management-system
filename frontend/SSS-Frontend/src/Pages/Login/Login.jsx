@@ -1,4 +1,4 @@
-import "./Login.css";
+﻿import "./Login.css";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
@@ -95,12 +95,12 @@ function Login() {
         role.toUpperCase() !== roleName
       ) {
         setMessage(
-          "Selected role does not match ❌"
+          "Selected role does not match âŒ"
         );
         return;
       }
 
-      setMessage("Login Successful ✅");
+      setMessage("Login Successful âœ…");
 
       setTimeout(() => {
         const savedLanguage =
@@ -138,9 +138,8 @@ function Login() {
         errorMessage.includes("ECONNREFUSED");
 
       setMessage(
-        isNetworkError
-          ? "Backend server not connected ❌"
-          : errorMessage || "Login failed ❌"
+        isNetworkError ? `Network Error: ${errorMessage}`
+          : errorMessage || "Login failed âŒ"
       );
     } finally {
       setIsSubmitting(false);
@@ -362,3 +361,4 @@ function Login() {
 }
 
 export default Login;
+

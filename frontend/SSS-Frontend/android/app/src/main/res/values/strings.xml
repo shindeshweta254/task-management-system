@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SSS FMS India</string>
+    <string name="title_activity_main">SSS FMS India</string>
+    <string name="package_name">com.sssfmsindia.app</string>
+    <string name="custom_url_scheme">com.sssfmsindia.app</string>
+</resources>

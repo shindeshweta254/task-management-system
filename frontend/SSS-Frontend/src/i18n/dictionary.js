@@ -160,7 +160,7 @@ const dictionary = {
     "team.loading": "Loading...",
     "team.saveFailed": "Contact number update failed",
 
-    "login.heading": "SSS FMS Facility Services",
+    "login.heading": "SSS FMS (I) PVT. LTD. Services",
     "login.subtitle": "Employee Task Management System",
     "login.version": "Version 1.0",
 

@@ -1,7 +1,7 @@
-import { API_BASE_URL, apiFetch } from "./index";
+﻿import { API_BASE_URL, apiFetch } from "./index";
 
 export async function fetchAllUsers() {
-  const data = await apiFetch(`${API_BASE_URL}/api/users`);
+  const data = await apiFetch(`${API_BASE_URL}/api/users/task-assignees`);
   return data;
 }
 
@@ -51,3 +51,4 @@ export async function uploadSiteTeamExcel(file) {
     body: formData,
   });
 }
+

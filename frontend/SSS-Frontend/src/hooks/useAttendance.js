@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { computeSessionsSummary, normalizeAttendanceRecord, upsertSessionForSameDay } from "../utils/attendanceUtils";
 import {
   checkIn as apiCheckIn,
@@ -153,7 +153,22 @@ export function useAttendance() {
   const backendAttendanceIdRef = useRef(null);
 
   const today = useMemo(() => new Date().toLocaleDateString("en-IN"), []);
+const [currentTime, setCurrentTime] = useState(new Date());
 
+useEffect(() => {
+  const timer = setInterval(() => {
+    setCurrentTime(new Date());
+  }, 1000);
+
+  return () => clearInterval(timer);
+}, []);
+
+const liveTime = currentTime.toLocaleTimeString("en-IN", {
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: true,
+});
   // Load localStorage attendance
   useEffect(() => {
     try {
@@ -181,7 +196,16 @@ export function useAttendance() {
           // Employee sees only their own attendance
           data = await fetchMyAttendance();
         }
-        setBackendAttendance(Array.isArray(data) ? data : []);
+        const backendData = Array.isArray(data) ? data : [];
+
+        setBackendAttendance(backendData);
+
+        // Database attendance ko neeche History me bhi show karo
+        setAttendance(
+          backendData
+            .map(backendToLocalRecord)
+            .filter(Boolean)
+        );
       } catch (e) {
         console.error("Failed to load backend attendance:", e);
         // Keep existing data on error
@@ -242,7 +266,16 @@ const persist = useCallback((nextAttendance) => {
     } else {
       data = await fetchMyAttendance();
     }
-    setBackendAttendance(Array.isArray(data) ? data : []);
+    const backendData = Array.isArray(data) ? data : [];
+
+        setBackendAttendance(backendData);
+
+        // Database attendance ko neeche History me bhi show karo
+        setAttendance(
+          backendData
+            .map(backendToLocalRecord)
+            .filter(Boolean)
+        );
   }, [canSeeAll, userRoleUpper]);
 
   // Merge backend attendance with localStorage attendance for display
@@ -314,7 +347,18 @@ const persist = useCallback((nextAttendance) => {
 
   const getCurrentTimeHHMM = useCallback(() => {
     const now = new Date();
-    return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Kolkata",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).formatToParts(now);
+
+    const hour = parts.find((p) => p.type === "hour")?.value || "00";
+    const minute = parts.find((p) => p.type === "minute")?.value || "00";
+
+    return `${hour}:${minute}`;
   }, []);
 
 const markHalfDay = useCallback(async () => {
@@ -524,7 +568,16 @@ const punchIn = useCallback(
           } else {
             data = await fetchMyAttendance();
           }
-          setBackendAttendance(Array.isArray(data) ? data : []);
+          const backendData = Array.isArray(data) ? data : [];
+
+        setBackendAttendance(backendData);
+
+        // Database attendance ko neeche History me bhi show karo
+        setAttendance(
+          backendData
+            .map(backendToLocalRecord)
+            .filter(Boolean)
+        );
         }
       } catch (e) {
         console.error("Backend check-in failed, data saved to localStorage only:", e);
@@ -539,12 +592,12 @@ return true;
 const punchOut = useCallback(
     async (photo) => {
       // Determine a valid (numeric) attendance ID to call checkout with.
-      // Never pass null/undefined/NaN — otherwise the request becomes
+      // Never pass null/undefined/NaN â€” otherwise the request becomes
       // PUT /api/attendance/checkout/undefined which yields a 404.
       let attendanceId = backendAttendanceIdRef.current;
       if (attendanceId == null || Number.isNaN(Number(attendanceId))) {
         // Fallback: Find the attendance ID from backend attendance matching today
-        const todayISO = new Date().toISOString().split("T")[0];
+        const todayISO = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
         const found = backendAttendance.find(
           (a) => a.attendanceDate === todayISO && a.user?.id === userId
         );
@@ -636,6 +689,7 @@ const punchOut = useCallback(
     uiError,
     location,
     locationError,
+    liveTime,
     today,
 
     attendance,
@@ -654,4 +708,9 @@ const punchOut = useCallback(
     setUiError,
   };
 }
+
+
+
+
+
 

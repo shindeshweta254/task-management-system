@@ -23,7 +23,7 @@ function Splash() {
         />
       </div>
 
-      <h1>SSS FMS INDIA PVT LTD</h1>
+      <h1>SSS FMS (I) PVT. LTD. Services</h1>
       <p>Employee Task Management System</p>
     </div>
   );

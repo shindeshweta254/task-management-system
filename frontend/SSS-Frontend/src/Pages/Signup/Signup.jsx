@@ -56,7 +56,7 @@ function Signup() {
 
         <img src="/logo.png" className="signup-logo" alt="logo" />
 
-        <h2>SSS FMS INDIA PVT LTD</h2>
+        <h2>SSS FMS (I) PVT. LTD. Services</h2>
 
         <p>Create Employee Account</p>
 

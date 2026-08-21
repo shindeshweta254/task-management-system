@@ -390,7 +390,7 @@ function Layout({ title, children }) {
           <div className="logo-text">
 
             <h2>
-              SSS FMS PVT. LTD.
+              SSS FMS (I) PVT. LTD. Services
             </h2>
 
             <p>
@@ -717,17 +717,17 @@ function Layout({ title, children }) {
 
 
                     <p>
-                      ✅ Checklist Updated
+                      âœ… Checklist Updated
                     </p>
 
 
                     <p>
-                      ⏳ 5 Tasks Pending
+                      â³ 5 Tasks Pending
                     </p>
 
 
                     <p>
-                      📊 Attendance Report Ready
+                      ðŸ“Š Attendance Report Ready
                     </p>
 
 
