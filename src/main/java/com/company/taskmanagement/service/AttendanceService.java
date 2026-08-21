@@ -3,6 +3,7 @@ package com.company.taskmanagement.service;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,6 +26,8 @@ public class AttendanceService {
 
 	private static final Logger logger = LoggerFactory.getLogger(AttendanceService.class);
 
+        private static final ZoneId INDIA_ZONE = ZoneId.of("Asia/Kolkata");
+
 	@Autowired
 	private AttendanceRepository attendanceRepository;
 
@@ -34,13 +37,13 @@ public class AttendanceService {
 	public Attendance checkIn(Attendance attendance) {
 
 		User user = attendance.getUser();
-		LocalDate today = LocalDate.now();
+		LocalDate today = LocalDate.now(INDIA_ZONE);
 
 		Attendance existing = attendanceRepository.findTopByUserIdAndAttendanceDateOrderByIdDesc(user.getId(), today);
 
 		if (existing != null) {
 
-			existing.setCheckInTime(LocalTime.now());
+			existing.setCheckInTime(LocalTime.now(INDIA_ZONE));
 
 			if (attendance.getLocation() != null) {
 				existing.setLocation(attendance.getLocation());
@@ -58,7 +61,7 @@ public class AttendanceService {
 		}
 
 		attendance.setAttendanceDate(today);
-		attendance.setCheckInTime(LocalTime.now());
+		attendance.setCheckInTime(LocalTime.now(INDIA_ZONE));
 
 		if (attendance.getStatus() == null) {
 			attendance.setStatus("PRESENT");
@@ -73,7 +76,7 @@ public class AttendanceService {
 	 */
 	public Attendance updateAttendanceStatus(User currentUser, String status, String location) {
 
-		LocalDate today = LocalDate.now();
+		LocalDate today = LocalDate.now(INDIA_ZONE);
 
 		Attendance record = attendanceRepository.findTopByUserIdAndAttendanceDateOrderByIdDesc(currentUser.getId(),
 				today);
@@ -134,7 +137,7 @@ public class AttendanceService {
 		Attendance attendance = attendanceRepository.findById(attendanceId)
 				.orElseThrow(() -> new RuntimeException("Attendance Not Found"));
 
-		attendance.setCheckOutTime(LocalTime.now());
+		attendance.setCheckOutTime(LocalTime.now(INDIA_ZONE));
 
 		if (checkOutSelfiePath != null && !checkOutSelfiePath.isBlank()) {
 			attendance.setCheckOutSelfiePath(checkOutSelfiePath);
@@ -184,7 +187,7 @@ public class AttendanceService {
 	}
 
 	public long getTodayAttendanceCountBySiteCode(String siteCode) {
-		return attendanceRepository.countByUserSiteCodeAndAttendanceDate(siteCode, LocalDate.now());
+		return attendanceRepository.countByUserSiteCodeAndAttendanceDate(siteCode, LocalDate.now(INDIA_ZONE));
 	}
 
 	/**
@@ -261,3 +264,6 @@ public class AttendanceService {
 				.orElse(userReports.get(userReports.size() - 1));
 	}
 }
+
+
+
