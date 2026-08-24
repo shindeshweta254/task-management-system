@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../../components/Layout/Layout";
 import { getAuthHeaders } from "../../api/index";
@@ -20,7 +20,7 @@ import {
   FaColumns,
 } from "react-icons/fa";
 
-const API_BASE_URL = "https://task-management-system-production-7694.up.railway.app";
+const API_BASE = "https://task-management-system-production-7694.up.railway.app";
 
 // Excel-like minimum rows always displayed
 const MIN_ROWS = 30;
@@ -56,6 +56,92 @@ const sanitizeColumns = (cols) => {
   return arr;
 };
 
+
+const TASK_OPTIONS = [
+  {
+    section: "Daily Cleaning",
+    tasks: [
+      "Run the pump for ..... hrs",
+      "Skim pool with pool net",
+      "Empty the skimmer basket",
+      "Clean up around the pool"
+    ]
+  },
+  {
+    section: "Weekly Cleaning",
+    tasks: [
+      "Check the water level - Add/Remove",
+      "Empty the filter basket",
+      "Clean check / pool jet",
+      "Back wash the filter media",
+      "Vacuum the pool",
+      "Check the chemistry of the pool",
+      "Add chemical as necessary",
+      "Verify pool pump pressure gauge",
+      "Brush the pool step, floor, wall",
+      "Shock the pool"
+    ]
+  },
+  {
+    section: "All Buildings",
+    tasks: [
+      "Garbage Collection",
+      "Ground floor lobby Cleaning",
+      "All floors lobby Cleaning",
+      "Lifts Cleaning",
+      "Main Staircase Cleaning",
+      "Fire Staircase Cleaning",
+      "All Floor Lobby Cob Web Removal",
+      "Parking Sweeping",
+      "Common Washroom cleaning",
+      "Outside Surround area",
+      "Parking area litter pick up and Sweeping"
+    ]
+  },
+  {
+    section: "Common Area",
+    tasks: [
+      "Main gate Security Cabins",
+      "Exit Gate Security Cabin",
+      "Internal Road Sweeping"
+    ]
+  },
+  {
+    section: "Buildings",
+    tasks: [
+      "Meter room Cleaning",
+      "Lift LMR Room Cleaning",
+      "All Terrace Cleaning"
+    ]
+  },
+  {
+    section: "All General Area",
+    tasks: [
+      "All Washroom Deep Cleaning",
+      "Basement Parking area thorough Sweeping",
+      "Club House surround area floor scrubbing",
+      "Maintenance Office deep cleaning",
+      "Lift Vacuuming and Ground lift lobby floor scrubbing",
+      "Plumbing Duct area cleaning by pressure machine",
+      "Internal Road washing by Pressure machine",
+      "Storm water drain line cleaning"
+    ]
+  },
+  {
+    section: "Podium & Club House",
+    tasks: [
+      "Club House Cleaning",
+      "Reception area",
+      "GYM",
+      "Game room",
+      "Sweeping pool area",
+      "Party Hall",
+      "Kitchen",
+      "Outside Surround area",
+      "Parking area litter pick up and Sweeping"
+    ]
+  }
+];
 function Checklist() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user")) || {};
@@ -111,38 +197,80 @@ function Checklist() {
   const fileInputsRef = useRef({});
   const extraFileInputsRef = useRef({});
 
-  // ========== FETCH EMPLOYEES (site team first) ==========
+  // ========== FETCH EMPLOYEES ==========
   const loadEmployees = useCallback(async () => {
     try {
-      const loggedInUser = JSON.parse(localStorage.getItem("user"));
-      if (!loggedInUser?.id) return;
-      const headers = getAuthHeaders();
-      let data = null;
-      try {
-        const res = await fetch(`${API_BASE}/api/users/my-site-team`, {
-          headers,
-        });
-        if (res.ok) data = await res.json();
-      } catch (e) {
-        // fall through to all users
+      const loggedInUser = JSON.parse(
+        localStorage.getItem("user") || "null"
+      );
+
+      const token = localStorage.getItem("token");
+
+      console.log("===== LOAD EMPLOYEES =====");
+      console.log("Logged user:", loggedInUser);
+      console.log("Token exists:", !!token);
+
+      if (!token) {
+        console.error("JWT token not found in localStorage");
+        setEmployees([]);
+        return;
       }
-      if (!Array.isArray(data)) {
-        const res = await fetch(`${API_BASE}/api/users`, {
-          headers,
-        });
-        data = await res.json();
+
+      const res = await fetch(
+        `${API_BASE}/api/users/task-assignees`,
+        {
+          method: "GET",
+          headers: {
+            ...getAuthHeaders(),
+            Accept: "application/json",
+          },
+        }
+      );
+
+      console.log("Employee API status:", res.status);
+
+      if (!res.ok) {
+        const errorText = await res.text();
+
+        console.error(
+          "Employee API error:",
+          errorText
+        );
+
+        throw new Error(
+          `Employee API failed: ${res.status}`
+        );
       }
-      setEmployees(Array.isArray(data) ? data : []);
-    } catch (e) {
-      console.log("Load employees error:", e);
+
+      const data = await res.json();
+
+      console.log(
+        "Employees API response:",
+        data
+      );
+
+      console.log(
+        "Employees count:",
+        Array.isArray(data) ? data.length : 0
+      );
+
+      setEmployees(
+        Array.isArray(data) ? data : []
+      );
+
+    } catch (error) {
+      console.error(
+        "Load employees error:",
+        error
+      );
+
       setEmployees([]);
     }
   }, []);
 
-useEffect(() => {
+  useEffect(() => {
     loadEmployees();
   }, [loadEmployees]);
-
   // ========== LOAD SHEET NAMES FROM DB ==========
   const loadSheetNames = useCallback(async () => {
     try {
@@ -843,7 +971,7 @@ const rowList = buildRowList();
               </div>
 
               <div className="note-box">
-                ℹ️ This checklist is updated daily and monthly report will be sent to Site Owner.
+                â„¹ï¸ This checklist is updated daily and monthly report will be sent to Site Owner.
               </div>
 
               {/* EXCEL-STYLE TABLE */}
@@ -891,13 +1019,37 @@ const rowList = buildRowList();
                           </td>
 
                           {/* Check Point / Task */}
-                          <td className="task-text">
-                            {isMaster ? taskValue : (
-                              <input className="cell-input" placeholder="Task"
-                                value={taskValue}
-                                onChange={(e) => onCellEdit(row.uid, "taskName", e.target.value)} />
-                            )}
-                          </td>
+<td className="task-text">
+  <select
+    className="cell-input task-select"
+    value={entry.taskName || taskValue || ""}
+    onChange={(e) => {
+      const selectedTask = e.target.value;
+
+      onCellEdit(row.uid, "taskName", selectedTask);
+
+      const selectedGroup = TASK_OPTIONS.find(
+        (group) => group.tasks.includes(selectedTask)
+      );
+
+      if (selectedGroup) {
+        onCellEdit(row.uid, "sectionName", selectedGroup.section);
+      }
+    }}
+  >
+    <option value="">-- Select Task --</option>
+
+    {TASK_OPTIONS.map((group) => (
+      <optgroup key={group.section} label={group.section}>
+        {group.tasks.map((task) => (
+          <option key={task} value={task}>
+            {task}
+          </option>
+        ))}
+      </optgroup>
+    ))}
+  </select>
+</td>
 
                           {/* Frequency */}
                           <td>
@@ -911,17 +1063,42 @@ const rowList = buildRowList();
                           {/* Employee Name - Select */}
                           <td>
                             <select
-                              className="cell-input employee-select"
-                              value={entry.employeeName || ""}
-                              onChange={(e) => onCellEdit(row.uid, "employeeName", e.target.value)}
-                            >
-                              <option value="">-- Select --</option>
-                              {employees.map((emp) => (
-                                <option key={emp.id} value={emp.name || emp.employeeId}>
-                                  {emp.name || emp.employeeId}
-                                </option>
-                              ))}
-                            </select>
+  className="cell-input employee-select"
+  value={entry.employeeName || ""}
+  onChange={(e) =>
+    onCellEdit(row.uid, "employeeName", e.target.value)
+  }
+>
+  <option value="">-- Select Employee --</option>
+
+  {employees
+    .filter(
+      (emp) =>
+        emp &&
+        emp.status?.toUpperCase() === "ACTIVE" &&
+        (emp.name?.trim() || emp.employeeId?.trim())
+    )
+    .sort((a, b) =>
+      (a.name || a.employeeId || "").localeCompare(
+        b.name || b.employeeId || ""
+      )
+    )
+    .map((emp) => {
+      const displayName =
+        emp.name?.trim() || emp.employeeId?.trim();
+
+      return (
+        <option
+          key={emp.id}
+          value={displayName}
+        >
+          {emp.name?.trim()
+            ? `${emp.name} (${emp.employeeId || "No ID"})`
+            : emp.employeeId}
+        </option>
+      );
+    })}
+</select>
                           </td>
 
                           {/* Status - Dropdown */}
@@ -970,7 +1147,7 @@ const rowList = buildRowList();
                           {/* Photo */}
                           <td className="photo-cell">
                             {isBlankRow ? (
-                              <span className="cell-placeholder">—</span>
+                              <span className="cell-placeholder">â€”</span>
                             ) : (
                               <>
                                 <input type="file" accept="image/*"
@@ -1005,10 +1182,10 @@ const rowList = buildRowList();
                           {/* Live Location */}
                           <td className="location-cell">
                             {isBlankRow ? (
-                              <span className="cell-placeholder">—</span>
+                              <span className="cell-placeholder">â€”</span>
                             ) : entry.locationAddress ? (
                               <span className="location-address-cell" title={entry.locationAddress}>
-                                📍 {entry.locationAddress.split(",")[0]},
+                                ðŸ“ {entry.locationAddress.split(",")[0]},
                                 {entry.latitude && <a href={`https://www.google.com/maps?q=${entry.latitude},${entry.longitude}`} target="_blank" rel="noreferrer" className="map-link"> Map</a>}
                               </span>
                             ) : (
@@ -1051,6 +1228,7 @@ const rowList = buildRowList();
                     })}
                   </tbody>
                 </table>
+                </div>
               </div>
 
               {/* Summary Cards */}
@@ -1079,7 +1257,6 @@ const rowList = buildRowList();
                 <button className="preview-btn" onClick={handlePreview}><FaEye /> Preview Report</button>
                 <button className="download-btn" onClick={handleDownloadExcel}><FaDownload /> Download Excel</button>
               </div>
-            </div>
           </>
         )}
 
@@ -1088,109 +1265,353 @@ const rowList = buildRowList();
           <div className="checklist-sheet">
             <div className="history-header">
               <h3>📋 Saved Checklist Reports</h3>
+
               <div className="history-filters">
-                <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-                <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
-                <button className="filter-btn" onClick={() => loadSavedReports(dateFrom, dateTo)}>Filter</button>
-                <button className="filter-btn clear" onClick={() => { setDateFrom(""); setDateTo(""); loadSavedReports(); }}>Clear</button>
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                />
+
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                />
+
+                <button
+                  className="filter-btn"
+                  onClick={() => loadSavedReports(dateFrom, dateTo)}
+                >
+                  Filter
+                </button>
+
+                <button
+                  className="filter-btn clear"
+                  onClick={() => {
+                    setDateFrom("");
+                    setDateTo("");
+                    loadSavedReports();
+                  }}
+                >
+                  Clear
+                </button>
               </div>
             </div>
 
-            {savedReportsLoading ? <p className="loading-text">Loading...</p>
-              : savedReports.length === 0 ? <p className="loading-text">No saved reports found.</p>
-              : (
+            {savedReportsLoading ? (
+              <p className="loading-text">Loading...</p>
+            ) : savedReports.length === 0 ? (
+              <p className="loading-text">No saved reports found.</p>
+            ) : (
+              <div className="history-section">
+
+                {/* SCROLL BUTTONS */}
+                <div className="history-scroll-controls">
+                  <button
+                    type="button"
+                    className="history-scroll-btn"
+                    onClick={() => {
+                      const el = document.querySelector(".history-table-wrapper");
+                      if (el) {
+                        el.scrollBy({
+                          left: -500,
+                          behavior: "smooth"
+                        });
+                      }
+                    }}
+                    title="Scroll Left"
+                  >
+                    ←
+                  </button>
+
+                  <button
+                    type="button"
+                    className="history-scroll-btn"
+                    onClick={() => {
+                      const el = document.querySelector(".history-table-wrapper");
+                      if (el) {
+                        el.scrollBy({
+                          left: 500,
+                          behavior: "smooth"
+                        });
+                      }
+                    }}
+                    title="Scroll Right"
+                  >
+                    →
+                  </button>
+                </div>
+
+                {/* HISTORY TABLE */}
                 <div className="history-table-wrapper">
                   <table className="checklist-table history-table">
                     <thead>
                       <tr>
-                        <th>Date</th><th>Sheet</th><th>Site</th><th>Shift</th>
-                        <th>Task</th><th>Status</th><th>Remark</th>
-                        <th>Employee</th><th>By</th><th>In</th><th>Out</th>
-                        <th>Updated By</th><th>Location</th><th>Action</th>
+                        <th>Date</th>
+                        <th>Sheet</th>
+                        <th>Site</th>
+                        <th>Shift</th>
+                        <th>Task</th>
+                        <th>Status</th>
+                        <th>Remark</th>
+                        <th>Employee</th>
+                        <th>By</th>
+                        <th>In</th>
+                        <th>Out</th>
+                        <th>Updated By</th>
+                        <th>Location</th>
+                        <th>Action</th>
                       </tr>
                     </thead>
+
                     <tbody>
                       {savedReports.map((r) => (
                         <tr key={r.id}>
                           <td>{r.reportDate}</td>
-                          <td>{r.sheetName || "-"}</td>
-                          <td>{r.siteName || r.siteCode || "-"}</td>
-                          <td>{r.shift || "-"}</td>
-                          <td className="task-text">{r.taskName || "-"}</td>
-                          <td><span className={`status-badge ${(r.status || "").toLowerCase()}`}>{r.status || "Pending"}</span></td>
-                          <td>{r.remark || "-"}</td>
-                          <td>{r.employeeName || "-"}</td>
-                          <td>{r.completedBy || "-"}</td>
-                          <td>{r.timeIn || "-"}</td>
-                          <td>{r.timeOut || "-"}</td>
-                          <td>{r.updatedBy || "-"}</td>
+
+                          <td>
+                            {r.sheetName || "-"}
+                          </td>
+
+                          <td>
+                            {r.siteName || r.siteCode || "-"}
+                          </td>
+
+                          <td>
+                            {r.shift || "-"}
+                          </td>
+
+                          <td className="task-text">
+                            {r.taskName || "-"}
+                          </td>
+
+                          <td>
+                            <span
+                              className={`status-badge ${(r.status || "")
+                                .toLowerCase()
+                                .replaceAll(" ", "-")}`}
+                            >
+                              {r.status || "Pending"}
+                            </span>
+                          </td>
+
+                          <td>
+                            {r.remark || "-"}
+                          </td>
+
+                          <td>
+                            {r.employeeName || "-"}
+                          </td>
+
+                          <td>
+                            {r.completedBy || "-"}
+                          </td>
+
+                          <td>
+                            {r.timeIn || "-"}
+                          </td>
+
+                          <td>
+                            {r.timeOut || "-"}
+                          </td>
+
+                          <td>
+                            {r.updatedBy || "-"}
+                          </td>
+
                           <td>
                             {r.locationAddress ? (
-                              <span>{r.locationAddress.split(",")[0]}
-                                {r.latitude && <a href={`https://www.google.com/maps?q=${r.latitude},${r.longitude}`} target="_blank" rel="noreferrer" className="map-link"> Map</a>}
+                              <span>
+                                {r.locationAddress.split(",")[0]}
+
+                                {r.latitude && (
+                                  <a
+                                    href={`https://www.google.com/maps?q=${r.latitude},${r.longitude}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="map-link"
+                                  >
+                                    {" "}Map
+                                  </a>
+                                )}
                               </span>
-                            ) : r.latitude ? `${r.latitude},${r.longitude}` : "-"}
+                            ) : r.latitude ? (
+                              `${r.latitude},${r.longitude}`
+                            ) : (
+                              "-"
+                            )}
                           </td>
+
                           <td>
-                            <button className="icon-btn edit" onClick={() => openAudit(r.id)} title="Audit History"><FaHistory /></button>
-                            <button className="icon-btn delete" onClick={() => handleDeleteReport(r.id)}><FaTrash /></button>
+                            <button
+                              type="button"
+                              className="icon-btn edit"
+                              onClick={() => openAudit(r.id)}
+                              title="Audit History"
+                            >
+                              <FaHistory />
+                            </button>
+
+                            <button
+                              type="button"
+                              className="icon-btn delete"
+                              onClick={() => handleDeleteReport(r.id)}
+                              title="Delete Report"
+                            >
+                              <FaTrash />
+                            </button>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-              )}
 
-            {savedReports.length > 0 && (
-              <div className="history-export-actions">
-                <button className="preview-btn" onClick={() => {
-                  const w = window.open("", "_blank");
-                  w.document.write(`
-                    <html><head><title>Saved Reports</title>
-                    <style>body{font-family:Arial;padding:20px;}h1{color:#5b2bd8;text-align:center;}
-                    table{width:100%;border-collapse:collapse;margin-top:20px;font-size:10px;}
-                    th,td{border:1px solid #ccc;padding:4px;text-align:center;}
-                    th{background:#5b2bd8;color:white;}</style></head><body>
-                    <h1>SSS FACILITY SERVICES</h1>
-                    <h2>Saved Reports</h2>
-                    <p>Period: ${dateFrom || "All"} to ${dateTo || "All"}</p>
-                    <table><thead><tr>
-                      <th>Date</th><th>Sheet</th><th>Site</th><th>Shift</th><th>Task</th>
-                      <th>Status</th><th>Remark</th><th>Employee</th><th>By</th><th>In</th><th>Out</th><th>Updated By</th><th>Location</th>
-                    </tr></thead><tbody>
-                    ${savedReports.map(r => `<tr>
-                      <td>${r.reportDate}</td><td>${r.sheetName || "-"}</td><td>${r.siteName || r.siteCode || "-"}</td>
-                      <td>${r.shift || "-"}</td><td style="text-align:left">${r.taskName || "-"}</td>
-                      <td>${r.status || "Pending"}</td><td>${r.remark || "-"}</td>
-                      <td>${r.employeeName || "-"}</td><td>${r.completedBy || "-"}</td>
-                      <td>${r.timeIn || "-"}</td><td>${r.timeOut || "-"}</td>
-                      <td>${r.updatedBy || "-"}</td>
-                      <td>${r.locationAddress || (r.latitude ? `${r.latitude},${r.longitude}` : "-")}</td>
-                    </tr>`).join("")}
-                    </tbody></table></body></html>
-                  `);
-                  w.document.close();
-                }}><FaEye /> Print PDF</button>
-                <button className="download-btn" onClick={() => {
-                  let csv = "Date,Sheet,Site,Shift,Task,Status,Remark,Employee,Completed By,Time In,Time Out,Updated By,Location\n";
-                  savedReports.forEach(r => {
-                    csv += `"${r.reportDate}","${r.sheetName||"-"}","${r.siteName||r.siteCode||"-"}","${r.shift||"-"}","${r.taskName||"-"}","${r.status||"Pending"}","${r.remark||"-"}","${r.employeeName||"-"}","${r.completedBy||"-"}","${r.timeIn||"-"}","${r.timeOut||"-"}","${r.updatedBy||"-"}","${r.locationAddress||(r.latitude?r.latitude+","+r.longitude:"-")}"\n`;
-                  });
-                  const blob = new Blob([csv], { type: "text/csv" });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = "checklist-reports.csv";
-                  a.click();
-                  URL.revokeObjectURL(url);
-                }}><FaDownload /> Download Excel</button>
               </div>
             )}
+
+            {/* EXPORT BUTTONS */}
+            {savedReports.length > 0 && (
+              <div className="history-export-actions">
+
+                <button
+                  className="preview-btn"
+                  onClick={() => {
+                    const w = window.open("", "_blank");
+
+                    w.document.write(`
+                      <html>
+                        <head>
+                          <title>Saved Reports</title>
+                          <style>
+                            body {
+                              font-family: Arial;
+                              padding: 20px;
+                            }
+
+                            h1 {
+                              color: #5b2bd8;
+                              text-align: center;
+                            }
+
+                            table {
+                              width: 100%;
+                              border-collapse: collapse;
+                              margin-top: 20px;
+                              font-size: 10px;
+                            }
+
+                            th, td {
+                              border: 1px solid #ccc;
+                              padding: 4px;
+                              text-align: center;
+                            }
+
+                            th {
+                              background: #5b2bd8;
+                              color: white;
+                            }
+                          </style>
+                        </head>
+
+                        <body>
+                          <h1>SSS FACILITY SERVICES</h1>
+                          <h2>Saved Reports</h2>
+
+                          <p>
+                            Period:
+                            ${dateFrom || "All"}
+                            to
+                            ${dateTo || "All"}
+                          </p>
+
+                          <table>
+                            <thead>
+                              <tr>
+                                <th>Date</th>
+                                <th>Sheet</th>
+                                <th>Site</th>
+                                <th>Shift</th>
+                                <th>Task</th>
+                                <th>Status</th>
+                                <th>Remark</th>
+                                <th>Employee</th>
+                                <th>By</th>
+                                <th>In</th>
+                                <th>Out</th>
+                                <th>Updated By</th>
+                                <th>Location</th>
+                              </tr>
+                            </thead>
+
+                            <tbody>
+                              ${savedReports
+                                .map(
+                                  (r) => `
+                                    <tr>
+                                      <td>${r.reportDate || "-"}</td>
+                                      <td>${r.sheetName || "-"}</td>
+                                      <td>${r.siteName || r.siteCode || "-"}</td>
+                                      <td>${r.shift || "-"}</td>
+                                      <td>${r.taskName || "-"}</td>
+                                      <td>${r.status || "Pending"}</td>
+                                      <td>${r.remark || "-"}</td>
+                                      <td>${r.employeeName || "-"}</td>
+                                      <td>${r.completedBy || "-"}</td>
+                                      <td>${r.timeIn || "-"}</td>
+                                      <td>${r.timeOut || "-"}</td>
+                                      <td>${r.updatedBy || "-"}</td>
+                                      <td>${r.locationAddress || (r.latitude ? `${r.latitude},${r.longitude}` : "-")}</td>
+                                    </tr>
+                                  `
+                                )
+                                .join("")}
+                            </tbody>
+                          </table>
+                        </body>
+                      </html>
+                    `);
+
+                    w.document.close();
+                  }}
+                >
+                  <FaEye /> Print PDF
+                </button>
+
+                <button
+                  className="download-btn"
+                  onClick={() => {
+                    let csv =
+                      "Date,Sheet,Site,Shift,Task,Status,Remark,Employee,Completed By,Time In,Time Out,Updated By,Location\n";
+
+                    savedReports.forEach((r) => {
+                      csv += `"${r.reportDate || "-"}","${r.sheetName || "-"}","${r.siteName || r.siteCode || "-"}","${r.shift || "-"}","${r.taskName || "-"}","${r.status || "Pending"}","${r.remark || "-"}","${r.employeeName || "-"}","${r.completedBy || "-"}","${r.timeIn || "-"}","${r.timeOut || "-"}","${r.updatedBy || "-"}","${r.locationAddress || (r.latitude ? r.latitude + "," + r.longitude : "-")}"\n`;
+                    });
+
+                    const blob = new Blob(
+                      [csv],
+                      { type: "text/csv" }
+                    );
+
+                    const url = URL.createObjectURL(blob);
+
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "checklist-reports.csv";
+                    a.click();
+
+                    URL.revokeObjectURL(url);
+                  }}
+                >
+                  <FaDownload /> Download Excel
+                </button>
+
+              </div>
+            )}
+
           </div>
         )}
-      </div>
-
 {/* COLUMN BUILDER MODAL */}
       {columnBuilderOpen && (
         <div className="column-builder-overlay" onClick={() => setColumnBuilderOpen(false)}>
@@ -1273,9 +1694,19 @@ const rowList = buildRowList();
           </div>
         </div>
       )}
+      </div>
     </Layout>
   );
 }
 
 export default Checklist;
+
+
+
+
+
+
+
+
+
 
