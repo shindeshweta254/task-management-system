@@ -64,11 +64,15 @@ private PasswordEncoder passwordEncoder;
  */
 @GetMapping("/task-assignees")
 public List<UserDTO> getTaskAssignees(HttpServletRequest request) {
-        accessService.resolveUser(request);
+
+        User currentUser = accessService.resolveUser(request);
 
         List<User> allUsers = userService.getAllUsers();
 
-        return allUsers.stream()
+        List<User> filteredUsers =
+                accessService.filterUsersByAccess(currentUser, allUsers);
+
+        return filteredUsers.stream()
                         .map(UserDTO::fromUser)
                         .collect(Collectors.toList());
 }

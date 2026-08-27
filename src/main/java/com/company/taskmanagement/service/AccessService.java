@@ -39,7 +39,7 @@ public class AccessService {
     private static final String SP001 = "SP001";
     private static final String SP002 = "SP002";
 
-    // Global supervisors â€“ these supervisors see ALL sites.
+    // Global supervisors Ã¢â‚¬â€œ these supervisors see ALL sites.
     // Add their employee IDs here (case-insensitive).
     private static final Set<String> GLOBAL_SUPERVISOR_EMPLOYEE_IDS = Set.of(
         "SP003"  // Replace with actual global supervisor employee IDs
@@ -416,9 +416,32 @@ public class AccessService {
             return allUsers;
         }
 
-        // Normal Employee -> ALL employees
+        // Normal Employee -> only users from employee's own site
+        // This includes employees and supervisor(s) of the same site.
+        // Office employees will therefore see only OFFICE users
+        // when their site_code is OFFICE.
         if (isEmployee(currentUser)) {
-            return allUsers;
+
+            Set<String> employeeSites = getPermittedSites(currentUser);
+
+            if (employeeSites.contains("ALL")) {
+                return allUsers;
+            }
+
+            return allUsers.stream()
+                    .filter(u -> u.getSiteCode() != null && !u.getSiteCode().isBlank())
+                    .filter(u -> {
+                        Set<String> targetSites = getPermittedSites(u);
+
+                        for (String site : targetSites) {
+                            if (employeeSites.contains(site.toUpperCase())) {
+                                return true;
+                            }
+                        }
+
+                        return false;
+                    })
+                    .collect(Collectors.toList());
         }
 
         // Admin -> ALL employees
