@@ -28,6 +28,10 @@ public class User {
 
 	private String department;
 
+        private String designation;
+
+        private String shift;
+
 	private String status;
 
 	@Column(name = "contact_no", length = 20)
@@ -93,6 +97,22 @@ public class User {
 	public void setDepartment(String department) {
 		this.department = department;
 	}
+        public String getDesignation() {
+                return designation;
+        }
+
+        public void setDesignation(String designation) {
+                this.designation = designation;
+        }
+
+        public String getShift() {
+                return shift;
+        }
+
+        public void setShift(String shift) {
+                this.shift = shift;
+        }
+
 
 	public String getStatus() {
 		return status;
