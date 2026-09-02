@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   FaUsers,
@@ -291,7 +291,7 @@ const fetchAllAttendanceSafe = async () => {
 
       // apiFetch handles response parsing and error throwing
 
-      setEmployeeMessage("Employee added successfully âœ…");
+      setEmployeeMessage("Employee added successfully");
 
       setNewEmployee({
         name: "",
@@ -305,7 +305,7 @@ const fetchAllAttendanceSafe = async () => {
       await loadDashboardData();
     } catch (error) {
       console.error("Add employee error:", error);
-      setEmployeeMessage(error?.message || "Employee add nahi hua âŒ");
+      setEmployeeMessage(error?.message || "Employee add nahi hua");
     }
   };
 
@@ -360,12 +360,12 @@ const fetchAllAttendanceSafe = async () => {
         body: formData,
       });
 
-      setStaffExcelMessage(`âœ… ${String(result)}`);
+      setStaffExcelMessage(`Success: ${String(result)}`);
       setStaffExcelFile(null);
       await Promise.all([loadDashboardData(), loadExcelHistories()]);
     } catch (error) {
       console.error("Staff Excel upload error:", error);
-      setStaffExcelMessage(`âŒ ${error?.message || "Upload failed"}`);
+
     }
   };
 
@@ -446,7 +446,7 @@ const directorTabs = [
                 <div className="director-avatar">{initials}</div>
                 <div>
                   <h1>
-                    Welcome, {userName}! <span>ðŸ‘‹</span>
+                    Welcome, {userName}!
                   </h1>
                   <p>
                     ID: {employeeId}
@@ -471,6 +471,46 @@ const directorTabs = [
               <StatsCard type="completed" icon={<FaCheckCircle />} value={stats.completedTasks} label="Completed Tasks" />
               <StatsCard type="deadlines" icon={<FaFlag />} value={stats.deadlines} label="Today's Deadlines" />
               <StatsCard type="tasks" icon={<FaTasks />} value={stats.totalTasks} label="Total Tasks" />
+            </section>
+            {/* SSS FMS Websites */}
+            <section className="sss-websites-section">
+              <div className="sss-websites-heading">
+                <span className="sss-websites-kicker">SSS FMS DIGITAL</span>
+                <h2>Our Websites</h2>
+                <p>Quick access to our official website and service portal.</p>
+              </div>
+
+              <div className="sss-websites-grid">
+                <a
+                  href="https://sssfmsindia.com/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="sss-website-card"
+                >
+                  <div className="sss-website-icon">WEB</div>
+                  <div className="sss-website-content">
+                    <span className="sss-website-badge">OFFICIAL</span>
+                    <h3>SSS FMS India</h3>
+                    <p>Visit the official SSS FMS India company website.</p>
+                    <span className="sss-website-link">Visit Website</span>
+                  </div>
+                </a>
+
+                <a
+                  href="https://ramcodesolutions.com/SSS-FMS-INDIA-PVT-LTD"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="sss-website-card"
+                >
+                  <div className="sss-website-icon">APP</div>
+                  <div className="sss-website-content">
+                    <span className="sss-website-badge">SERVICES</span>
+                    <h3>SSS FMS Services</h3>
+                    <p>Explore SSS FMS services, solutions and company information.</p>
+                    <span className="sss-website-link">Explore Services</span>
+                  </div>
+                </a>
+              </div>
             </section>
           </>
         )}
@@ -518,7 +558,7 @@ const directorTabs = [
                   setClearDataOpen(true);
                 }}
               >
-                ðŸ—‘ Clear Data
+
               </button>
             </div>
 
@@ -620,20 +660,16 @@ const directorTabs = [
                             clearYear,
                             Number(clearMonth)
                           );
-                          setClearMessage(
-                            `âœ… ${String(result)}`
-                          );
+                          setClearMessage("Attendance data deleted successfully.");
                           setClearDataOpen(false);
                           setClearMonth("");
                           await loadDashboardData();
                         } catch (error) {
                           console.error("Clear data error:", error);
                           setClearMessage(
-                            `âŒ ${
-                              error?.response?.data?.message ||
-                              error?.message ||
-                              "Failed to clear attendance data"
-                            }`
+                            error?.response?.data?.message ||
+                            error?.message ||
+                            "Failed to clear attendance data"
                           );
                         } finally {
                           setClearBusy(false);

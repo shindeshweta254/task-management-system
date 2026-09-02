@@ -95,12 +95,12 @@ function Login() {
         role.toUpperCase() !== roleName
       ) {
         setMessage(
-          "Selected role does not match âŒ"
+          "Selected role does not match your account role."
         );
         return;
       }
 
-      setMessage("Login Successful âœ…");
+      setMessage("Login Successful");
 
       setTimeout(() => {
         const savedLanguage =
@@ -361,4 +361,6 @@ function Login() {
 }
 
 export default Login;
+
+
 

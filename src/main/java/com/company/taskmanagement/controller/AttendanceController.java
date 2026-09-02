@@ -29,6 +29,8 @@ import com.company.taskmanagement.entity.Attendance;
 import com.company.taskmanagement.entity.User;
 import com.company.taskmanagement.service.AccessService;
 import com.company.taskmanagement.service.AttendanceService;
+import com.company.taskmanagement.service.SupervisorAttendanceService;
+import com.company.taskmanagement.service.EmployeePhotoProfileService;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -43,6 +45,12 @@ public class AttendanceController {
 
 	@Autowired
 	private AccessService accessService;
+
+        @Autowired
+        private SupervisorAttendanceService supervisorAttendanceService;
+
+        @Autowired
+        private EmployeePhotoProfileService employeePhotoProfileService;
 
 @PostMapping("/checkin")
 	public Attendance checkIn(
@@ -213,7 +221,9 @@ User currentUser = accessService.resolveUser(request);
 		if (accessService.isSupervisor(currentUser) || accessService.isManager(currentUser)
 				|| accessService.isSP001(currentUser) || accessService.isSP002(currentUser)
 				|| accessService.hasElevatedAccess(currentUser)) {
-			return attendanceService.getAttendanceBySiteCode(currentUser.getSiteCode());
+			return attendanceService.getAttendanceByPermittedSites(
+        accessService.getPermittedSites(currentUser)
+);
 		}
 		// For employees, return own attendance
 		return attendanceService.getAttendanceByUser(currentUser.getId());
@@ -271,4 +281,273 @@ User currentUser = accessService.resolveUser(request);
 	    return ResponseEntity.ok("Deleted " + deleted + " attendance records for " + year + "-" + month);
 	}
 	
-	}
+	
+        // =========================================================
+        // SUPERVISOR PHOTO ATTENDANCE
+        // =========================================================
+
+        @PostMapping("/supervisor/punch-in/{employeeId}")
+        public Attendance supervisorPunchIn(
+                        @PathVariable("employeeId") Long employeeId,
+                        @RequestParam(value = "photo", required = true) MultipartFile photo,
+                        @RequestParam(value = "location", required = false) String location,
+                        @RequestParam(value = "latitude", required = false) Double latitude,
+                        @RequestParam(value = "longitude", required = false) Double longitude,
+                        HttpServletRequest request) throws Exception {
+
+                User supervisor = accessService.resolveUser(request);
+
+                if (!(accessService.isSupervisor(supervisor)
+                                || accessService.isManager(supervisor)
+                                || accessService.isSP001(supervisor)
+                                || accessService.isSP002(supervisor)
+                                || accessService.hasElevatedAccess(supervisor))) {
+                        throw new RuntimeException(
+                                        "Unauthorized: Supervisor access required"
+                        );
+                }
+
+                if (photo == null || photo.isEmpty()) {
+                        throw new RuntimeException(
+                                        "Employee live photo is required"
+                        );
+                }
+
+                String photoPath = saveSelfieFile(
+                                photo,
+                                "supervisor_checkin_" + employeeId
+                );
+
+                return supervisorAttendanceService.punchIn(
+                                supervisor,
+                                employeeId,
+                                photoPath,
+                                location,
+                                latitude,
+                                longitude
+                );
+        }
+
+
+        @PutMapping("/supervisor/punch-out/{employeeId}")
+        public Attendance supervisorPunchOut(
+                        @PathVariable("employeeId") Long employeeId,
+                        @RequestParam(value = "photo", required = true) MultipartFile photo,
+                        @RequestParam(value = "location", required = false) String location,
+                        @RequestParam(value = "latitude", required = false) Double latitude,
+                        @RequestParam(value = "longitude", required = false) Double longitude,
+                        HttpServletRequest request) throws Exception {
+
+                User supervisor = accessService.resolveUser(request);
+
+                if (!(accessService.isSupervisor(supervisor)
+                                || accessService.isManager(supervisor)
+                                || accessService.isSP001(supervisor)
+                                || accessService.isSP002(supervisor)
+                                || accessService.hasElevatedAccess(supervisor))) {
+                        throw new RuntimeException(
+                                        "Unauthorized: Supervisor access required"
+                        );
+                }
+
+                if (photo == null || photo.isEmpty()) {
+                        throw new RuntimeException(
+                                        "Employee live photo is required"
+                        );
+                }
+
+                String photoPath = saveSelfieFile(
+                                photo,
+                                "supervisor_checkout_" + employeeId
+                );
+
+                return supervisorAttendanceService.punchOut(
+                                supervisor,
+                                employeeId,
+                                photoPath,
+                                location,
+                                latitude,
+                                longitude
+                );
+        }
+
+
+        @PutMapping("/supervisor/status/{employeeId}")
+        public Attendance supervisorUpdateStatus(
+                        @PathVariable("employeeId") Long employeeId,
+                        @RequestBody java.util.Map<String, String> body,
+                        HttpServletRequest request) {
+
+                User supervisor = accessService.resolveUser(request);
+
+                if (!(accessService.isSupervisor(supervisor)
+                                || accessService.isManager(supervisor)
+                                || accessService.isSP001(supervisor)
+                                || accessService.isSP002(supervisor)
+                                || accessService.hasElevatedAccess(supervisor))) {
+                        throw new RuntimeException(
+                                        "Unauthorized: Supervisor access required"
+                        );
+                }
+
+                String status =
+                                body != null ? body.get("status") : null;
+
+                String location =
+                                body != null ? body.get("location") : null;
+
+                return supervisorAttendanceService.updateStatus(
+                                supervisor,
+                                employeeId,
+                                status,
+                                location
+                );
+        }
+
+
+        @DeleteMapping("/supervisor/{attendanceId}")
+        public ResponseEntity<?> deleteSupervisorAttendance(
+                        @PathVariable("attendanceId") Long attendanceId,
+                        HttpServletRequest request) {
+
+                User supervisor = accessService.resolveUser(request);
+
+                if (!(accessService.isSupervisor(supervisor)
+                                || accessService.isManager(supervisor)
+                                || accessService.isSP001(supervisor)
+                                || accessService.isSP002(supervisor)
+                                || accessService.hasElevatedAccess(supervisor))) {
+
+                        return ResponseEntity.status(403)
+                                        .body("Supervisor access required");
+                }
+
+                Attendance attendance =
+                                attendanceService.getAttendanceById(attendanceId);
+
+                if (attendance == null) {
+                        return ResponseEntity.notFound().build();
+                }
+
+                if (attendance.getUser() == null) {
+                        return ResponseEntity.badRequest()
+                                        .body("Attendance employee not found");
+                }
+
+                // Supervisor can act only on employees allowed by AccessService.
+                accessService.validateTargetEmployee(
+                                supervisor,
+                                attendance.getUser()
+                );
+
+                attendanceService.deleteAttendanceById(attendanceId);
+
+                return ResponseEntity.ok(
+                                "Attendance record deleted successfully"
+                );
+        }
+
+        @GetMapping("/supervisor/history/{employeeId}")
+        public List<Attendance> supervisorEmployeeHistory(
+                        @PathVariable("employeeId") Long employeeId,
+                        HttpServletRequest request) {
+
+                User supervisor = accessService.resolveUser(request);
+
+                if (!(accessService.isSupervisor(supervisor)
+                                || accessService.isManager(supervisor)
+                                || accessService.isSP001(supervisor)
+                                || accessService.isSP002(supervisor)
+                                || accessService.hasElevatedAccess(supervisor))) {
+                        throw new RuntimeException(
+                                        "Unauthorized: Supervisor access required"
+                        );
+                }
+
+                return supervisorAttendanceService.getEmployeeHistory(
+                                supervisor,
+                                employeeId
+                );
+        }
+
+        @PostMapping("/supervisor/profile-photo/{employeeId}")
+        public com.company.taskmanagement.entity.EmployeeFaceProfile saveEmployeeProfilePhoto(
+                        @PathVariable("employeeId") Long employeeId,
+                        @RequestParam("photo") MultipartFile photo,
+                        HttpServletRequest request) throws Exception {
+
+                User supervisor = accessService.resolveUser(request);
+
+                if (!accessService.isSupervisor(supervisor)
+                                && !accessService.isManager(supervisor)
+                                && !accessService.isSP001(supervisor)
+                                && !accessService.isSP002(supervisor)
+                                && !accessService.hasElevatedAccess(supervisor)) {
+
+                        throw new RuntimeException("Supervisor access required");
+                }
+
+                if (photo == null || photo.isEmpty()) {
+                        throw new RuntimeException("Employee profile photo is required");
+                }
+
+                String savedPath = saveSelfieFile(
+                                photo,
+                                "profile_" + employeeId
+                );
+
+                return employeePhotoProfileService.saveProfilePhoto(
+                                supervisor,
+                                employeeId,
+                                savedPath
+                );
+        }
+
+
+        @GetMapping("/supervisor/profile-photo/{employeeId}")
+        public com.company.taskmanagement.entity.EmployeeFaceProfile getEmployeeProfilePhoto(
+                        @PathVariable("employeeId") Long employeeId,
+                        HttpServletRequest request) {
+
+                User currentUser = accessService.resolveUser(request);
+
+                return employeePhotoProfileService.getProfile(
+                                currentUser,
+                                employeeId
+                );
+        }
+
+        @GetMapping("/supervisor/profile-photos")
+        public java.util.List<com.company.taskmanagement.entity.EmployeeFaceProfile>
+        getRegisteredEmployeeProfiles(HttpServletRequest request) {
+
+                User currentUser = accessService.resolveUser(request);
+
+                return employeePhotoProfileService
+                                .getRegisteredProfiles(currentUser);
+        }
+
+
+        @DeleteMapping("/supervisor/profile-photo/{employeeId}")
+        public java.util.Map<String, Object> deleteEmployeeProfilePhoto(
+                        @PathVariable("employeeId") Long employeeId,
+                        HttpServletRequest request) {
+
+                User currentUser = accessService.resolveUser(request);
+
+                employeePhotoProfileService.deleteProfile(
+                                currentUser,
+                                employeeId
+                );
+
+                java.util.Map<String, Object> response =
+                                new java.util.HashMap<>();
+
+                response.put("success", true);
+                response.put("message", "Registered profile photo deleted");
+
+                return response;
+        }
+}
+
+

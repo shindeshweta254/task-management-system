@@ -317,6 +317,7 @@ function Layout({ title, children }) {
         return [
           "/dashboard",
           "/task",
+          "/checklist",
           "/add-task",
           "/attendance",
           "/calendar",
@@ -717,17 +718,17 @@ function Layout({ title, children }) {
 
 
                     <p>
-                      âœ… Checklist Updated
+                      Checklist Updated
                     </p>
 
 
                     <p>
-                      â³ 5 Tasks Pending
+                      5 Tasks Pending
                     </p>
 
 
                     <p>
-                      ðŸ“Š Attendance Report Ready
+                      Attendance Report Ready
                     </p>
 
 
@@ -799,3 +800,4 @@ function Layout({ title, children }) {
 
 
 export default Layout;
+

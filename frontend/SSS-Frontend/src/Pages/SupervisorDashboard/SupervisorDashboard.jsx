@@ -121,7 +121,7 @@ function SupervisorDashboard() {
         <div className="sv-hero-left">
           <div className="sv-avatar">{initials}</div>
           <div>
-            <h2>Welcome, {userName}! 👋</h2>
+            <h2>Welcome, {userName}!</h2>
             <p>ID: {employeeId} &nbsp;|&nbsp; Dept: {department} &nbsp;|&nbsp; Site: {siteCode || "-"} &nbsp;|&nbsp; Role: SUPERVISOR</p>
           </div>
         </div>
@@ -176,7 +176,7 @@ function SupervisorDashboard() {
           <div>
             {myTasksFiltered.slice(0, 5).map((t) => (
               <p key={t.id} style={{ margin: "8px 0" }}>
-                ✅/⏳ {t.taskTitle} - <b>{t.status}</b>
+                {t.taskTitle} - <b>{t.status}</b>
                 {t.dueDate ? ` (Due: ${t.dueDate})` : ""}
               </p>
             ))}
@@ -194,6 +194,47 @@ function SupervisorDashboard() {
           <button onClick={() => navigate("/checklist")}><FaCheckCircle /> Checklist</button>
         </div>
       </section>
+      {/* SSS FMS Websites */}
+      <section className="sss-websites-section">
+        <div className="sss-websites-heading">
+          <span className="sss-websites-kicker">SSS FMS DIGITAL</span>
+          <h2>Our Websites</h2>
+          <p>Quick access to our official website and service portal.</p>
+        </div>
+
+        <div className="sss-websites-grid">
+          <a
+            href="https://sssfmsindia.com/"
+            target="_blank"
+            rel="noreferrer"
+            className="sss-website-card"
+          >
+            <div className="sss-website-icon">WEB</div>
+            <div className="sss-website-content">
+              <span className="sss-website-badge">OFFICIAL</span>
+              <h3>SSS FMS India</h3>
+              <p>Visit the official SSS FMS India company website.</p>
+              <span className="sss-website-link">Visit Website</span>
+            </div>
+          </a>
+
+          <a
+            href="https://ramcodesolutions.com/SSS-FMS-INDIA-PVT-LTD"
+            target="_blank"
+            rel="noreferrer"
+            className="sss-website-card"
+          >
+            <div className="sss-website-icon">APP</div>
+            <div className="sss-website-content">
+              <span className="sss-website-badge">SERVICES</span>
+              <h3>SSS FMS Services</h3>
+              <p>Explore SSS FMS services, solutions and company information.</p>
+              <span className="sss-website-link">Explore Services</span>
+            </div>
+          </a>
+        </div>
+      </section>
+
     </Layout>
   );
 }

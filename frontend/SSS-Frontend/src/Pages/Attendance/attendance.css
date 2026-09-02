@@ -271,3 +271,1444 @@
   .camera-overlay-info { max-width: 100%; font-size: 10px; }
 }
 
+
+/* ===== Supervisor Team Attendance ===== */
+
+.team-attendance-tools {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.team-menu-btn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: #1d4ed8;
+  color: #fff;
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.team-menu-dropdown {
+  position: absolute;
+  right: 0;
+  top: 50px;
+  z-index: 50;
+  min-width: 190px;
+  padding: 8px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 14px 35px rgba(15, 23, 42, 0.2);
+  border: 1px solid #e5e7eb;
+}
+
+.team-menu-dropdown button {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 11px 12px;
+  border-radius: 9px;
+  text-align: left;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.team-menu-dropdown button:hover {
+  background: #eff6ff;
+}
+
+.team-attendance-panel {
+  margin-bottom: 18px;
+  padding: 18px;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid #dbeafe;
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.08);
+}
+
+.team-attendance-panel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.team-attendance-panel-head h2 {
+  margin: 0 0 4px;
+  color: #0f172a;
+}
+
+.team-attendance-panel-head p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.team-close-btn {
+  border: none;
+  background: #f1f5f9;
+  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.team-employee-select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1.5px solid #cbd5e1;
+  background: #fff;
+  font-size: 14px;
+  outline: none;
+}
+
+.team-employee-select:focus {
+  border-color: #2563eb;
+}
+
+.team-attendance-note {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: #1e40af;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+
+.team-attendance-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.team-attendance-actions button {
+  border: none;
+  border-radius: 12px;
+  padding: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  background: #2563eb;
+  color: white;
+}
+
+.team-attendance-actions button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.attendance-success-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.attendance-success-box {
+  width: min(320px, 88vw);
+  padding: 30px 24px;
+  border-radius: 24px;
+  background: white;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+  animation: attendanceSuccessPop 0.3s ease-out;
+}
+
+.attendance-success-circle {
+  width: 92px;
+  height: 92px;
+  margin: 0 auto 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2563eb;
+  color: white;
+  font-size: 48px;
+  font-weight: 900;
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.32);
+}
+
+.attendance-success-box h2 {
+  margin: 0 0 6px;
+  color: #0f172a;
+}
+
+.attendance-success-box p {
+  margin: 0;
+  color: #64748b;
+  font-weight: 700;
+}
+
+@keyframes attendanceSuccessPop {
+  from {
+    transform: scale(0.82);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+
+.team-status-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.team-status-actions button {
+  border: none;
+  border-radius: 11px;
+  padding: 11px 8px;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.team-status-actions button:hover {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.team-status-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.team-history-box {
+  margin-top: 18px;
+  padding-top: 15px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.team-history-box h3 {
+  margin: 0 0 12px;
+  color: #0f172a;
+}
+
+.team-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.team-history-item {
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+
+.team-history-item > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.team-history-item span {
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.team-history-item small {
+  display: block;
+  margin-top: 5px;
+  color: #64748b;
+}
+
+@media (max-width: 600px) {
+  .team-status-actions {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+
+.team-status-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.team-status-actions button {
+  border: none;
+  border-radius: 11px;
+  padding: 11px 8px;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.team-status-actions button:hover {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.team-status-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.team-history-box {
+  margin-top: 18px;
+  padding-top: 15px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.team-history-box h3 {
+  margin: 0 0 12px;
+  color: #0f172a;
+}
+
+.team-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.team-history-item {
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+
+.team-history-item > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.team-history-item span {
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.team-history-item small {
+  display: block;
+  margin-top: 5px;
+  color: #64748b;
+}
+
+@media (max-width: 600px) {
+  .team-status-actions {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+
+.team-menu-dots {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 100%;
+}
+
+.team-menu-dots span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: block;
+}
+
+
+.attendance-success-check {
+  width: 22px;
+  height: 42px;
+  border-right: 6px solid #ffffff;
+  border-bottom: 6px solid #ffffff;
+  transform: rotate(45deg);
+  display: block;
+  margin-top: -8px;
+}
+
+
+/* Supervisor Attendance 3-dot Dropdown */
+.team-menu-dropdown {
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18) !important;
+  overflow: hidden;
+  min-width: 230px;
+  z-index: 9999;
+}
+
+.team-menu-dropdown button {
+  display: block !important;
+  width: 100% !important;
+  background: #ffffff !important;
+  color: #111111 !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  text-align: left !important;
+  padding: 14px 16px !important;
+  border: none !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  cursor: pointer !important;
+  opacity: 1 !important;
+}
+
+.team-menu-dropdown button:last-child {
+  border-bottom: none !important;
+}
+
+.team-menu-dropdown button:hover {
+  background: #f3f4f6 !important;
+  color: #000000 !important;
+}
+
+
+.profile-photo-register-box {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.profile-photo-camera-label {
+  margin-bottom: 10px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.profile-register-video {
+  width: 100%;
+  max-width: 360px;
+  height: 240px;
+  object-fit: cover;
+  border-radius: 16px;
+  background: #111827;
+}
+
+.profile-photo-preview {
+  margin-top: 14px;
+}
+
+.profile-photo-preview p {
+  margin-bottom: 8px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.profile-photo-preview img {
+  width: 150px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 2px solid #2563eb;
+}
+
+.profile-register-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.profile-register-actions button {
+  border: none;
+  border-radius: 12px;
+  padding: 13px 12px;
+  background: #1d4ed8;
+  color: #ffffff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.profile-register-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .profile-register-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-register-video {
+    height: 210px;
+  }
+}
+
+
+.profile-register-camera-box {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.profile-register-camera-box h3 {
+  margin: 0 0 12px;
+  color: #111827;
+}
+
+.profile-register-video {
+  width: 100%;
+  max-width: 360px;
+  height: 240px;
+  object-fit: cover;
+  background: #111827;
+  border-radius: 16px;
+}
+
+.profile-photo-preview {
+  margin-top: 14px;
+}
+
+.profile-photo-preview p {
+  font-weight: 700;
+  color: #334155;
+}
+
+.profile-photo-preview img {
+  width: 160px;
+  height: 125px;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 2px solid #2563eb;
+}
+
+.profile-register-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.profile-register-actions button {
+  border: none;
+  border-radius: 12px;
+  padding: 13px;
+  background: #1d4ed8;
+  color: white;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.profile-register-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .profile-register-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-register-video {
+    height: 210px;
+  }
+}
+
+
+/* ===== Mobile-style profile camera ===== */
+
+.profile-camera-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 18px 0 8px;
+}
+
+.profile-camera-shutter {
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  border-radius: 50%;
+  border: 4px solid #ffffff;
+  background: transparent;
+  box-shadow:
+    0 0 0 2px #111827,
+    0 5px 16px rgba(0, 0, 0, 0.25);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.profile-camera-shutter span {
+  display: block;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #d1d5db;
+}
+
+.profile-camera-shutter:active {
+  transform: scale(0.92);
+}
+
+.profile-camera-shutter:disabled {
+  opacity: 0.5;
+}
+
+.profile-after-capture {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.profile-retake-btn,
+.profile-save-btn {
+  min-width: 130px;
+  padding: 12px 18px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.profile-retake-btn {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.profile-save-btn {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.profile-retake-btn:disabled,
+.profile-save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+.registered-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.registered-profile-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+.registered-profile-photo {
+  width: 100%;
+  height: 180px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #f1f5f9;
+}
+
+.registered-profile-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.registered-no-photo {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.registered-profile-info {
+  margin-top: 12px;
+}
+
+.registered-profile-info h3 {
+  margin: 0 0 8px;
+  color: #111827;
+}
+
+.registered-profile-info p {
+  margin: 4px 0;
+  color: #374151;
+}
+
+.registered-profile-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.registered-profile-actions button {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.registered-profile-actions button:nth-child(1) {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.registered-profile-actions button:nth-child(2) {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.registered-profile-actions button:nth-child(3) {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+
+.attendance-records-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.attendance-record-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.07);
+}
+
+.attendance-record-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.attendance-record-top span {
+  font-weight: 800;
+  color: #2563eb;
+}
+
+.attendance-record-times {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.attendance-record-times div {
+  padding: 10px;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.attendance-record-times b,
+.attendance-record-times span {
+  display: block;
+}
+
+.attendance-record-times span {
+  margin-top: 4px;
+  color: #334155;
+}
+
+.attendance-record-location {
+  margin-top: 12px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.attendance-record-selfies {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.attendance-record-selfies p {
+  margin: 0 0 6px;
+  font-weight: 700;
+}
+
+.attendance-record-selfies img {
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+@media (max-width: 600px) {
+  .attendance-record-times {
+    grid-template-columns: 1fr;
+  }
+
+  .attendance-record-selfies {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+.team-record-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin: 12px 0 16px;
+}
+
+.team-record-toolbar label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.team-record-toolbar input {
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+.team-record-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.team-record-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1050px;
+  background: #fff;
+}
+
+.team-record-table th,
+.team-record-table td {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 9px 8px;
+  text-align: left;
+  vertical-align: middle;
+  font-size: 13px;
+}
+
+.team-record-table th {
+  background: #f8fafc;
+  color: #111827;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.team-record-table td small {
+  display: block;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.team-record-thumb {
+  width: 46px;
+  height: 46px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid #d1d5db;
+}
+
+.team-record-thumb:hover {
+  transform: scale(1.06);
+}
+
+.team-record-location-cell {
+  max-width: 170px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.team-record-delete {
+  border: none;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-weight: 700;
+  padding: 7px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.attendance-photo-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.attendance-photo-modal-box {
+  position: relative;
+  max-width: 700px;
+  width: 100%;
+  text-align: center;
+}
+
+.attendance-photo-modal-box img {
+  max-width: 100%;
+  max-height: 80vh;
+  border-radius: 14px;
+}
+
+.attendance-photo-modal-box button {
+  position: absolute;
+  top: -14px;
+  right: -8px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  background: #fff;
+  color: #111827;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+
+.profile-register-camera-box {
+  width: 100%;
+  max-width: 520px;
+  margin: 18px auto;
+  padding: 14px;
+  border-radius: 20px;
+  background: #111827;
+}
+
+.profile-register-camera-box h3 {
+  color: #ffffff;
+  text-align: center;
+  margin: 0 0 12px;
+}
+
+.profile-register-video {
+  width: 100%;
+  height: 68vh;
+  max-height: 720px;
+  min-height: 420px;
+  object-fit: cover;
+  border-radius: 18px;
+  background: #000;
+  display: block;
+}
+
+.profile-photo-preview {
+  margin-top: 14px;
+  text-align: center;
+}
+
+.profile-photo-preview img {
+  width: 100%;
+  max-height: 68vh;
+  object-fit: cover;
+  border-radius: 18px;
+}
+
+.profile-camera-controls {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.profile-camera-shutter {
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  border: 6px solid #ffffff;
+  background: #e5e7eb;
+  box-shadow: 0 0 0 4px #111827;
+  cursor: pointer;
+}
+
+.profile-camera-shutter span {
+  display: block;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #ffffff;
+  margin: auto;
+}
+
+@media (max-width: 600px) {
+  .profile-register-camera-box {
+    max-width: 100%;
+    padding: 8px;
+  }
+
+  .profile-register-video {
+    height: 72vh;
+    min-height: 500px;
+    border-radius: 16px;
+  }
+}
+
+
+/* =========================================
+   CREATE EMPLOYEE PROFILE - SEPARATE VIEW
+   ========================================= */
+
+.attendance-page.profile-page-active > * {
+  display: none;
+}
+
+.attendance-page.profile-page-active > .team-attendance-panel {
+  display: none;
+}
+
+/* Create Profile panel is identified by its current open state/layout */
+.attendance-page.profile-page-active .profile-register-camera-box,
+.attendance-page.profile-page-active .profile-camera-controls {
+  display: block;
+}
+
+
+.attendance-page.profile-page-active > .create-profile-page {
+  display: block !important;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  min-height: calc(100vh - 120px);
+}
+
+.create-profile-page .team-attendance-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.create-profile-page .team-close-btn {
+  width: auto;
+  min-width: 90px;
+  height: 42px;
+  border-radius: 10px;
+  padding: 0 16px;
+}
+
+.create-profile-page .team-close-btn::before {
+  content: "Back";
+}
+
+.create-profile-page .team-close-btn {
+  font-size: 0;
+}
+
+.create-profile-page .team-close-btn::before {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.create-profile-page .team-employee-select {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto 18px;
+  display: block;
+  padding: 12px;
+  border-radius: 12px;
+}
+
+.create-profile-page .profile-register-camera-box {
+  display: block !important;
+}
+
+.create-profile-page .profile-camera-controls {
+  display: flex !important;
+  justify-content: center;
+}
+
+
+/* =========================================
+   CREATE PROFILE - TEXT + BACK ARROW FIX
+   ========================================= */
+
+.create-profile-page {
+  color: #000 !important;
+}
+
+.create-profile-page h1,
+.create-profile-page h2,
+.create-profile-page h3,
+.create-profile-page p,
+.create-profile-page label,
+.create-profile-page span {
+  color: #000 !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+  filter: none !important;
+}
+
+.create-profile-page .team-attendance-panel-head h2 {
+  color: #000 !important;
+  font-weight: 800;
+}
+
+.create-profile-page .team-attendance-panel-head p {
+  color: #000 !important;
+  opacity: 1 !important;
+}
+
+.create-profile-page .team-employee-select {
+  color: #000 !important;
+  background: #fff !important;
+  opacity: 1 !important;
+  font-weight: 600;
+}
+
+.create-profile-page .team-employee-select option {
+  color: #000 !important;
+  background: #fff !important;
+}
+
+/* Back button = only black arrow */
+.create-profile-page .team-close-btn {
+  font-size: 0 !important;
+  color: #000 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  width: 48px !important;
+  min-width: 48px !important;
+  height: 48px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  opacity: 1 !important;
+}
+
+.create-profile-page .team-close-btn::before {
+  content: "?" !important;
+  color: #000 !important;
+  font-size: 34px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+}
+
+
+/* BACK BUTTON - ASCII ARROW FIX */
+.create-profile-page .team-close-btn::before {
+  content: "<-" !important;
+  color: #000 !important;
+  font-size: 28px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+}
+
+
+/* =========================================
+   ALL PROFILES - SEPARATE VIEW
+   ========================================= */
+
+.attendance-page.profile-page-active > .all-profiles-page {
+  display: block !important;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  min-height: calc(100vh - 120px);
+  color: #000 !important;
+}
+
+.all-profiles-page h2,
+.all-profiles-page h3,
+.all-profiles-page p,
+.all-profiles-page b,
+.all-profiles-page span {
+  color: #000 !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+}
+
+.all-profiles-page .team-close-btn {
+  font-size: 0 !important;
+  color: #000 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  width: 48px !important;
+  min-width: 48px !important;
+  height: 48px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.all-profiles-page .team-close-btn::before {
+  content: "<-" !important;
+  color: #000 !important;
+  font-size: 28px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+}
+
+.all-profiles-page .registered-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.all-profiles-page .registered-profile-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.08);
+}
+
+.all-profiles-page .registered-profile-photo img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+
+/* =========================================
+   MARK TEAM ATTENDANCE - LIVE CAMERA
+   ========================================= */
+
+.mark-team-attendance-page {
+  color: #111827 !important;
+}
+
+.mark-team-attendance-page h2,
+.mark-team-attendance-page h3,
+.mark-team-attendance-page p,
+.mark-team-attendance-page select,
+.mark-team-attendance-page .team-attendance-note {
+  color: #111827 !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+}
+
+.team-live-camera-box {
+  width: 100%;
+  max-width: 520px;
+  margin: 18px auto;
+}
+
+.team-live-camera-box h3 {
+  text-align: center;
+  margin-bottom: 12px;
+  color: #111827 !important;
+}
+
+.team-live-camera-video {
+  display: block;
+  width: 100%;
+  height: 65vh;
+  min-height: 430px;
+  max-height: 720px;
+  object-fit: cover;
+  background: #000;
+  border-radius: 20px;
+}
+
+.team-camera-status {
+  margin-top: 10px;
+  text-align: center;
+  font-weight: 700;
+  color: #111827 !important;
+}
+
+@media (max-width: 600px) {
+  .team-live-camera-box {
+    max-width: 100%;
+  }
+
+  .team-live-camera-video {
+    height: 70vh;
+    min-height: 500px;
+    border-radius: 16px;
+  }
+}
+
+
+/* =========================================
+   MARK TEAM ATTENDANCE - LIVE CAMERA
+   ========================================= */
+
+.mark-team-attendance-page {
+  color: #111827 !important;
+}
+
+.mark-team-attendance-page h2,
+.mark-team-attendance-page h3,
+.mark-team-attendance-page p,
+.mark-team-attendance-page select,
+.mark-team-attendance-page .team-attendance-note {
+  color: #111827 !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+}
+
+.team-live-camera-box {
+  width: 100%;
+  max-width: 520px;
+  margin: 18px auto;
+}
+
+.team-live-camera-box h3 {
+  text-align: center;
+  margin-bottom: 12px;
+  color: #111827 !important;
+}
+
+.team-live-camera-video {
+  display: block;
+  width: 100%;
+  height: 65vh;
+  min-height: 430px;
+  max-height: 720px;
+  object-fit: cover;
+  background: #000;
+  border-radius: 20px;
+}
+
+.team-camera-status {
+  margin-top: 10px;
+  text-align: center;
+  font-weight: 700;
+  color: #111827 !important;
+}
+
+@media (max-width: 600px) {
+  .team-live-camera-box {
+    max-width: 100%;
+  }
+
+  .team-live-camera-video {
+    height: 70vh;
+    min-height: 500px;
+    border-radius: 16px;
+  }
+}
+
+
+/* =========================================
+   MARK TEAM ATTENDANCE - SEPARATE PAGE
+   ========================================= */
+
+.attendance-page.profile-page-active > .mark-team-attendance-page {
+  display: block !important;
+  width: 100% !important;
+  max-width: 1100px !important;
+  margin: 0 auto !important;
+  min-height: calc(100vh - 120px);
+  color: #111827 !important;
+}
+
+.mark-team-attendance-page .team-attendance-panel-head h2,
+.mark-team-attendance-page .team-attendance-panel-head p {
+  color: #111827 !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+}
+
+/* X ko hide karke <- show karo */
+.mark-team-attendance-page .team-close-btn {
+  font-size: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  width: 50px !important;
+  height: 50px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.mark-team-attendance-page .team-close-btn::before {
+  content: "<-" !important;
+  color: #000 !important;
+  font-size: 28px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+}
+
+
+/* =========================================
+   ATTENDANCE RECORDS - SEPARATE PAGE
+   ========================================= */
+
+.attendance-page.profile-page-active > .attendance-records-page {
+  display: block !important;
+  width: 100% !important;
+  max-width: 1250px !important;
+  margin: 0 auto !important;
+  min-height: calc(100vh - 120px);
+  color: #111827 !important;
+}
+
+.attendance-records-page h2,
+.attendance-records-page h3,
+.attendance-records-page p,
+.attendance-records-page b,
+.attendance-records-page span,
+.attendance-records-page label {
+  color: #111827 !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+}
+
+.attendance-records-page .team-close-btn {
+  font-size: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  width: 50px !important;
+  height: 50px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.attendance-records-page .team-close-btn::before {
+  content: "<-" !important;
+  color: #000 !important;
+  font-size: 28px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+}
+

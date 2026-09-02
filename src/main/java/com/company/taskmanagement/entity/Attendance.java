@@ -31,10 +31,46 @@ public class Attendance {
 
 private String location;
 
+        private Double latitude;
 
-	private String checkInSelfiePath;
+        private Double longitude;
+private String checkInSelfiePath;
 
 	private String checkOutSelfiePath;
+
+        // SELF = employee marked own attendance
+        // SUPERVISOR_PHOTO = supervisor marked attendance after face verification
+        private String attendanceMode = "SELF";
+
+        // User ID of supervisor/person who marked the attendance
+        private Long markedByUserId;
+
+        // True only after actual registered-face verification succeeds
+        private Boolean supervisorVerified = false;
+
+        public String getAttendanceMode() {
+                return attendanceMode;
+        }
+
+        public void setAttendanceMode(String attendanceMode) {
+                this.attendanceMode = attendanceMode;
+        }
+
+        public Long getMarkedByUserId() {
+                return markedByUserId;
+        }
+
+        public void setMarkedByUserId(Long markedByUserId) {
+                this.markedByUserId = markedByUserId;
+        }
+
+        public Boolean getSupervisorVerified() {
+                return supervisorVerified;
+        }
+
+        public void setSupervisorVerified(Boolean supervisorVerified) {
+                this.supervisorVerified = supervisorVerified;
+        }
 
 	public String getCheckInSelfiePath() {
 		return checkInSelfiePath;
@@ -61,10 +97,25 @@ private String location;
 	}
 
 public String getLocation() {
-		return location;
-	}
+                return location;
+        }
 
-	public void setLocation(String location) {
+        public Double getLatitude() {
+                return latitude;
+        }
+
+        public void setLatitude(Double latitude) {
+                this.latitude = latitude;
+        }
+
+        public Double getLongitude() {
+                return longitude;
+        }
+
+        public void setLongitude(Double longitude) {
+                this.longitude = longitude;
+        }
+public void setLocation(String location) {
 		this.location = location;
 	}
 
@@ -123,3 +174,4 @@ public String getLocation() {
 	}
 
 }
+

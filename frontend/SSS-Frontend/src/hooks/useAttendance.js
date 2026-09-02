@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { computeSessionsSummary, normalizeAttendanceRecord, upsertSessionForSameDay } from "../utils/attendanceUtils";
 import {
   checkIn as apiCheckIn,
@@ -135,7 +135,13 @@ export function useAttendance() {
   const user = useMemo(() => getUserFromStorage(), []);
   const userId = user?.id;
   const userName = user?.name || "Employee";
-  const userRole = user?.role?.roleName || "EMPLOYEE";
+  const userRole =
+    user?.role?.roleName ||
+    user?.roleName ||
+    (typeof user?.role === "string" ? user.role : "") ||
+    (String(user?.employeeId || "").toUpperCase().startsWith("SUP")
+      ? "SUPERVISOR"
+      : "EMPLOYEE");
   const userRoleUpper = useMemo(() => String(userRole || "").toUpperCase(), [userRole]);
 
   const canSeeAll = isPrivilegedRole(userRole) || isAuthorizedManager(userRole);

@@ -1,4 +1,4 @@
-export const API_BASE_URL = "https://task-management-system-production-7694.up.railway.app";
+export const API_BASE_URL = "http://localhost:8080";
 
 /**
  * Builds the common auth headers for every authenticated API request.

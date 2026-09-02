@@ -6,6 +6,9 @@ import {
   fetchMySiteTeam,
   uploadSiteTeamExcel,
   addEmployee,
+  updateUserContact,
+  updateEmployee,
+  removeEmployee,
 } from "../../api/userApi";
 import {
   buildTeamGroups,
@@ -32,6 +35,19 @@ function Team() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [editingEmployee, setEditingEmployee] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    email: "",
+    contactNo: "",
+    department: "",
+    designation: "",
+    shift: "",
+    siteCode: "",
+    status: "ACTIVE",
+  });
+  const [editSaving, setEditSaving] = useState(false);
 
   // Add employee form state
   const [showAddForm, setShowAddForm] = useState(false);
@@ -82,38 +98,65 @@ function Team() {
 
   useEffect(() => {
     loadTeams();
-  }, [loadTeams]);
-
-  // ========== GROUPING FOR DIRECTOR VIEW ==========
-  // Director sees all sites grouped by site_code with supervisor info
+  }, [loadTeams]);  // ========== GROUPING FOR DIRECTOR VIEW ==========
+  // Show only real sites.
+  // Multi-site supervisors are attached to each permitted site.
+  // ALL / blank site codes are not shown as separate site cards.
   const directorGroups = useMemo(() => {
     if (!isDirector) return [];
 
-    // Find supervisors and group by site_code
     const siteMap = new Map();
 
     users.forEach((u) => {
-      const sc = u?.siteCode || "Unknown";
-      if (!siteMap.has(sc)) {
-        siteMap.set(sc, { siteCode: sc, employees: [], supervisors: [] });
-      }
-      const group = siteMap.get(sc);
-      group.employees.push(u);
+      const rawSiteCode = String(u?.siteCode || "").trim();
+      const role = String(
+        u?.roleName || u?.role?.roleName || ""
+      ).toUpperCase();
 
-      const role = String(u?.roleName || u?.role?.roleName || "").toUpperCase();
-      if (role === "SUPERVISOR") {
-        group.supervisors.push(u.name || u.employeeId || "Unknown");
+      if (!rawSiteCode) {
+        return;
       }
+
+      const siteCodes = rawSiteCode
+        .split(",")
+        .map((site) => site.trim().toUpperCase())
+        .filter((site) => site && site !== "ALL");
+
+      siteCodes.forEach((siteCode) => {
+        if (!siteMap.has(siteCode)) {
+          siteMap.set(siteCode, {
+            siteCode,
+            employees: [],
+            supervisors: [],
+          });
+        }
+
+        const group = siteMap.get(siteCode);
+
+        if (role === "SUPERVISOR" || role === "MANAGER") {
+          const supervisorName =
+            u.name || u.employeeId || "Not assigned";
+
+          if (!group.supervisors.includes(supervisorName)) {
+            group.supervisors.push(supervisorName);
+          }
+        } else {
+          group.employees.push(u);
+        }
+      });
     });
 
-    return Array.from(siteMap.entries())
-      .map(([siteCode, group]) => ({
-        siteCode,
-        supervisor: group.supervisors.join(", ") || "Not assigned",
+    return Array.from(siteMap.values())
+      .map((group) => ({
+        siteCode: group.siteCode,
+        supervisor:
+          group.supervisors.join(", ") || "Not assigned",
         employeeCount: group.employees.length,
         employees: group.employees,
       }))
-      .sort((a, b) => a.siteCode.localeCompare(b.siteCode));
+      .sort((a, b) =>
+        a.siteCode.localeCompare(b.siteCode)
+      );
   }, [users, isDirector]);
 
   // ========== SUPERVISOR SITE EMPLOYEES ==========
@@ -146,7 +189,7 @@ function Team() {
 
       await addEmployee(payload);
 
-      setAddMsg("Employee added successfully ✅");
+      setAddMsg("Employee added successfully");
       setNewEmployee({
         name: "",
         employeeId: "",
@@ -174,7 +217,7 @@ function Team() {
     setUploadMsg("Uploading...");
     try {
       const result = await uploadSiteTeamExcel(uploadFile);
-      setUploadMsg(typeof result === "string" ? result : "Upload successful ✅");
+      setUploadMsg(typeof result === "string" ? result : "Upload successful");
       setUploadFile(null);
       loadTeams();
     } catch (err) {
@@ -189,9 +232,201 @@ function Team() {
     });
   };
 
+  const handleUpdateEmployee = (employee) => {
+    setEditingEmployee(employee);
+
+    setEditForm({
+      name: employee?.name || "",
+      email: employee?.email || "",
+      contactNo: employee?.contactNo || "",
+      department: employee?.department || "",
+      designation: employee?.designation || "",
+      shift: employee?.shift || "",
+      siteCode: employee?.siteCode || "",
+      status: employee?.status || "ACTIVE",
+    });
+  };
+
+  const handleSaveEmployeeUpdate = async (e) => {
+    e.preventDefault();
+
+    if (!editingEmployee?.id || editSaving) return;
+
+    setEditSaving(true);
+
+    try {
+      await updateEmployee(editingEmployee.id, {
+        name: editForm.name.trim(),
+        email: editForm.email.trim(),
+        contactNo: editForm.contactNo.trim(),
+        department: editForm.department.trim(),
+        designation: editForm.designation.trim(),
+        shift: editForm.shift.trim(),
+        siteCode: editForm.siteCode.trim(),
+        status: editForm.status,
+      });
+
+      alert("Employee updated successfully.");
+
+      setEditingEmployee(null);
+      await loadTeams();
+
+    } catch (err) {
+      alert(readableError(err) || "Update failed");
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  const handleRemoveEmployee = async (employee) => {
+    const ok = window.confirm(
+      `Remove ${employee?.name || employee?.employeeId} from active team?`
+    );
+
+    if (!ok) return;
+
+    try {
+      await removeEmployee(employee.id);
+      alert("Employee removed from active team.");
+      await loadTeams();
+    } catch (err) {
+      alert(readableError(err) || "Remove failed");
+    }
+  };
+
+  const handleDeleteEmployee = (employee) => {
+    alert(
+      `Permanent Delete for ${employee?.name || employee?.employeeId} abhi disabled hai. Attendance aur task history safe rakhi gayi hai.`
+    );
+  };
   return (
     <Layout title="Team">
       <div className="team-page">
+
+  {editingEmployee && (
+    <div className="team-edit-overlay">
+      <form className="team-edit-modal" onSubmit={handleSaveEmployeeUpdate}>
+
+        <div className="team-edit-head">
+          <div>
+            <h3>Edit Employee</h3>
+            <p>{editingEmployee.employeeId || ""}</p>
+          </div>
+
+          <button
+            type="button"
+            className="team-edit-close"
+            onClick={() => setEditingEmployee(null)}
+          >
+            X
+          </button>
+        </div>
+
+        <div className="team-edit-grid">
+
+          <label>
+            Name
+            <input
+              value={editForm.name}
+              onChange={(e) =>
+                setEditForm({ ...editForm, name: e.target.value })
+              }
+            />
+          </label>
+
+          <label>
+            Email
+            <input
+              type="email"
+              value={editForm.email}
+              onChange={(e) =>
+                setEditForm({ ...editForm, email: e.target.value })
+              }
+            />
+          </label>
+
+          <label>
+            Mobile Number
+            <input
+              value={editForm.contactNo}
+              onChange={(e) =>
+                setEditForm({ ...editForm, contactNo: e.target.value })
+              }
+            />
+          </label>
+
+          <label>
+            Department
+            <input
+              value={editForm.department}
+              onChange={(e) =>
+                setEditForm({ ...editForm, department: e.target.value })
+              }
+            />
+          </label>
+
+          <label>
+            Designation
+            <input
+              value={editForm.designation}
+              onChange={(e) =>
+                setEditForm({ ...editForm, designation: e.target.value })
+              }
+            />
+          </label>
+
+          <label>
+            Shift
+            <input
+              value={editForm.shift}
+              onChange={(e) =>
+                setEditForm({ ...editForm, shift: e.target.value })
+              }
+            />
+          </label>
+
+          <label>
+            Site Code
+            <input
+              value={editForm.siteCode}
+              onChange={(e) =>
+                setEditForm({ ...editForm, siteCode: e.target.value })
+              }
+            />
+          </label>
+
+          <label>
+            Status
+            <select
+              value={editForm.status}
+              onChange={(e) =>
+                setEditForm({ ...editForm, status: e.target.value })
+              }
+            >
+              <option value="ACTIVE">ACTIVE</option>
+              <option value="RESIGNED">RESIGNED</option>
+              <option value="INACTIVE">INACTIVE</option>
+            </select>
+          </label>
+
+        </div>
+
+        <div className="team-edit-actions">
+          <button type="submit" disabled={editSaving}>
+            {editSaving ? "Saving..." : "Save Changes"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setEditingEmployee(null)}
+          >
+            Cancel
+          </button>
+        </div>
+
+      </form>
+    </div>
+  )}
         <section className="page-card">
           <div className="team-page-header">
             <div>
@@ -230,9 +465,7 @@ function Team() {
                   className="team-file-input"
                   id="team-excel-upload"
                 />
-                <label htmlFor="team-excel-upload" className="team-action-btn upload">
-                  📂 Upload Team Excel
-                </label>
+                <label htmlFor="team-excel-upload" className="team-action-btn upload">Upload Team Excel</label>
                 {uploadFile && (
                   <button className="team-action-btn go" onClick={handleUploadExcel}>
                     Upload Now
@@ -317,6 +550,7 @@ function Team() {
                         <th>Shift</th>
                         <th>Contact</th>
                         <th>Status</th>
+                        <th>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -330,6 +564,34 @@ function Team() {
                           <td>{u.shift || "-"}</td>
                           <td>{u.contactNo || "-"}</td>
                           <td>{u.status || "ACTIVE"}</td>
+
+                          <td>
+                            <div className="team-row-actions">
+                              <button
+                                type="button"
+                                className="team-row-btn update"
+                                onClick={() => handleUpdateEmployee(u)}
+                              >
+                                Update
+                              </button>
+
+                              <button
+                                type="button"
+                                className="team-row-btn remove"
+                                onClick={() => handleRemoveEmployee(u)}
+                              >
+                                Remove
+                              </button>
+
+                              <button
+                                type="button"
+                                className="team-row-btn delete"
+                                onClick={() => handleDeleteEmployee(u)}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -354,8 +616,8 @@ function Team() {
                       onClick={() => openTeamDetails(group.siteCode)}
                     >
                       <div className="team-card-top">
-                        <span className="team-card-icon">🏗️</span>
-                        <span className="team-view-label">View Team →</span>
+                        <span className="team-card-icon">SITE</span>
+                        <span className="team-view-label">View Team</span>
                       </div>
                       <h3>{group.siteCode}</h3>
                       <div className="team-count-row">

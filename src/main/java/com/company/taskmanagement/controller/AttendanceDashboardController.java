@@ -1,5 +1,7 @@
 package com.company.taskmanagement.controller;
 
+import java.time.ZoneId;
+
 import java.time.LocalDate;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,11 +32,13 @@ public class AttendanceDashboardController {
 		User currentUser = accessService.resolveUser(request);
 		// For elevated users, return total today's count
 		if (accessService.hasElevatedAccess(currentUser) || accessService.isSP002(currentUser)) {
-			return attendanceRepository.countByAttendanceDate(LocalDate.now());
+			return attendanceRepository.countByAttendanceDate(LocalDate.now(ZoneId.of("Asia/Kolkata")));
 		}
 		// For others, return count only for their site
 		return attendanceRepository.countByUserSiteCodeAndAttendanceDate(
-				currentUser.getSiteCode(), LocalDate.now());
+				currentUser.getSiteCode(), LocalDate.now(ZoneId.of("Asia/Kolkata")));
 	}
 }
+
+
 

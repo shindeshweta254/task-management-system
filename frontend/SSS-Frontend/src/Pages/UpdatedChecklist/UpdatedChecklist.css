@@ -454,3 +454,106 @@
     flex-direction: column;
   }
 }
+
+/* ===== UPDATED CHECKLIST TABLE SCROLL FIX ===== */
+
+.updated-checklist-table-wrapper,
+.table-wrapper,
+.table-container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+}
+
+.updated-checklist-table-wrapper table,
+.table-wrapper table,
+.table-container table {
+  min-width: 1200px;
+  width: max-content;
+  border-collapse: collapse;
+}
+
+.updated-checklist-table-wrapper th,
+.updated-checklist-table-wrapper td,
+.table-wrapper th,
+.table-wrapper td,
+.table-container th,
+.table-container td {
+  white-space: nowrap;
+}
+
+.updated-checklist-table-wrapper::-webkit-scrollbar,
+.table-wrapper::-webkit-scrollbar,
+.table-container::-webkit-scrollbar {
+  height: 10px;
+}
+
+.updated-checklist-table-wrapper::-webkit-scrollbar-thumb,
+.table-wrapper::-webkit-scrollbar-thumb,
+.table-container::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+}
+
+
+/* ===== EXACT FIX: UPDATED CHECKLIST MAIN TABLE ===== */
+
+.updated-checklist-wrapper {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.updated-table-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto !important;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 12px;
+}
+
+.updated-table {
+  width: max-content !important;
+  min-width: 1200px !important;
+  border-collapse: collapse;
+}
+
+.updated-table th,
+.updated-table td {
+  white-space: nowrap;
+}
+
+/* Horizontal scrollbar */
+.updated-table-wrapper::-webkit-scrollbar {
+  height: 12px;
+}
+
+.updated-table-wrapper::-webkit-scrollbar-track {
+  border-radius: 10px;
+}
+
+.updated-table-wrapper::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+}
+
+/* View-details table */
+.excel-view-table-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto !important;
+  padding-bottom: 10px;
+}
+
+.excel-view-table {
+  width: max-content !important;
+  min-width: 1300px !important;
+}
+
+.excel-view-table th,
+.excel-view-table td {
+  white-space: nowrap;
+}
+

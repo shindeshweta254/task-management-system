@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Layout from "../../components/Layout/Layout";
-import { getAuthHeaders } from "../../api/index";
+import { API_BASE_URL, getAuthHeaders } from "../../api/index";
 import "./TeamDetails.css";
 
 import {
@@ -64,7 +64,7 @@ function TeamDetails() {
         // Supervisor can only see his own site team
         const loggedInUser = JSON.parse(localStorage.getItem("user")) || {};
         const headers = getAuthHeaders();
-        const res = await fetch("https://task-management-system-production-7694.up.railway.app/api/users/my-site-team", { headers });
+        const res = await fetch(`${API_BASE_URL}/api/users/my-site-team`, { headers });
         data = await res.json();
       } else {
         // Director: fetch all users and filter by site code
@@ -109,7 +109,7 @@ function TeamDetails() {
         role: { id: 3, roleName: "EMPLOYEE" },
       };
       await addEmployee(payload);
-      setAddMsg("Employee added successfully ✅");
+      setAddMsg("Employee added successfully ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦");
       setNewEmployee({ name: "", employeeId: "", email: "", contactNo: "", department: "", designation: "", shift: "" });
       setShowAddForm(false);
       loadEmployees();
@@ -128,7 +128,7 @@ function TeamDetails() {
     setUploadMsg("Uploading...");
     try {
       const result = await uploadSiteTeamExcel(uploadFile);
-      setUploadMsg(typeof result === "string" ? result : "Upload successful ✅");
+      setUploadMsg(typeof result === "string" ? result : "Upload successful ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦");
       setUploadFile(null);
       loadEmployees();
     } catch (err) {
@@ -153,7 +153,7 @@ function TeamDetails() {
         <div className="team-details-card">
           <div className="team-details-header">
             <button type="button" className="team-details-back" onClick={() => navigate("/team")}>
-              ← Back to Teams
+              ÃƒÂ¢Ã¢â‚¬Â Ã‚Â Back to Teams
             </button>
             <div className="team-details-title">
               <h2>{siteCode}</h2>
@@ -177,7 +177,7 @@ function TeamDetails() {
                     id="td-excel-upload"
                   />
                   <label htmlFor="td-excel-upload" className="team-action-btn upload">
-                    📂 Upload Team Excel
+                    ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Å¡ Upload Team Excel
                   </label>
                   {uploadFile && (
                     <button className="team-action-btn go" onClick={handleUploadExcel}>

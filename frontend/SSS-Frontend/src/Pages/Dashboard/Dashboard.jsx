@@ -166,7 +166,7 @@ function Dashboard() {
                 <div className="director-avatar">{initials}</div>
                 <div>
                   <h1>
-                    Welcome, {userName}! <span>👋</span>
+                    Welcome, {userName}!
                   </h1>
                   <p>
                     ID: {employeeId}
@@ -273,6 +273,48 @@ function Dashboard() {
                   </table>
                 </div>
               )}
+
+                        </section>
+
+            {/* SSS FMS Websites */}
+            <section className="sss-websites-section">
+              <div className="sss-websites-heading">
+                <span className="sss-websites-kicker">SSS FMS DIGITAL</span>
+                <h2>Our Websites</h2>
+                <p>Quick access to our official website and service portal.</p>
+              </div>
+
+              <div className="sss-websites-grid">
+                <a
+                  href="https://sssfmsindia.com/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="sss-website-card"
+                >
+                  <div className="sss-website-icon">WEB</div>
+                  <div className="sss-website-content">
+                    <span className="sss-website-badge">OFFICIAL</span>
+                    <h3>SSS FMS India</h3>
+                    <p>Visit the official SSS FMS India company website.</p>
+                    <span className="sss-website-link">Visit Website</span>
+                  </div>
+                </a>
+
+                <a
+                  href="https://ramcodesolutions.com/SSS-FMS-INDIA-PVT-LTD"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="sss-website-card"
+                >
+                  <div className="sss-website-icon">WEB</div>
+                  <div className="sss-website-content">
+                    <span className="sss-website-badge">SERVICES</span>
+                    <h3>SSS FMS Services</h3>
+                    <p>Explore SSS FMS services, solutions and company information.</p>
+                    <span className="sss-website-link">Explore Services</span>
+                  </div>
+                </a>
+              </div>
             </section>
           </>
         )}

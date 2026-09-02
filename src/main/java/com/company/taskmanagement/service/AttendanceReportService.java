@@ -1,5 +1,7 @@
 package com.company.taskmanagement.service;
 
+import java.time.ZoneId;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -117,7 +119,7 @@ public class AttendanceReportService {
             latestReport = new Report();
             latestReport.setUser(new User());
             latestReport.getUser().setId(userId);
-            latestReport.setReportDate(LocalDate.now());
+            latestReport.setReportDate(LocalDate.now(ZoneId.of("Asia/Kolkata")));
         } else {
             latestReport = userReports.get(userReports.size() - 1);
         }
@@ -143,4 +145,5 @@ public class AttendanceReportService {
         return userReports.get(userReports.size() - 1);
     }
 }
+
 

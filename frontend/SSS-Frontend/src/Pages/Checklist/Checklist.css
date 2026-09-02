@@ -1,4 +1,4 @@
-.checklist-wrapper {
+﻿.checklist-wrapper {
   width: 100%;
   overflow-x: auto;
   padding: 0 10px 40px;
@@ -889,7 +889,7 @@
 }
 
 /* ============================================================
-   EXCEL-STYLE UPGRADE STYLES (kept separate — existing design intact)
+   EXCEL-STYLE UPGRADE STYLES (kept separate â€” existing design intact)
    ============================================================ */
 
 /* Add Row button (appears next to sheet/date/print controls) */
@@ -1395,3 +1395,519 @@
 
 
 
+
+
+/* =========================================================
+   DIRECTOR UPDATED CHECKLIST - TABLE RESPONSIVE FIX
+   ========================================================= */
+
+.checklist-table-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  display: block;
+}
+
+.checklist-table-wrapper .checklist-table {
+  width: max-content;
+  min-width: 1200px;
+  table-layout: auto;
+}
+
+.checklist-table-wrapper .checklist-table th,
+.checklist-table-wrapper .checklist-table td {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.checklist-table-wrapper .checklist-table .task-text {
+  min-width: 260px;
+  max-width: 400px;
+  white-space: normal;
+}
+
+.checklist-table-wrapper .employee-select {
+  min-width: 220px;
+}
+
+.checklist-table-wrapper .remark-input {
+  min-width: 180px;
+}
+
+.history-table-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  display: block;
+}
+
+.history-table-wrapper .history-table {
+  width: max-content;
+  min-width: 1100px;
+}
+
+@media (max-width: 1200px) {
+  .checklist-wrapper {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .checklist-table-wrapper {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .checklist-wrapper {
+    padding: 0 5px 30px;
+  }
+
+  .checklist-table-wrapper .checklist-table {
+    min-width: 1100px;
+  }
+
+  .checklist-table-wrapper .employee-select {
+    min-width: 200px;
+  }
+}
+
+/* ===== DIRECTOR UPDATED CHECKLIST - FINAL WIDTH FIX ===== */
+
+.checklist-wrapper {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.history-table-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto !important;
+  overflow-y: hidden;
+  display: block;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+}
+
+.history-table-wrapper .history-table {
+  width: max-content !important;
+  min-width: 1200px;
+  max-width: none;
+  table-layout: auto;
+}
+
+.history-table-wrapper .history-table th,
+.history-table-wrapper .history-table td {
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.history-table-wrapper .history-table .task-text {
+  min-width: 260px;
+  max-width: 400px;
+  white-space: normal;
+}
+
+.history-table-wrapper .history-table td:last-child {
+  min-width: 100px;
+  white-space: nowrap;
+}
+
+@media (max-width: 1200px) {
+  .history-table-wrapper {
+    width: 100%;
+    overflow-x: auto !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .history-table-wrapper {
+    width: 100%;
+    overflow-x: auto !important;
+  }
+}
+
+
+/* =========================================================
+   UPDATED CHECKLIST - NO CUT / FULL HORIZONTAL SCROLL
+   ========================================================= */
+
+.history-table-wrapper {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+
+  box-sizing: border-box !important;
+  padding-bottom: 12px;
+}
+
+.history-table-wrapper .history-table {
+  display: table !important;
+  width: max-content !important;
+  min-width: 1400px !important;
+  max-width: none !important;
+
+  table-layout: auto !important;
+}
+
+.history-table-wrapper .history-table th,
+.history-table-wrapper .history-table td {
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+.history-table-wrapper .history-table .task-text {
+  min-width: 260px !important;
+  max-width: 400px !important;
+  white-space: normal !important;
+}
+
+.history-table-wrapper::-webkit-scrollbar {
+  height: 12px;
+}
+
+.history-table-wrapper::-webkit-scrollbar-track {
+  background: #e5e7eb;
+  border-radius: 10px;
+}
+
+.history-table-wrapper::-webkit-scrollbar-thumb {
+  background: #6d5dfc;
+  border-radius: 10px;
+}
+
+/* Important: parent containers must not clip the table */
+.checklist-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.checklist-sheet {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+}
+
+/* Director Updated Checklist section */
+.history-section,
+.checklist-history,
+.updated-checklist-section {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+}
+
+@media (max-width: 1200px) {
+  .history-table-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+  }
+
+  .history-table-wrapper .history-table {
+    min-width: 1400px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .history-table-wrapper {
+    width: 100% !important;
+    overflow-x: auto !important;
+  }
+
+  .history-table-wrapper .history-table {
+    min-width: 1400px !important;
+  }
+}
+
+
+ /* ===== UPDATED CHECKLIST TABLE - FINAL FIX ===== */
+
+.history-table-wrapper {
+  display: block !important;
+  position: relative !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+
+  box-sizing: border-box !important;
+  padding: 0 0 14px 0 !important;
+  margin: 0 !important;
+
+  scrollbar-width: auto;
+}
+
+.history-table-wrapper .history-table {
+  display: table !important;
+  width: max-content !important;
+  min-width: 1500px !important;
+  max-width: none !important;
+
+  border-collapse: collapse !important;
+  table-layout: auto !important;
+}
+
+.history-table-wrapper .history-table th,
+.history-table-wrapper .history-table td {
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+.history-table-wrapper .history-table th {
+  padding: 12px 14px !important;
+}
+
+.history-table-wrapper .history-table td {
+  padding: 10px 14px !important;
+}
+
+.history-table-wrapper .history-table .task-text {
+  min-width: 250px !important;
+  max-width: 400px !important;
+  white-space: normal !important;
+}
+
+.history-table-wrapper .history-table th:last-child,
+.history-table-wrapper .history-table td:last-child {
+  min-width: 110px !important;
+  width: 110px !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+
+.history-table-wrapper::-webkit-scrollbar {
+  height: 12px;
+}
+
+.history-table-wrapper::-webkit-scrollbar-track {
+  background: #e5e7eb;
+  border-radius: 10px;
+}
+
+.history-table-wrapper::-webkit-scrollbar-thumb {
+  background: #6d5dfc;
+  border-radius: 10px;
+}
+
+.history-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #5b4ae8;
+}
+
+/* Make sure outer checklist containers don't clip it */
+.checklist-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.checklist-sheet {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Director page responsive */
+@media (max-width: 1200px) {
+  .history-table-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+  }
+
+  .history-table-wrapper .history-table {
+    min-width: 1500px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .history-table-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+  }
+
+  .history-table-wrapper .history-table {
+    min-width: 1500px !important;
+  }
+}
+
+
+/* =========================
+   SAVED REPORTS HISTORY - FINAL FIX
+   ========================= */
+
+.history-table-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  display: block !important;
+  box-sizing: border-box !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding-bottom: 14px !important;
+}
+
+.history-table-wrapper .history-table {
+  width: max-content !important;
+  min-width: 1600px !important;
+  max-width: none !important;
+  table-layout: auto !important;
+  border-collapse: collapse !important;
+}
+
+.history-table-wrapper .history-table th,
+.history-table-wrapper .history-table td {
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  box-sizing: border-box !important;
+}
+
+.history-table-wrapper .history-table .task-text {
+  min-width: 280px !important;
+  max-width: 450px !important;
+  white-space: normal !important;
+  word-break: normal !important;
+}
+
+.history-table-wrapper .history-table th:last-child,
+.history-table-wrapper .history-table td:last-child {
+  min-width: 120px !important;
+  width: 120px !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+}
+
+.history-table-wrapper .history-table th {
+  padding: 12px 16px !important;
+}
+
+.history-table-wrapper .history-table td {
+  padding: 10px 16px !important;
+}
+
+.history-table-wrapper::-webkit-scrollbar {
+  height: 14px !important;
+}
+
+.history-table-wrapper::-webkit-scrollbar-track {
+  background: #e5e7eb !important;
+  border-radius: 10px !important;
+}
+
+.history-table-wrapper::-webkit-scrollbar-thumb {
+  background: #6d5dfc !important;
+  border-radius: 10px !important;
+}
+
+.history-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #5b4ae8 !important;
+}
+
+/* Parent containers - prevent cutting */
+
+.checklist-sheet {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.checklist-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  overflow-x: visible !important;
+}
+
+@media (max-width: 1200px) {
+  .history-table-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+  }
+
+  .history-table-wrapper .history-table {
+    min-width: 1600px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .history-table-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+  }
+
+  .history-table-wrapper .history-table {
+    min-width: 1600px !important;
+  }
+}
+
+
+/* History horizontal scroll controls */
+.history-section {
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow: visible !important;
+}
+
+.history-scroll-controls {
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-bottom: 10px !important;
+  width: 100% !important;
+}
+
+.history-scroll-btn {
+  width: 42px !important;
+  height: 38px !important;
+  border: none !important;
+  border-radius: 8px !important;
+  background: #6d5dfc !important;
+  color: white !important;
+  font-size: 22px !important;
+  font-weight: bold !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.history-scroll-btn:hover {
+  background: #5b4ae8 !important;
+}
+
+.history-table-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+}

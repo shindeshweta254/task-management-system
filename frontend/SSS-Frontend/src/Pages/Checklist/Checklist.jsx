@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../../components/Layout/Layout";
 import { getAuthHeaders } from "../../api/index";
@@ -46,13 +46,54 @@ const DEFAULT_COLUMNS = [
 
 // Ensure sr column is always first and action column is always last
 const sanitizeColumns = (cols) => {
-  const arr = Array.isArray(cols) ? cols.filter((c) => c && c.key) : [];
-  if (!arr.some((c) => c.key === "sr")) {
-    arr.unshift({ key: "sr", label: "Sr.", type: "sr", locked: true });
+  let arr = Array.isArray(cols)
+    ? cols.filter((c) => c && c.key)
+    : [];
+
+  // Remove duplicates
+  arr = arr.filter(
+    (col, index, self) =>
+      index === self.findIndex((c) => c.key === col.key)
+  );
+
+  // Sr. always first
+  arr = arr.filter((c) => c.key !== "sr");
+  arr.unshift({
+    key: "sr",
+    label: "Sr.",
+    type: "sr",
+    locked: true
+  });
+
+  // Temporarily remove Action so it remains last
+  arr = arr.filter((c) => c.key !== "action");
+
+  // Photo is mandatory
+  if (!arr.some((c) => c.key === "photo")) {
+    arr.push({
+      key: "photo",
+      label: "Photo",
+      type: "photo"
+    });
   }
-  if (!arr.some((c) => c.key === "action")) {
-    arr.push({ key: "action", label: "Action", type: "action", locked: true });
+
+  // Location is mandatory
+  if (!arr.some((c) => c.key === "location")) {
+    arr.push({
+      key: "location",
+      label: "Location",
+      type: "location"
+    });
   }
+
+  // Action always last
+  arr.push({
+    key: "action",
+    label: "Action",
+    type: "action",
+    locked: true
+  });
+
   return arr;
 };
 
@@ -177,6 +218,7 @@ function Checklist() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [locationLoading, setLocationLoading] = useState(false);
+  const [photoUploading, setPhotoUploading] = useState(false);
 
   // Audit modal state
   const [auditModalOpen, setAuditModalOpen] = useState(false);
@@ -563,50 +605,86 @@ function Checklist() {
     setColumnBuilderOpen(false);
   };
 
-// ========== PHOTO HANDLING PER ROW (upload to backend + GPS) ==========
+// ========== PHOTO HANDLING PER ROW (upload + actual address) ==========
   const handleRowPhoto = async (uid, e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Show preview
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      updateEntry(uid, "photoPreview", ev.target.result);
-    };
-    reader.readAsDataURL(file);
+    setPhotoUploading(true);
 
-    // Upload to server
     try {
+      const preview = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => resolve(ev.target.result);
+        reader.readAsDataURL(file);
+      });
+
       const formData = new FormData();
       formData.append("file", file);
-      const loggedInUser = JSON.parse(localStorage.getItem("user"));
-const res = await fetch(`${API_BASE}/api/checklist-report/photo`, {
+
+      const res = await fetch(`${API_BASE}/api/checklist-report/photo`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: formData,
       });
-      if (res.ok) {
-        const data = await res.json();
-        updateEntry(uid, "photoName", data.photoName);
-        updateEntry(uid, "photoPath", data.photoPath);
+
+      if (!res.ok) {
+        throw new Error("Photo upload failed");
       }
+
+      const photoData = await res.json();
+
+      let latitude = "";
+      let longitude = "";
+      let locationAddress = "";
+
+      if (navigator.geolocation) {
+        try {
+          const position = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(
+              resolve,
+              reject,
+              {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 0,
+              }
+            );
+          });
+
+          latitude = String(position.coords.latitude);
+          longitude = String(position.coords.longitude);
+
+          const address = await reverseGeocode(
+            position.coords.latitude,
+            position.coords.longitude
+          );
+
+          locationAddress = address || "";
+
+        } catch (locationError) {
+          console.error("Location capture error:", locationError);
+        }
+      }
+
+      setEntries((prev) => ({
+        ...prev,
+        [uid]: {
+          ...(prev[uid] || {}),
+          photoPreview: preview,
+          photoName: photoData.photoName || "",
+          photoPath: photoData.photoPath || "",
+          latitude,
+          longitude,
+          locationAddress,
+        },
+      }));
+
     } catch (err) {
       console.error("Photo upload error:", err);
-    }
-
-    // Also capture GPS
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          const address = await reverseGeocode(latitude, longitude);
-          updateEntry(uid, "latitude", String(latitude));
-          updateEntry(uid, "longitude", String(longitude));
-          updateEntry(uid, "locationAddress", address);
-        },
-        () => {},
-        { enableHighAccuracy: true, timeout: 15000 }
-      );
+      alert("Photo upload failed. Please try again.");
+    } finally {
+      setPhotoUploading(false);
     }
   };
 
@@ -619,6 +697,11 @@ const res = await fetch(`${API_BASE}/api/checklist-report/photo`, {
 
   // ========== SAVE CHECKLIST ==========
 const handleSave = async () => {
+
+    if (photoUploading || locationLoading) {
+      alert("Please wait. Photo and location are still processing.");
+      return;
+    }
     try {
       const user = JSON.parse(localStorage.getItem("user"));
       const loggedInUser = JSON.parse(localStorage.getItem("user"));
@@ -971,8 +1054,8 @@ const rowList = buildRowList();
               </div>
 
               <div className="note-box">
-                â„¹ï¸ This checklist is updated daily and monthly report will be sent to Site Owner.
-              </div>
+  This checklist is updated daily and monthly report will be sent to Site Owner.
+</div>
 
               {/* EXCEL-STYLE TABLE */}
               <div className="checklist-table-wrapper">
@@ -1143,35 +1226,61 @@ const rowList = buildRowList();
                               value={entry.timeOut || ""}
                               onChange={(e) => onCellEdit(row.uid, "timeOut", e.target.value)} />
                           </td>
-
                           {/* Photo */}
                           <td className="photo-cell">
                             {isBlankRow ? (
-                              <span className="cell-placeholder">â€”</span>
+                              <span className="cell-placeholder">-</span>
                             ) : (
                               <>
-                                <input type="file" accept="image/*"
-                                  ref={(el) => { if (el) fileInputsRef.current[row.uid] = el; }}
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  ref={(el) => {
+                                    if (el) fileInputsRef.current[row.uid] = el;
+                                  }}
                                   style={{ display: "none" }}
-                                  onChange={(e) => handleRowPhoto(row.uid, e)} />
+                                  onChange={(e) => handleRowPhoto(row.uid, e)}
+                                />
+
                                 {entry.photoPreview ? (
                                   <div className="row-photo-container">
-                                    <img src={entry.photoPreview} alt="Preview" className="row-photo-thumb" />
-                                    <button className="photo-remove-btn-small" onClick={() => removeRowPhoto(row.uid)}>
+                                    <img
+                                      src={entry.photoPreview}
+                                      alt="Preview"
+                                      className="row-photo-thumb"
+                                    />
+                                    <button
+                                      type="button"
+                                      className="photo-remove-btn-small"
+                                      onClick={() => removeRowPhoto(row.uid)}
+                                    >
                                       <FaTimes />
                                     </button>
                                   </div>
-                                ) : entry.photoPath ? (
+                                ) : entry.photoName ? (
                                   <div className="row-photo-container">
-                                    <img src={`${API_BASE}/uploads/checklist/${entry.photoName}`} alt="Uploaded" className="row-photo-thumb"
-                                      onError={(e) => { e.target.style.display = "none"; }} />
-                                    <button className="photo-remove-btn-small" onClick={() => removeRowPhoto(row.uid)}>
+                                    <img
+                                      src={`${API_BASE}/uploads/checklist/${entry.photoName}`}
+                                      alt="Uploaded"
+                                      className="row-photo-thumb"
+                                    />
+                                    <button
+                                      type="button"
+                                      className="photo-remove-btn-small"
+                                      onClick={() => removeRowPhoto(row.uid)}
+                                    >
                                       <FaTimes />
                                     </button>
                                   </div>
                                 ) : (
-                                  <button className="cell-icon-btn" onClick={() => fileInputsRef.current[row.uid]?.click()}
-                                    title="Upload photo">
+                                  <button
+                                    type="button"
+                                    className="cell-icon-btn"
+                                    onClick={() =>
+                                      fileInputsRef.current[row.uid]?.click()
+                                    }
+                                    title="Upload photo"
+                                  >
                                     <FaCamera />
                                   </button>
                                 )}
@@ -1179,22 +1288,30 @@ const rowList = buildRowList();
                             )}
                           </td>
 
-                          {/* Live Location */}
+                          {/* Location */}
                           <td className="location-cell">
                             {isBlankRow ? (
-                              <span className="cell-placeholder">â€”</span>
+                              <span className="cell-placeholder">-</span>
                             ) : entry.locationAddress ? (
-                              <span className="location-address-cell" title={entry.locationAddress}>
-                                ðŸ“ {entry.locationAddress.split(",")[0]},
-                                {entry.latitude && <a href={`https://www.google.com/maps?q=${entry.latitude},${entry.longitude}`} target="_blank" rel="noreferrer" className="map-link"> Map</a>}
+                              <span
+                                className="location-address-cell"
+                                title={entry.locationAddress}
+                              >
+                                {entry.locationAddress}
                               </span>
                             ) : (
-                              <button className="cell-icon-btn" onClick={() => getLocationForRow(row.uid)}
-                                disabled={locationLoading} title="Get location">
+                              <button
+                                type="button"
+                                className="cell-icon-btn"
+                                onClick={() => getLocationForRow(row.uid)}
+                                disabled={locationLoading}
+                                title="Get location"
+                              >
                                 <FaMapMarkerAlt />
                               </button>
                             )}
                           </td>
+
 
                           {/* Updated By */}
                           <td>
@@ -1264,7 +1381,7 @@ const rowList = buildRowList();
         {activeTab === "history" && (
           <div className="checklist-sheet">
             <div className="history-header">
-              <h3>📋 Saved Checklist Reports</h3>
+              <h3>ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ Saved Checklist Reports</h3>
 
               <div className="history-filters">
                 <input
@@ -1322,7 +1439,7 @@ const rowList = buildRowList();
                     }}
                     title="Scroll Left"
                   >
-                    ←
+                    ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â
                   </button>
 
                   <button
@@ -1339,7 +1456,7 @@ const rowList = buildRowList();
                     }}
                     title="Scroll Right"
                   >
-                    →
+                    ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¾ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢
                   </button>
                 </div>
 

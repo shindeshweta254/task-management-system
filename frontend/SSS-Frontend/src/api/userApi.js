@@ -52,3 +52,19 @@ export async function uploadSiteTeamExcel(file) {
   });
 }
 
+
+export async function removeEmployee(userId) {
+  return apiFetch(`${API_BASE_URL}/api/users/resign/${userId}`, {
+    method: "PUT",
+  });
+}
+
+
+export async function updateEmployee(userId, employeeData) {
+  return apiFetch(`${API_BASE_URL}/api/users/${userId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(employeeData),
+  });
+}
+

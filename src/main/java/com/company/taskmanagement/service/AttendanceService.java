@@ -186,6 +186,31 @@ public class AttendanceService {
 		return attendanceRepository.findByUserSiteCode(siteCode);
 	}
 
+        public List<Attendance> getAttendanceByPermittedSites(
+                        java.util.Set<String> permittedSites) {
+
+                if (permittedSites == null || permittedSites.isEmpty()) {
+                        return java.util.Collections.emptyList();
+                }
+
+                if (permittedSites.contains("ALL")) {
+                        return attendanceRepository.findAll();
+                }
+
+                return attendanceRepository.findAll()
+                                .stream()
+                                .filter(a ->
+                                        a.getUser() != null &&
+                                        a.getUser().getSiteCode() != null &&
+                                        permittedSites.stream().anyMatch(
+                                                site -> site.equalsIgnoreCase(
+                                                        a.getUser().getSiteCode().trim()
+                                                )
+                                        )
+                                )
+                                .collect(java.util.stream.Collectors.toList());
+        }
+
 	public long getTodayAttendanceCountBySiteCode(String siteCode) {
 		return attendanceRepository.countByUserSiteCodeAndAttendanceDate(siteCode, LocalDate.now(INDIA_ZONE));
 	}
@@ -252,6 +277,26 @@ public class AttendanceService {
 	 * Find the Report (daily work proof) for the given user on the given date.
 	 * Report entity holds location address, coordinates, and selfie/proof file.
 	 */
+
+        /**
+         * Permanently delete one attendance record by ID.
+         */
+        public void deleteAttendanceById(Long attendanceId) {
+
+                Attendance attendance = attendanceRepository.findById(attendanceId)
+                                .orElseThrow(() ->
+                                                new RuntimeException("Attendance record not found"));
+
+                attendanceRepository.delete(attendance);
+
+                logger.info(
+                                "Attendance record deleted id={}, userId={}",
+                                attendanceId,
+                                attendance.getUser() != null
+                                                ? attendance.getUser().getId()
+                                                : null
+                );
+        }
 	private Report findReportFor(Long userId, LocalDate date) {
 		if (userId == null || date == null) {
 			return null;
