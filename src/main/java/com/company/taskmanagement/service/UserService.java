@@ -444,7 +444,13 @@ public class UserService {
 
     public List<User> getUsersBySiteCode(String siteCode) {
 
-        return userRepository.findBySiteCode(siteCode);
+        return userRepository.findBySiteCode(siteCode)
+        .stream()
+        .filter(user ->
+                user.getStatus() != null &&
+                "ACTIVE".equalsIgnoreCase(user.getStatus())
+        )
+        .collect(java.util.stream.Collectors.toList());
     }
 
 
@@ -528,151 +534,58 @@ public class UserService {
             String email,
             String password) {
 
-        System.out.println(
-                "========== LOGIN DEBUG =========="
-        );
+        System.out.println("========== LOGIN DEBUG ==========");
+        System.out.println("Employee ID: [" + employeeId + "]");
+        System.out.println("Email: [" + email + "]");
 
-        System.out.println(
-                "Employee ID: [" + employeeId + "]"
-        );
-
-        System.out.println(
-                "Email: [" + email + "]"
-        );
-
-        /*
-         * Password intentionally ignored.
-         */
-        System.out.println(
-                "Password authentication: DISABLED"
-        );
-
-
-        // ---------------------------------------------------------
-        // EMPLOYEE ID VALIDATION
-        // ---------------------------------------------------------
-
-        if (employeeId == null
-                || employeeId.trim().isEmpty()) {
-
-            throw new RuntimeException(
-                    "Employee ID is required"
-            );
+        if (employeeId == null || employeeId.trim().isEmpty()) {
+            throw new RuntimeException("Employee ID is required");
         }
-
-
-        // ---------------------------------------------------------
-        // EMAIL VALIDATION
-        // ---------------------------------------------------------
-
-        if (email == null
-                || email.trim().isEmpty()) {
-
-            throw new RuntimeException(
-                    "Email is required"
-            );
-        }
-
 
         employeeId = employeeId.trim();
-        email = email.trim();
-
-
-        // ---------------------------------------------------------
-        // FIND USER
-        // ---------------------------------------------------------
 
         List<User> users =
-                userRepository.findByEmployeeId(
-                        employeeId
-                );
+                userRepository.findByEmployeeId(employeeId);
 
-        System.out.println(
-                "Users found: " + users.size()
-        );
-
+        System.out.println("Users found: " + users.size());
 
         if (users.isEmpty()) {
-
-            throw new RuntimeException(
-                    "Invalid Employee ID"
-            );
+            throw new RuntimeException("Invalid Employee ID");
         }
-
 
         User user = users.get(0);
 
-
-        // ---------------------------------------------------------
-        // USER DETAILS
-        // ---------------------------------------------------------
-
         System.out.println(
-                "DB Employee ID: ["
-                + user.getEmployeeId()
-                + "]"
+                "DB Employee ID: [" +
+                user.getEmployeeId() + "]"
         );
 
         System.out.println(
-                "DB Email: ["
-                + user.getEmail()
-                + "]"
+                "DB Email: [" +
+                user.getEmail() + "]"
         );
 
         System.out.println(
-                "DB Status: ["
-                + user.getStatus()
-                + "]"
+                "DB Status: [" +
+                user.getStatus() + "]"
         );
 
         System.out.println(
-                "DB Role: "
-                + (
-                    user.getRole() != null
+                "DB Role: " +
+                (user.getRole() != null
                     ? user.getRole().getRoleName()
-                    : "NULL"
-                )
+                    : "NULL")
         );
-
-
-        // ---------------------------------------------------------
-        // STATUS CHECK
-        // ---------------------------------------------------------
 
         if (user.getStatus() != null
                 && !"ACTIVE".equalsIgnoreCase(
-                        user.getStatus().trim()
-                )) {
+                        user.getStatus().trim())) {
 
             throw new RuntimeException(
-                    "Your account is not active. "
-                    + "Please contact Administrator."
+                    "Your account is not active. " +
+                    "Please contact Administrator."
             );
         }
-
-
-        // ---------------------------------------------------------
-        // EMAIL CHECK
-        // ---------------------------------------------------------
-
-        if (user.getEmail() == null
-                || !user.getEmail()
-                        .trim()
-                        .equalsIgnoreCase(email)) {
-
-            System.out.println(
-                    "EMAIL MISMATCH!"
-            );
-
-            throw new RuntimeException(
-                    "Invalid Employee ID or email"
-            );
-        }
-
-
-        // ---------------------------------------------------------
-        // LOGIN SUCCESS
-        // ---------------------------------------------------------
 
         System.out.println(
                 "========== LOGIN SUCCESS =========="
@@ -681,7 +594,6 @@ public class UserService {
         System.out.println(
                 "Password authentication: DISABLED"
         );
-
 
         return UserDTO.fromUser(user);
     }

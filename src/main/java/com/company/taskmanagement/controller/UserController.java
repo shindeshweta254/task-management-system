@@ -111,25 +111,53 @@ public List<UserDTO> getTaskAssignees(HttpServletRequest request) {
 		accessService.resolveAndValidateTargetUser(request, userId);
 		User resigned = userService.resignEmployee(userId);
 		return UserDTO.fromUser(resigned);
-	}
+	}        // Update employee details from Team page
+        @PutMapping("/{id}")
+        public UserDTO updateEmployee(
+                        @PathVariable Long id,
+                        @RequestBody User user,
+                        HttpServletRequest request
+        ) {
 
-	// Update contact number (Team Edit + Save)
-	@PutMapping("/{id}")
-	public UserDTO updateContactNo(
-			@PathVariable Long id,
-			@RequestBody User user,
-			HttpServletRequest request
-	) {
+                accessService.resolveAndValidateTargetUser(request, id);
 
-		accessService.resolveAndValidateTargetUser(request, id);
+                User existing = userService.getUserById(id);
 
-		// Fetch existing user to avoid overwriting fields with null
-		User existing = userService.getUserById(id);
-		existing.setContactNo(user.getContactNo());
+                if (user.getName() != null) {
+                        existing.setName(user.getName().trim());
+                }
 
-		User saved = userService.saveUser(existing);
-		return UserDTO.fromUser(saved);
-	}
+                if (user.getEmail() != null) {
+                        existing.setEmail(user.getEmail().trim());
+                }
+
+                if (user.getContactNo() != null) {
+                        existing.setContactNo(user.getContactNo().trim());
+                }
+
+                if (user.getDepartment() != null) {
+                        existing.setDepartment(user.getDepartment().trim());
+                }
+
+                if (user.getDesignation() != null) {
+                        existing.setDesignation(user.getDesignation().trim());
+                }
+
+                if (user.getShift() != null) {
+                        existing.setShift(user.getShift().trim());
+                }
+
+                if (user.getSiteCode() != null) {
+                        existing.setSiteCode(user.getSiteCode().trim());
+                }
+
+                if (user.getStatus() != null) {
+                        existing.setStatus(user.getStatus().trim());
+                }
+
+                User saved = userService.saveUser(existing);
+                return UserDTO.fromUser(saved);
+        }
 
 	@GetMapping("/me")
 	public UserDTO getMyProfile(HttpServletRequest request) {
