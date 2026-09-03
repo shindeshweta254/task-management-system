@@ -1,8 +1,9 @@
-﻿import "./Login.css";
+import "./Login.css";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
+import { saveStoredFcmTokenAfterLogin } from "../../utils/pushNotifications";
 
 function Login() {
   const { t } = useTranslation();
@@ -82,6 +83,9 @@ function Login() {
         "userId",
         String(user?.id || "")
       );
+
+      // Android phone ka FCM token logged-in user ke DB record me save karo.
+      await saveStoredFcmTokenAfterLogin();
 
       const roleName = String(
         user?.roleName ||

@@ -128,7 +128,13 @@
 			<scope>test</scope>
 		</dependency>
 
-	</dependencies>
+	
+        <dependency>
+            <groupId>com.google.firebase</groupId>
+            <artifactId>firebase-admin</artifactId>
+            <version>9.10.0</version>
+        </dependency>
+    </dependencies>
 
 	<build>
 		<plugins>

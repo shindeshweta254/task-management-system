@@ -15,6 +15,9 @@ public class NotificationService {
     @Autowired
     private NotificationRepository notificationRepository;
 
+    @Autowired
+    private FirebasePushService firebasePushService;
+
     public Notification createNotification(Notification notification) {
         notification.setCreatedAt(LocalDateTime.now());
         notification.setRead(false);
@@ -30,7 +33,17 @@ public class NotificationService {
         notification.setTaskId(taskId);
         notification.setRead(false);
         notification.setCreatedAt(LocalDateTime.now());
-        return notificationRepository.save(notification);
+        Notification saved = notificationRepository.save(notification);
+
+        firebasePushService.sendToUser(
+                userId,
+                saved.getTitle(),
+                saved.getMessage(),
+                saved.getType(),
+                saved.getTaskId()
+        );
+
+        return saved;
     }
 
     public List<Notification> getNotificationsByUserId(Long userId) {

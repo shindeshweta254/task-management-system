@@ -43,6 +43,9 @@ public class User {
 	 * TEMPORARY AUTH NOTE: X-User-Id header is used to identify the logged-in user.
 	 * This MUST be replaced with JWT/session-based authentication before production deployment.
 	 */
+        @Column(name = "fcm_token", length = 1000)
+        private String fcmToken;
+
 	@Column(name = "site_code", length = 50)
 	private String siteCode;
 
@@ -129,6 +132,14 @@ public class User {
 	public void setContactNo(String contactNo) {
 		this.contactNo = contactNo;
 	}
+        public String getFcmToken() {
+                return fcmToken;
+        }
+
+        public void setFcmToken(String fcmToken) {
+                this.fcmToken = fcmToken;
+        }
+
 
 	public String getSiteCode() {
 		return siteCode;
