@@ -6,7 +6,7 @@ import { fetchMySiteTeam } from "../../api/userApi";
 import { getAuthHeaders } from "../../api/index";
 
 const API_BASE_URL =
-  "http://localhost:8080";
+  "https://task-management-system-production-7694.up.railway.app";
 
 const format12Hour = (timeStr) => {
   if (!timeStr) return "-";
@@ -210,7 +210,7 @@ function Attendance() {
     let cancelled = false;
 
     // Create Employee Profile open hai to personal camera release rahega.
-    if (registerPhotoOpen) {
+    if (registerPhotoOpen || teamAttendanceOpen || registeredEmployeesOpen || attendanceRecordsOpen) {
       if (videoRef.current?.srcObject) {
         videoRef.current.srcObject
           .getTracks()
@@ -267,7 +267,7 @@ function Attendance() {
         stream.getTracks().forEach((track) => track.stop());
       }
     };
-  }, [registerPhotoOpen]);
+  }, [registerPhotoOpen, teamAttendanceOpen, registeredEmployeesOpen, attendanceRecordsOpen]);
 
   useEffect(() => {
     let profileStream = null;
@@ -2127,3 +2127,4 @@ function Attendance() {
 }
 
 export default Attendance;
+
