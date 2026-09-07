@@ -1,11 +1,9 @@
 package com.company.taskmanagement.service;
 
+import java.util.List;
 import java.util.Map;
 
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -13,57 +11,62 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Service
 public class GoogleGeocodingService {
 
+    @Value("${mappls.static-key:}")
+    private String mapplsStaticKey;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     @SuppressWarnings("unchecked")
     public String reverseGeocode(double latitude, double longitude) {
 
         try {
+            if (mapplsStaticKey == null || mapplsStaticKey.isBlank()) {
+                System.out.println("MAPPLS STATIC KEY IS NOT CONFIGURED");
+                return "Current Location";
+            }
+
             String url = UriComponentsBuilder
-                    .fromHttpUrl("https://nominatim.openstreetmap.org/reverse")
-                    .queryParam("format", "jsonv2")
+                    .fromHttpUrl("https://search.mappls.com/search/address/rev-geocode")
                     .queryParam("lat", latitude)
-                    .queryParam("lon", longitude)
-                    .queryParam("zoom", 18)
-                    .queryParam("addressdetails", 1)
+                    .queryParam("lng", longitude)
+                    .queryParam("access_token", mapplsStaticKey)
                     .toUriString();
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.set(
-                    "User-Agent",
-                    "SSS-FMS-India-Attendance/1.0"
-            );
+            Map<String, Object> response =
+                    restTemplate.getForObject(url, Map.class);
 
-            HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-            ResponseEntity<Map> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    entity,
-                    Map.class
-            );
-
-            Map<String, Object> body = response.getBody();
-
-            if (body == null) {
+            if (response == null) {
                 return "Current Location";
             }
 
-            Object displayName = body.get("display_name");
+            Object resultsObject = response.get("results");
 
-            if (displayName == null) {
+            if (!(resultsObject instanceof List<?> results)
+                    || results.isEmpty()) {
                 return "Current Location";
             }
 
-            String address = String.valueOf(displayName).trim();
+            Object firstObject = results.get(0);
 
-            return address.isBlank()
-                    ? "Current Location"
-                    : address;
+            if (!(firstObject instanceof Map<?, ?> firstResult)) {
+                return "Current Location";
+            }
+
+            Object formattedAddress = firstResult.get("formatted_address");
+
+            if (formattedAddress != null) {
+                String address = String.valueOf(formattedAddress).trim();
+
+                if (!address.isBlank()) {
+                    return address;
+                }
+            }
+
+            return "Current Location";
 
         } catch (Exception e) {
             System.out.println(
-                    "FREE REVERSE GEOCODING ERROR: " + e.getMessage()
+                    "MAPPLS REVERSE GEOCODING ERROR: " + e.getMessage()
             );
             return "Current Location";
         }
