@@ -28,9 +28,10 @@ public class CorsConfig {
             public void addResourceHandlers(ResourceHandlerRegistry registry) {
                 // Serve uploaded checklist photos from the uploads folder
                 registry.addResourceHandler("/uploads/**")
-                        .addResourceLocations("file:uploads/");
+                        .addResourceLocations("file:/data/uploads/");
             }
         };
     }
 }
+
 

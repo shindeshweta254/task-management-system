@@ -85,7 +85,7 @@ public class AttendanceController {
 	 * Returns the relative file path (e.g. uploads/attendance/1234_selfie.jpg).
 	 */
 	private String saveSelfieFile(MultipartFile selfie, String prefix) throws Exception {
-		String uploadsDir = "uploads/attendance";
+		String uploadsDir = "/data/uploads/attendance";
 		Path uploadPath = Paths.get(uploadsDir);
 		if (!Files.exists(uploadPath)) {
 			Files.createDirectories(uploadPath);
@@ -549,5 +549,6 @@ User currentUser = accessService.resolveUser(request);
                 return response;
         }
 }
+
 
 
