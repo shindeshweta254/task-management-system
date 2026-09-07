@@ -35,6 +35,8 @@ public class GoogleGeocodingService {
             Map<String, Object> response =
                     restTemplate.getForObject(url, Map.class);
 
+            System.out.println("MAPPLS FULL RESPONSE: " + response);
+
             if (response == null) {
                 return "Current Location";
             }
