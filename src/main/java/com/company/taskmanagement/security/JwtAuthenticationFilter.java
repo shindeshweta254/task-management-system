@@ -50,7 +50,7 @@ protected void doFilterInternal(
 
     // LOGIN / AUTH endpoints are completely public.
     // Do not check JWT or X-User-Id here.
-    if (path.equals("/api/auth/login") || path.equals("/api/location/reverse")) {
+    if (path.equals("/api/auth/login")) {
         filterChain.doFilter(request, response);
         return;
     }
