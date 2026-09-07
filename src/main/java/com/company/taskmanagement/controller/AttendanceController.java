@@ -29,6 +29,7 @@ import com.company.taskmanagement.entity.Attendance;
 import com.company.taskmanagement.entity.User;
 import com.company.taskmanagement.service.AccessService;
 import com.company.taskmanagement.service.AttendanceService;
+import com.company.taskmanagement.service.GoogleGeocodingService;
 import com.company.taskmanagement.service.SupervisorAttendanceService;
 import com.company.taskmanagement.service.EmployeePhotoProfileService;
 
@@ -42,6 +43,9 @@ public class AttendanceController {
 
 	@Autowired
 	private AttendanceService attendanceService;
+
+     @Autowired
+     private GoogleGeocodingService googleGeocodingService;
 
 	@Autowired
 	private AccessService accessService;
@@ -64,7 +68,15 @@ public class AttendanceController {
 
 		Attendance attendance = new Attendance();
 		attendance.setUser(currentUser);
-		attendance.setLocation(location);
+		attendance.setLatitude(latitude);
+            attendance.setLongitude(longitude);
+
+            if (latitude != null && longitude != null) {
+                    String gpsAddress = googleGeocodingService.reverseGeocode(latitude, longitude);
+                    attendance.setLocation(gpsAddress);
+            } else {
+                    attendance.setLocation(location);
+            }
 		
 		logger.info("checkin: live GPS location={}, latitude={}, longitude={}", location, latitude, longitude);
 
@@ -179,7 +191,19 @@ User currentUser = accessService.resolveUser(request);
 		// Live GPS location for checkout
 		logger.info("checkout: live GPS location={}, latitude={}, longitude={}", location, latitude, longitude);
 
-	    return attendanceService.checkOut(attendanceId, checkOutSelfiePath, location, latitude, longitude);
+	    String gpsAddress = location;
+
+        if (latitude != null && longitude != null) {
+                gpsAddress = googleGeocodingService.reverseGeocode(latitude, longitude);
+        }
+
+        return attendanceService.checkOut(
+                attendanceId,
+                checkOutSelfiePath,
+                gpsAddress,
+                latitude,
+                longitude
+        );
 	}
 
 @GetMapping("/me")
