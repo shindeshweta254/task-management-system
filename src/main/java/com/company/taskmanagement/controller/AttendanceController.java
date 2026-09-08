@@ -104,7 +104,7 @@ public class AttendanceController {
 		Path filePath = uploadPath.resolve(fileName);
 		Files.copy(selfie.getInputStream(), filePath);
 
-		return uploadPath.resolve(fileName).toString();
+		return "uploads/attendance/" + fileName;
 	}
 
 @GetMapping
