@@ -86,6 +86,11 @@ public class AttendanceReportDTO {
         }
         // Normalize Windows backslashes to forward slashes
         String normalized = path.replace("\\", "/");
+        // Railway persistent volume is mounted at /data,
+        // but files are publicly available through /uploads/**
+        if (normalized.startsWith("/data/uploads/")) {
+            return normalized.substring("/data".length());
+        }
         // If it already starts with uploads/, serve via static handler
         if (normalized.startsWith("uploads/")) {
             return "/" + normalized;
