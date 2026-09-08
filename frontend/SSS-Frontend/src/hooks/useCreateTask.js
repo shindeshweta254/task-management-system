@@ -1,12 +1,18 @@
 import { useState } from "react";
-import { fetchAllUsers } from "../api/userApi";
+import { fetchAllUsers, fetchEmployeeTaskAssignees } from "../api/userApi";
 
 export function useCreateTask() {
   const [employees, setEmployees] = useState([]);
   const [message, setMessage] = useState("");
 
   const init = async () => {
-    const data = await fetchAllUsers();
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+    const data =
+      user?.roleName === "EMPLOYEE"
+        ? await fetchEmployeeTaskAssignees()
+        : await fetchAllUsers();
+
     setEmployees(Array.isArray(data) ? data : []);
   };
 
@@ -31,4 +37,3 @@ export function useCreateTask() {
 
   return { employees, message, setMessage, task, setTask, init, handleChange };
 }
-

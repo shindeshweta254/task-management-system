@@ -21,6 +21,21 @@ function AddTask() {
     init,
     handleChange,
   } = useCreateTask();
+    const isEmployee = user?.roleName === "EMPLOYEE";
+
+    const assignToEmployees = isEmployee
+      ? employees.filter(
+          (emp) => Number(emp.id) === Number(user?.id)
+        )
+      : employees;
+
+    const reviewerEmployees = isEmployee
+      ? employees.filter((emp) =>
+          ["CP001", "CP002", "CP003", "SP002"].includes(
+            String(emp.employeeId || "").toUpperCase()
+          )
+        )
+      : employees;
 
 
   // Load employees after component mount
@@ -152,7 +167,7 @@ function AddTask() {
                   </option>
 
 
-                  {employees.map((emp) => (
+                  {assignToEmployees.map((emp) => (
 
                     <option
                       key={emp.id}
@@ -189,7 +204,7 @@ function AddTask() {
                   </option>
 
 
-                  {employees.map((emp) => (
+                  {reviewerEmployees.map((emp) => (
 
                     <option
                       key={emp.id}

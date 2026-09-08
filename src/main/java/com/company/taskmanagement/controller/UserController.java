@@ -76,6 +76,33 @@ public List<UserDTO> getTaskAssignees(HttpServletRequest request) {
                         .map(UserDTO::fromUser)
                         .collect(Collectors.toList());
 }
+
+/**
+ * Employee Add Task dropdown:
+ * logged-in employee + fixed reviewers only.
+ */
+@GetMapping("/employee-task-assignees")
+public List<UserDTO> getEmployeeTaskAssignees(HttpServletRequest request) {
+
+        User currentUser = accessService.resolveUser(request);
+
+        if (!accessService.isEmployee(currentUser)) {
+                return java.util.Collections.emptyList();
+        }
+
+        List<User> allUsers = userService.getAllUsers();
+
+        return allUsers.stream()
+                .filter(u ->
+                        u.getId().equals(currentUser.getId())
+                        || "CP001".equalsIgnoreCase(u.getEmployeeId())
+                        || "CP002".equalsIgnoreCase(u.getEmployeeId())
+                        || "CP003".equalsIgnoreCase(u.getEmployeeId())
+                        || "SP002".equalsIgnoreCase(u.getEmployeeId())
+                )
+                .map(UserDTO::fromUser)
+                .collect(Collectors.toList());
+}
 @PostMapping("/login")
 	public JwtResponse login(@RequestBody LoginRequest loginRequest) {
 		UserDTO user = userService.login(
