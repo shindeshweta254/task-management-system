@@ -23,8 +23,8 @@ public class FirebaseConfig {
         String base64 = System.getenv("FIREBASE_SERVICE_ACCOUNT_BASE64");
 
         if (base64 == null || base64.isBlank()) {
-            throw new IllegalStateException(
-                    "FIREBASE_SERVICE_ACCOUNT_BASE64 is not configured");
+            System.out.println("Firebase disabled: FIREBASE_SERVICE_ACCOUNT_BASE64 is not configured");
+            return null;
         }
 
         byte[] decoded = Base64.getDecoder().decode(base64);

@@ -143,7 +143,7 @@ function Login() {
 
       setMessage(
         isNetworkError ? `Network Error: ${errorMessage}`
-          : errorMessage || "Login failed âŒ"
+          : errorMessage || "Login failed ÃƒÂ¢Ã‚ÂÃ…â€™"
       );
     } finally {
       setIsSubmitting(false);

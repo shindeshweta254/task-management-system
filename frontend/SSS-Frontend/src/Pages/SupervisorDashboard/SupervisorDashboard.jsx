@@ -27,6 +27,40 @@ function SupervisorDashboard() {
   });
 
   const [myTasks, setMyTasks] = useState([]);
+  const [birthdayEmployees, setBirthdayEmployees] = useState([]);
+
+  const getUpcomingBirthdays = (employees) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return (Array.isArray(employees) ? employees : [])
+      .filter((emp) => emp?.dateOfBirth && String(emp?.status || "ACTIVE").toUpperCase() === "ACTIVE")
+      .map((emp) => {
+        const parts = String(emp.dateOfBirth).split("-");
+        if (parts.length !== 3) return null;
+
+        const month = Number(parts[1]) - 1;
+        const day = Number(parts[2]);
+
+        let nextBirthday = new Date(today.getFullYear(), month, day);
+        nextBirthday.setHours(0, 0, 0, 0);
+
+        if (nextBirthday < today) {
+          nextBirthday = new Date(today.getFullYear() + 1, month, day);
+          nextBirthday.setHours(0, 0, 0, 0);
+        }
+
+        const daysLeft = Math.round(
+          (nextBirthday - today) / (1000 * 60 * 60 * 24)
+        );
+
+        if (daysLeft < 0 || daysLeft > 7) return null;
+
+        return { ...emp, daysLeft };
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.daysLeft - b.daysLeft);
+  };
 
   const getUserId = (userObj) => {
     const id = userObj?.id ?? userObj?.userId ?? userObj?.employeeId;
@@ -71,6 +105,8 @@ function SupervisorDashboard() {
           fetchNumber("https://task-management-system-production-7694.up.railway.app/api/tasks/count/completed"),
           fetchNumber("https://task-management-system-production-7694.up.railway.app/api/dashboard/todays-attendance"),
         ]);
+
+        setBirthdayEmployees(getUpcomingBirthdays(users));
 
         setStats({
           totalEmployees: Array.isArray(users) ? users.length : 0,
@@ -127,6 +163,35 @@ function SupervisorDashboard() {
         </div>
         <img src="/logo.png" alt="logo" className="sv-hero-logo" />
       </section>
+
+      {/* Birthday Notifications */}
+      {birthdayEmployees.length > 0 && (
+        <section className="sv-birthday-alert">
+          <h3>🎂 Upcoming Birthdays</h3>
+
+          {birthdayEmployees.map((emp) => (
+            <div
+              className="sv-birthday-person"
+              key={emp.id || emp.employeeId}
+            >
+              <strong>
+                {emp.daysLeft === 0
+                  ? `🎉 Happy Birthday ${emp.name}!`
+                  : `🎈 ${emp.name}`}
+              </strong>
+
+              <span>
+                {emp.daysLeft === 0
+                  ? "Today"
+                  : emp.daysLeft === 1
+                  ? "Tomorrow"
+                  : `In ${emp.daysLeft} days`}
+                {" • "} DOB: {emp.dateOfBirth}
+              </span>
+            </div>
+          ))}
+        </section>
+      )}
 
       {/* Stats */}
       <section className="sv-stats">

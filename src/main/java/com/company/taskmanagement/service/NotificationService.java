@@ -46,6 +46,59 @@ public class NotificationService {
         return saved;
     }
 
+    public Notification createReportSubmittedNotification(
+            Long userId,
+            String employeeName,
+            Long reportId) {
+
+        Notification notification = new Notification();
+        notification.setUserId(userId);
+        notification.setTitle("New Report Submitted");
+        notification.setMessage(employeeName + " submitted a new daily report.");
+        notification.setType("REPORT_SUBMITTED");
+        notification.setTaskId(null);
+        notification.setRead(false);
+        notification.setCreatedAt(LocalDateTime.now());
+
+        Notification saved = notificationRepository.save(notification);
+
+        firebasePushService.sendToUser(
+                userId,
+                saved.getTitle(),
+                saved.getMessage(),
+                saved.getType(),
+                null
+        );
+
+        return saved;
+    }
+    public Notification createTaskReadyForReviewNotification(
+            Long reviewerUserId,
+            String employeeName,
+            String taskTitle,
+            Long taskId) {
+
+        Notification notification = new Notification();
+        notification.setUserId(reviewerUserId);
+        notification.setTitle("Task Ready For Review");
+        notification.setMessage(employeeName + " completed task: " + taskTitle);
+        notification.setType("TASK_READY_FOR_REVIEW");
+        notification.setTaskId(taskId);
+        notification.setRead(false);
+        notification.setCreatedAt(LocalDateTime.now());
+
+        Notification saved = notificationRepository.save(notification);
+
+        firebasePushService.sendToUser(
+                reviewerUserId,
+                saved.getTitle(),
+                saved.getMessage(),
+                saved.getType(),
+                saved.getTaskId()
+        );
+
+        return saved;
+    }
     public List<Notification> getNotificationsByUserId(Long userId) {
         return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }

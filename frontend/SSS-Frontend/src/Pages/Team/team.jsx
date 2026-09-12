@@ -41,6 +41,8 @@ function Team() {
     name: "",
     email: "",
     contactNo: "",
+    dateOfBirth: "",
+    dateOfJoining: "",
     department: "",
     designation: "",
     shift: "",
@@ -56,6 +58,9 @@ function Team() {
     employeeId: "",
     email: "",
     contactNo: "",
+    dateOfBirth: "",
+    dateOfJoining: "",
+    siteCode: "",
     department: "",
     designation: "",
     shift: "",
@@ -70,6 +75,15 @@ function Team() {
   const isDirector = roleName === "DIRECTOR" || roleName === "OWNER/ADMIN" || roleName === "OWNER";
   const isSupervisor = roleName === "SUPERVISOR";
   const siteCode = user?.siteCode || "";
+
+  const supervisorSiteOptions = useMemo(() => {
+    return String(siteCode || "")
+      .split(",")
+      .map((site) => site.trim())
+      .filter(Boolean);
+  }, [siteCode]);
+
+
 
   // ========== LOAD DATA ==========
   const loadTeams = useCallback(async () => {
@@ -114,6 +128,29 @@ function Team() {
       ).toUpperCase();
 
       if (!rawSiteCode) {
+        const officeCode = "OFFICE STAFF";
+
+        if (!siteMap.has(officeCode)) {
+          siteMap.set(officeCode, {
+            siteCode: officeCode,
+            employees: [],
+            supervisors: [],
+          });
+        }
+
+        const officeGroup = siteMap.get(officeCode);
+
+        if (role === "SUPERVISOR" || role === "MANAGER") {
+          const supervisorName =
+            u.name || u.employeeId || "Not assigned";
+
+          if (!officeGroup.supervisors.includes(supervisorName)) {
+            officeGroup.supervisors.push(supervisorName);
+          }
+        } else {
+          officeGroup.employees.push(u);
+        }
+
         return;
       }
 
@@ -159,6 +196,52 @@ function Team() {
       );
   }, [users, isDirector]);
 
+  // ========== UPCOMING BIRTHDAYS ==========
+  const upcomingBirthdays = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return users
+      .filter((employee) => employee?.dateOfBirth)
+      .map((employee) => {
+        const parts = String(employee.dateOfBirth).split("-");
+        if (parts.length !== 3) return null;
+
+        const month = Number(parts[1]) - 1;
+        const day = Number(parts[2]);
+
+        let nextBirthday = new Date(
+          today.getFullYear(),
+          month,
+          day
+        );
+        nextBirthday.setHours(0, 0, 0, 0);
+
+        if (nextBirthday < today) {
+          nextBirthday = new Date(
+            today.getFullYear() + 1,
+            month,
+            day
+          );
+          nextBirthday.setHours(0, 0, 0, 0);
+        }
+
+        const daysLeft = Math.round(
+          (nextBirthday - today) / (1000 * 60 * 60 * 24)
+        );
+
+        if (daysLeft < 0 || daysLeft > 7) return null;
+
+        return {
+          ...employee,
+          daysLeft,
+          nextBirthday,
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.daysLeft - b.daysLeft);
+  }, [users]);
+
   // ========== SUPERVISOR SITE EMPLOYEES ==========
   const supervisorEmployees = useMemo(() => {
     if (!isSupervisor) return [];
@@ -178,10 +261,12 @@ function Team() {
         employeeId: empId,
         email: newEmployee.email.trim() || `${empId}@sss.com`,
         contactNo: newEmployee.contactNo.trim() || null,
+        dateOfBirth: newEmployee.dateOfBirth || null,
+        dateOfJoining: newEmployee.dateOfJoining || null,
         department: newEmployee.department.trim(),
         designation: newEmployee.designation.trim(),
         shift: newEmployee.shift.trim(),
-        siteCode: siteCode,
+        siteCode: newEmployee.siteCode || siteCode,
         password: `${empId}@123`,
         status: "ACTIVE",
         role: { id: EMPLOYEE_ROLE_ID, roleName: "EMPLOYEE" },
@@ -195,6 +280,8 @@ function Team() {
         employeeId: "",
         email: "",
         contactNo: "",
+        dateOfBirth: "",
+        dateOfJoining: "",
         department: "",
         designation: "",
         shift: "",
@@ -239,6 +326,8 @@ function Team() {
       name: employee?.name || "",
       email: employee?.email || "",
       contactNo: employee?.contactNo || "",
+      dateOfBirth: employee?.dateOfBirth || "",
+      dateOfJoining: employee?.dateOfJoining || "",
       department: employee?.department || "",
       designation: employee?.designation || "",
       shift: employee?.shift || "",
@@ -259,6 +348,8 @@ function Team() {
         name: editForm.name.trim(),
         email: editForm.email.trim(),
         contactNo: editForm.contactNo.trim(),
+        dateOfBirth: editForm.dateOfBirth || null,
+        dateOfJoining: editForm.dateOfJoining || null,
         department: editForm.department.trim(),
         designation: editForm.designation.trim(),
         shift: editForm.shift.trim(),
@@ -356,6 +447,28 @@ function Team() {
           </label>
 
           <label>
+            Date of Birth
+            <input
+              type="date"
+              value={editForm.dateOfBirth}
+              onChange={(e) =>
+                setEditForm({ ...editForm, dateOfBirth: e.target.value })
+              }
+            />
+          </label>
+
+          <label>
+            Date of Joining
+            <input
+              type="date"
+              value={editForm.dateOfJoining}
+              onChange={(e) =>
+                setEditForm({ ...editForm, dateOfJoining: e.target.value })
+              }
+            />
+          </label>
+
+          <label>
             Department
             <input
               value={editForm.department}
@@ -447,6 +560,38 @@ function Team() {
             />
           </div>
 
+          {/* Birthday Notifications */}
+          {upcomingBirthdays.length > 0 && (
+            <div className="team-birthday-notifications">
+              {upcomingBirthdays.map((employee) => (
+                <div
+                  className="team-birthday-card"
+                  key={`birthday-${employee.id || employee.employeeId}`}
+                >
+                  <div className="team-birthday-icon">🎂</div>
+
+                  <div>
+                    <strong>
+                      {employee.daysLeft === 0
+                        ? `Happy Birthday ${employee.name || employee.employeeId}!`
+                        : `Upcoming Birthday: ${employee.name || employee.employeeId}`}
+                    </strong>
+
+                    <p>
+                      {employee.daysLeft === 0
+                        ? "Birthday Today 🎉"
+                        : employee.daysLeft === 1
+                        ? "Birthday Tomorrow"
+                        : `Birthday in ${employee.daysLeft} days`}
+                      {" • "}
+                      {employee.dateOfBirth}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Supervisor: Add Employee & Upload Excel buttons */}
           {isSupervisor && (
             <div className="team-actions-bar">
@@ -504,6 +649,37 @@ function Team() {
                   value={newEmployee.contactNo}
                   onChange={(e) => setNewEmployee({ ...newEmployee, contactNo: e.target.value })}
                 />
+                <label>
+                  Date of Birth
+                  <input
+                    type="date"
+                    value={newEmployee.dateOfBirth}
+                    onChange={(e) => setNewEmployee({ ...newEmployee, dateOfBirth: e.target.value })}
+                  />
+                </label>
+
+                <label>
+                  Date of Joining
+                  <input
+                    type="date"
+                    value={newEmployee.dateOfJoining}
+                    onChange={(e) => setNewEmployee({ ...newEmployee, dateOfJoining: e.target.value })}
+                  />
+                </label>
+
+                <label>
+                  Site
+                  <select
+                    required
+                    value={newEmployee.siteCode || siteCode}
+                    onChange={(e) => setNewEmployee({ ...newEmployee, siteCode: e.target.value })}
+                  >
+                    {supervisorSiteOptions.map((site) => (
+                      <option key={site} value={site}>{site}</option>
+                    ))}
+                  </select>
+                </label>
+
                 <input
                   placeholder="Department"
                   value={newEmployee.department}
@@ -525,7 +701,6 @@ function Team() {
                 <button type="button" className="team-action-btn cancel" onClick={() => { setShowAddForm(false); setAddMsg(""); }}>Cancel</button>
               </div>
               {addMsg && <p className="team-message">{addMsg}</p>}
-              <p className="team-form-note">Site: {siteCode} (auto-assigned)</p>
             </form>
           )}
 
@@ -545,6 +720,8 @@ function Team() {
                         <th>Sr.</th>
                         <th>Employee ID</th>
                         <th>Name</th>
+                        <th>Date of Birth</th>
+                        <th>Date of Joining</th>
                         <th>Department</th>
                         <th>Designation</th>
                         <th>Shift</th>
@@ -559,6 +736,8 @@ function Team() {
                           <td>{idx + 1}</td>
                           <td>{u.employeeId || "-"}</td>
                           <td><strong>{u.name || "-"}</strong></td>
+                          <td>{u.dateOfBirth || "-"}</td>
+                          <td>{u.dateOfJoining || "-"}</td>
                           <td>{u.department || "-"}</td>
                           <td>{u.designation || "-"}</td>
                           <td>{u.shift || "-"}</td>

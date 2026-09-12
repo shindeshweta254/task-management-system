@@ -36,7 +36,9 @@ function TeamDetails() {
     employeeId: "",
     email: "",
     contactNo: "",
-    department: "",
+dateOfBirth: "",
+dateOfJoining: "",
+department: "",
     designation: "",
     shift: "",
   });
@@ -73,8 +75,18 @@ function TeamDetails() {
       const allUsers = Array.isArray(data) ? data : [];
       // Filter by site_code
       const filtered = allUsers.filter((u) => {
-        const usc = u?.siteCode || "";
-        return usc.toUpperCase() === siteCode.toUpperCase();
+        const requestedSite = String(siteCode || "").trim().toUpperCase();
+
+        const userSites = String(u?.siteCode || "")
+          .split(",")
+          .map((site) => site.trim().toUpperCase())
+          .filter(Boolean);
+
+        if (requestedSite === "OFFICE STAFF") {
+          return userSites.length === 0 || userSites.every((site) => site === "ALL");
+        }
+
+        return userSites.includes(requestedSite);
       });
       setEmployees(filtered);
     } catch (e) {
@@ -110,7 +122,10 @@ function TeamDetails() {
       };
       await addEmployee(payload);
       setAddMsg("Employee added successfully ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦");
-      setNewEmployee({ name: "", employeeId: "", email: "", contactNo: "", department: "", designation: "", shift: "" });
+      setNewEmployee({ name: "", employeeId: "", email: "", contactNo: "",
+dateOfBirth: "",
+dateOfJoining: "",
+department: "", designation: "", shift: "" });
       setShowAddForm(false);
       loadEmployees();
     } catch (err) {
@@ -153,7 +168,7 @@ function TeamDetails() {
         <div className="team-details-card">
           <div className="team-details-header">
             <button type="button" className="team-details-back" onClick={() => navigate("/team")}>
-              ÃƒÂ¢Ã¢â‚¬Â Ã‚Â Back to Teams
+              ← Back to Teams
             </button>
             <div className="team-details-title">
               <h2>{siteCode}</h2>
@@ -200,6 +215,28 @@ function TeamDetails() {
                       onChange={(e) => setNewEmployee({ ...newEmployee, email: e.target.value })} />
                     <input placeholder="Mobile Number" value={newEmployee.contactNo}
                       onChange={(e) => setNewEmployee({ ...newEmployee, contactNo: e.target.value })} />
+                    <label>
+                      Date of Birth
+                      <input
+                        type="date"
+                        value={newEmployee.dateOfBirth}
+                        onChange={(e) =>
+                          setNewEmployee({ ...newEmployee, dateOfBirth: e.target.value })
+                        }
+                      />
+                    </label>
+
+                    <label>
+                      Date of Joining
+                      <input
+                        type="date"
+                        value={newEmployee.dateOfJoining}
+                        onChange={(e) =>
+                          setNewEmployee({ ...newEmployee, dateOfJoining: e.target.value })
+                        }
+                      />
+                    </label>
+
                     <input placeholder="Department" value={newEmployee.department}
                       onChange={(e) => setNewEmployee({ ...newEmployee, department: e.target.value })} />
                     <input placeholder="Designation" value={newEmployee.designation}

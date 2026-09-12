@@ -1,5 +1,7 @@
 package com.company.taskmanagement.entity;
 
+import java.time.LocalDate;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -36,6 +38,12 @@ public class User {
 
 	@Column(name = "contact_no", length = 20)
 	private String contactNo;
+
+        @Column(name = "date_of_birth")
+        private LocalDate dateOfBirth;
+
+        @Column(name = "date_of_joining")
+        private LocalDate dateOfJoining;
 
 	/**
 	 * siteCode identifies which site/location this user belongs to.
@@ -132,6 +140,21 @@ public class User {
 	public void setContactNo(String contactNo) {
 		this.contactNo = contactNo;
 	}
+        public LocalDate getDateOfBirth() {
+                return dateOfBirth;
+        }
+
+        public void setDateOfBirth(LocalDate dateOfBirth) {
+                this.dateOfBirth = dateOfBirth;
+        }
+
+        public LocalDate getDateOfJoining() {
+                return dateOfJoining;
+        }
+
+        public void setDateOfJoining(LocalDate dateOfJoining) {
+                this.dateOfJoining = dateOfJoining;
+        }
         public String getFcmToken() {
                 return fcmToken;
         }

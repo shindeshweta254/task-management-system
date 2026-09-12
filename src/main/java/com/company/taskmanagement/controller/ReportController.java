@@ -24,6 +24,8 @@ import com.company.taskmanagement.entity.Report;
 import com.company.taskmanagement.entity.User;
 import com.company.taskmanagement.service.AccessService;
 import com.company.taskmanagement.service.ReportService;
+import com.company.taskmanagement.service.NotificationService;
+import com.company.taskmanagement.repository.UserRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -36,6 +38,12 @@ public class ReportController {
 
 	@Autowired
 	private AccessService accessService;
+
+        @Autowired
+        private NotificationService notificationService;
+
+        @Autowired
+        private UserRepository userRepository;
 
 	// Existing JSON save
 	@PostMapping
@@ -91,25 +99,52 @@ public class ReportController {
 		u.setId(userId);
 		report.setUser(u);
 
-		return dailyReportService.saveReport(report);
+                Report savedReport = dailyReportService.saveReport(report);
+
+                String employeeName = userRepository.findById(userId)
+                                .map(User::getName)
+                                .orElse("Employee");
+
+                userRepository.findAll().stream()
+                                .filter(user -> user.getRole() != null)
+                                .filter(user -> "DIRECTOR".equalsIgnoreCase(user.getRole().getRoleName()))
+                                .forEach(director -> {
+                                        try {
+                                                notificationService.createReportSubmittedNotification(
+                                                                director.getId(),
+                                                                employeeName,
+                                                                savedReport.getId()
+                                                );
+                                        } catch (Exception e) {
+                                                System.err.println("Report notification failed: " + e.getMessage());
+                                        }
+                                });
+
+                return savedReport;
 	}
 
 	@GetMapping
-	public List<Report> getAllReports(HttpServletRequest request) {
-		User currentUser = accessService.resolveUser(request);
-		List<Report> allReports = dailyReportService.getAllReports();
-		return allReports.stream()
-				.filter(r -> {
-					if (r.getUser() == null) return false;
-					try {
-						accessService.validateTargetEmployee(currentUser, r.getUser());
-						return true;
-					} catch (Exception e) {
-						return false;
-					}
-				})
-				.collect(Collectors.toList());
-	}
+        public List<Report> getAllReports(HttpServletRequest request) {
+                User currentUser = accessService.resolveUser(request);
+                List<Report> allReports = dailyReportService.getAllReports();
+
+                // Director / Admin can see all reports
+                if (accessService.hasElevatedAccess(currentUser)) {
+                        return allReports;
+                }
+
+                return allReports.stream()
+                                .filter(r -> {
+                                        if (r.getUser() == null) return false;
+                                        try {
+                                                accessService.validateTargetEmployee(currentUser, r.getUser());
+                                                return true;
+                                        } catch (Exception e) {
+                                                return false;
+                                        }
+                                })
+                                .collect(Collectors.toList());
+        }
 	@GetMapping("/user/{userId}")
 	public List<Report> getReportsByUser(
 	        @PathVariable("userId") Long userId,

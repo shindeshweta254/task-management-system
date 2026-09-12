@@ -222,6 +222,11 @@ function Layout({ title, children }) {
       path: "/profile",
       icon: <FaUser />
     },
+    {
+      label: "Logout",
+      path: "/logout",
+      icon: <FaUser />
+    },
 
 
     {
@@ -259,6 +264,31 @@ function Layout({ title, children }) {
 
 
 
+
+  const handleLogout = (event) => {
+    if (event) {
+      event.preventDefault();
+    }
+
+    // Sirf login/session data remove karo.
+    // Language aur baaki preferences preserve rahengi.
+    localStorage.removeItem("token");
+    localStorage.removeItem("tokenType");
+    localStorage.removeItem("user");
+    localStorage.removeItem("userId");
+
+    // Session storage me agar old auth data ho to usse bhi hatao.
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("tokenType");
+    sessionStorage.removeItem("user");
+    sessionStorage.removeItem("userId");
+
+    setIsSidebarOpen(false);
+    setSearchOpen(false);
+    setSearchQuery("");
+
+    navigate("/login", { replace: true });
+  };
 
   const filteredNavItems =
     navItems.filter((item) => {
@@ -303,7 +333,9 @@ function Layout({ title, children }) {
           "/reports",
           "/team",
           "/calendar",
-          "/projects"
+          "/projects",
+          "/profile",
+          "/logout"
         ].includes(item.path);
 
       }
@@ -323,7 +355,8 @@ function Layout({ title, children }) {
           "/calendar",
           "/reports",
           "/notifications",
-          "/profile"
+          "/profile",
+          "/logout"
         ].includes(item.path);
 
       }
@@ -416,9 +449,10 @@ function Layout({ title, children }) {
             filteredNavItems.map((item)=>(
 
               <NavLink
-                key={item.path}
-                to={item.path}
-              >
+                  key={item.path}
+                  to={item.label === "Logout" ? "/login" : item.path}
+                  onClick={item.label === "Logout" ? handleLogout : undefined}
+                >
 
                 {item.icon}
 

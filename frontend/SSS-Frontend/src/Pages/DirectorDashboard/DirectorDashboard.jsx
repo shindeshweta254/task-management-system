@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   FaUsers,
@@ -25,7 +25,7 @@ import {
 } from "../../api/excelUploadHistoryApi";
 
 import { deleteAttendanceByMonth } from "../../api/attendanceApi";
-import { getAuthHeaders } from "../../api/index";
+import { getAuthHeaders, apiFetch } from "../../api/index";
 
 const API_BASE_URL = "https://task-management-system-production-7694.up.railway.app";
 
@@ -85,9 +85,61 @@ function DirectorDashboard() {
     employeeId: "",
     email: "",
     contactNo: "",
+    dateOfBirth: "",
+    dateOfJoining: "",
+    siteCode: "",
     department: "",
     role: "EMPLOYEE",
   });
+
+  const siteOptions = useMemo(() => {
+    return [...new Set(
+      employees
+        .flatMap((emp) => String(emp?.siteCode || "").split(","))
+        .map((site) => site.trim())
+        .filter((site) => site && site.toUpperCase() !== "ALL")
+    )].sort();
+  }, [employees]);
+
+  const upcomingBirthdays = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return employees
+      .filter(
+        (emp) =>
+          emp?.dateOfBirth &&
+          String(emp?.status || "ACTIVE").toUpperCase() === "ACTIVE"
+      )
+      .map((emp) => {
+        const parts = String(emp.dateOfBirth).split("-");
+        if (parts.length !== 3) return null;
+
+        const month = Number(parts[1]) - 1;
+        const day = Number(parts[2]);
+
+        let nextBirthday = new Date(today.getFullYear(), month, day);
+        nextBirthday.setHours(0, 0, 0, 0);
+
+        if (nextBirthday < today) {
+          nextBirthday = new Date(today.getFullYear() + 1, month, day);
+          nextBirthday.setHours(0, 0, 0, 0);
+        }
+
+        const daysLeft = Math.round(
+          (nextBirthday - today) / (1000 * 60 * 60 * 24)
+        );
+
+        if (daysLeft < 0 || daysLeft > 7) return null;
+
+        return {
+          ...emp,
+          daysLeft,
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.daysLeft - b.daysLeft);
+  }, [employees]);
 
   const [employeeMessage, setEmployeeMessage] = useState("");
 
@@ -273,6 +325,7 @@ const fetchAllAttendanceSafe = async () => {
       const employeeIdValue = newEmployee.employeeId.trim();
 
       await apiFetch(`${API_BASE_URL}/api/users`, {
+        method: "POST",
         headers: {
           ...getAuthHeaders(),
           "Content-Type": "application/json",
@@ -282,6 +335,9 @@ const fetchAllAttendanceSafe = async () => {
           employeeId: employeeIdValue,
           email: newEmployee.email.trim(),
           contactNo: newEmployee.contactNo.trim() || null,
+          dateOfBirth: newEmployee.dateOfBirth || null,
+          dateOfJoining: newEmployee.dateOfJoining || null,
+          siteCode: newEmployee.siteCode || null,
           department: newEmployee.department.trim(),
           password: `${employeeIdValue}@123`,
           status: "ACTIVE",
@@ -298,6 +354,9 @@ const fetchAllAttendanceSafe = async () => {
         employeeId: "",
         email: "",
         contactNo: "",
+        dateOfBirth: "",
+        dateOfJoining: "",
+        siteCode: "",
         department: "",
         role: "EMPLOYEE",
       });
@@ -463,6 +522,35 @@ const directorTabs = [
                 className="director-hero-logo"
               />
             </section>
+
+            {upcomingBirthdays.length > 0 && (
+              <section className="director-birthday-alert">
+                <h3>ðŸŽ‚ Upcoming Birthdays</h3>
+
+                {upcomingBirthdays.map((emp) => (
+                  <div
+                    className="director-birthday-person"
+                    key={emp.id || emp.employeeId}
+                  >
+                    <strong>
+                      {emp.daysLeft === 0
+                        ? `ðŸŽ‰ Happy Birthday ${emp.name}!`
+                        : `ðŸŽˆ ${emp.name}`}
+                    </strong>
+
+                    <span>
+                      {emp.daysLeft === 0
+                        ? "Today"
+                        : emp.daysLeft === 1
+                        ? "Tomorrow"
+                        : `In ${emp.daysLeft} days`}
+                      {" â€¢ "} DOB: {emp.dateOfBirth}
+                      {emp.siteCode ? ` â€¢ Site: ${emp.siteCode}` : ""}
+                    </span>
+                  </div>
+                ))}
+              </section>
+            )}
 
             <section className="director-stats-grid">
               <StatsCard type="employees" icon={<FaUsers />} value={stats.totalEmployees} label="Total Employees" />
@@ -742,6 +830,41 @@ const directorTabs = [
                     setNewEmployee({ ...newEmployee, contactNo: event.target.value })
                   }
                 />
+              </label>
+              <label>
+                Date of Birth
+                <input
+                  type="date"
+                  value={newEmployee.dateOfBirth}
+                  onChange={(event) =>
+                    setNewEmployee({ ...newEmployee, dateOfBirth: event.target.value })
+                  }
+                />
+              </label>
+              <label>
+                Date of Joining
+                <input
+                  type="date"
+                  value={newEmployee.dateOfJoining}
+                  onChange={(event) =>
+                    setNewEmployee({ ...newEmployee, dateOfJoining: event.target.value })
+                  }
+                />
+              </label>
+              <label>
+                Site
+                <select
+                  required
+                  value={newEmployee.siteCode}
+                  onChange={(event) =>
+                    setNewEmployee({ ...newEmployee, siteCode: event.target.value })
+                  }
+                >
+                  <option value="">Select Site</option>
+                  {siteOptions.map((site) => (
+                    <option key={site} value={site}>{site}</option>
+                  ))}
+                </select>
               </label>
               <label>
                 Department
@@ -1061,6 +1184,8 @@ const getLocationText = (item) => {
 }
 
 export default DirectorDashboard;
+
+
 
 
 

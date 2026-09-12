@@ -134,6 +134,7 @@ function Attendance() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [cameraError, setCameraError] = useState("");
   const [punchBusy, setPunchBusy] = useState(false);
+  const [personalCapturedPhoto, setPersonalCapturedPhoto] = useState("");
 
   // Supervisor Team Attendance
   const [teamMenuOpen, setTeamMenuOpen] = useState(false);
@@ -748,8 +749,16 @@ function Attendance() {
       );
 
       if (!response.ok) {
-        const message = await response.text();
-        throw new Error(message || "Profile photo save failed");
+        let message = "Profile photo save failed";
+
+        try {
+          const errorData = await response.json();
+          message = errorData?.message || message;
+        } catch {
+          message = `Profile photo save failed (HTTP ${response.status})`;
+        }
+
+        throw new Error(`${message} [HTTP ${response.status}]`);
       }
 
       playAttendanceSuccessSound();
@@ -978,15 +987,36 @@ function Attendance() {
       setTeamBusy(false);
     }
   };
+  const handlePersonalShutter = () => {
+    const photo = captureFromCamera();
+
+    if (!photo) {
+      alert("Camera photo capture nahi hua. Please try again.");
+      return;
+    }
+
+    setPersonalCapturedPhoto(photo);
+  };
+
+  const handlePersonalRetake = () => {
+    setPersonalCapturedPhoto("");
+  };
   const handlePunchIn = async () => {
     if (punchBusy) return;
 
     setPunchBusy(true);
 
     try {
-      const photo = captureFromCamera();
+      if (!personalCapturedPhoto) {
+        alert("Pehle camera button se photo capture karo.");
+        return;
+      }
+
+      const photo = personalCapturedPhoto;
 
       await punchIn(photo);
+
+      setPersonalCapturedPhoto("");
 
       alert("Punch In successful.");
     } catch (error) {
@@ -1003,7 +1033,12 @@ function Attendance() {
     setPunchBusy(true);
 
     try {
-      const photo = captureFromCamera();
+      if (!personalCapturedPhoto) {
+        alert("Pehle camera button se photo capture karo.");
+        return;
+      }
+
+      const photo = personalCapturedPhoto;
 
       const result = await punchOut(photo);
 
@@ -1011,6 +1046,7 @@ function Attendance() {
         alert(result?.reason || "Punch Out failed.");
       } else {
         alert("Punch Out successful.");
+        setPersonalCapturedPhoto("");
       }
     } catch (error) {
       console.error("Punch Out error:", error);
@@ -1834,12 +1870,49 @@ function Attendance() {
 
           <div className="camera-box">
 
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-            />
+            <div className="personal-camera-frame">
+
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+              />
+
+              {personalCapturedPhoto && (
+                <img
+                  src={personalCapturedPhoto}
+                  alt="Captured attendance"
+                  className="personal-captured-photo"
+                />
+              )}
+
+            </div>
+
+            <div className="personal-camera-controls">
+
+              {!personalCapturedPhoto ? (
+                <button
+                  type="button"
+                  className="personal-camera-shutter"
+                  onClick={handlePersonalShutter}
+                  disabled={punchBusy}
+                  aria-label="Take Photo"
+                >
+                  <span></span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="personal-retake-btn"
+                  onClick={handlePersonalRetake}
+                  disabled={punchBusy}
+                >
+                  Retake Photo
+                </button>
+              )}
+
+            </div>
 
             <canvas
               ref={canvasRef}

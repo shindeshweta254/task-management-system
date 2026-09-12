@@ -19,6 +19,7 @@ import com.company.taskmanagement.repository.TaskRepository;
 import com.company.taskmanagement.service.AccessService;
 import com.company.taskmanagement.service.ActivityLogService;
 import com.company.taskmanagement.service.TaskAttachmentService;
+import com.company.taskmanagement.service.NotificationService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -41,7 +42,10 @@ public class TaskAttachmentController {
 
 	@Autowired
 	private TaskRepository taskRepository;
+
 
+        @Autowired
+        private NotificationService notificationService;
 	@PostMapping
 	public TaskAttachment saveAttachment(@RequestBody TaskAttachment attachment, HttpServletRequest request) {
 		User currentUser = accessService.resolveUser(request);
@@ -86,6 +90,18 @@ public class TaskAttachmentController {
 		log.setTask(task);
 		activityLogService.saveLog(log);
 
+                if (task.getReviewer() != null && task.getReviewer().getId() != null) {
+                        notificationService.createTaskReadyForReviewNotification(
+                                        task.getReviewer().getId(),
+                                        currentUser.getName(),
+                                        task.getTaskTitle(),
+                                        task.getId()
+                        );
+                }
+
 		return task.getTaskTitle() + " Successfully Completed";
 	}
 }
+
+
+

@@ -1,6 +1,7 @@
 package com.company.taskmanagement.dto;
 
 import com.company.taskmanagement.entity.User;
+import java.time.LocalDate;
 
 public class UserDTO {
 
@@ -12,6 +13,8 @@ public class UserDTO {
     private String status;
     private String contactNo;
     private String siteCode;
+    private LocalDate dateOfBirth;
+    private LocalDate dateOfJoining;
     private Long roleId;
     private String roleName;
 
@@ -31,6 +34,8 @@ public class UserDTO {
         dto.setStatus(user.getStatus());
         dto.setContactNo(user.getContactNo());
         dto.setSiteCode(user.getSiteCode());
+        dto.setDateOfBirth(user.getDateOfBirth());
+        dto.setDateOfJoining(user.getDateOfJoining());
         if (user.getRole() != null) {
             dto.setRoleId(user.getRole().getId());
             dto.setRoleName(user.getRole().getRoleName());
@@ -100,6 +105,22 @@ public class UserDTO {
 
     public void setSiteCode(String siteCode) {
         this.siteCode = siteCode;
+    }
+
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    public LocalDate getDateOfJoining() {
+        return dateOfJoining;
+    }
+
+    public void setDateOfJoining(LocalDate dateOfJoining) {
+        this.dateOfJoining = dateOfJoining;
     }
 
     public Long getRoleId() {
