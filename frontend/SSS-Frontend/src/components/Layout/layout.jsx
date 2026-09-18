@@ -22,6 +22,7 @@ import {
   FaHome,
   FaPlus,
   FaClipboardCheck,
+  FaBoxes,
 } from "react-icons/fa";
 
 
@@ -190,6 +191,13 @@ function Layout({ title, children }) {
 
 
     {
+      label: "Inventory",
+      path: "/inventory",
+      icon: <FaBoxes />
+    },
+
+
+    {
       label: "Team",
       path: "/team",
       icon: <FaUsers />
@@ -334,6 +342,7 @@ function Layout({ title, children }) {
           "/team",
           "/calendar",
           "/projects",
+          "/inventory",
           "/profile",
           "/logout"
         ].includes(item.path);
@@ -354,6 +363,7 @@ function Layout({ title, children }) {
           "/attendance",
           "/calendar",
           "/reports",
+          "/inventory",
           "/notifications",
           "/profile",
           "/logout"
