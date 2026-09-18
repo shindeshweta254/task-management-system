@@ -14,9 +14,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.company.taskmanagement.entity.InventoryItem;
+import com.company.taskmanagement.entity.InventoryUsage;
 import com.company.taskmanagement.entity.User;
 import com.company.taskmanagement.service.AccessService;
 import com.company.taskmanagement.service.InventoryService;
+import com.company.taskmanagement.service.InventoryUsageService;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -26,6 +28,9 @@ public class InventoryController {
 
     @Autowired
     private InventoryService inventoryService;
+
+    @Autowired
+    private InventoryUsageService inventoryUsageService;
 
     @Autowired
     private AccessService accessService;
@@ -75,6 +80,56 @@ public class InventoryController {
 
         return ResponseEntity.ok(
                 inventoryService.getLowStockItemsBySite(siteCode));
+    }
+
+    @GetMapping("/usage-history")
+    public ResponseEntity<List<InventoryUsage>> getUsageHistory(
+            HttpServletRequest request) {
+
+        User currentUser = accessService.resolveUser(request);
+
+        if (accessService.hasElevatedAccess(currentUser)
+                || accessService.isGlobalSupervisor(currentUser)
+                || accessService.isSP002(currentUser)) {
+
+            return ResponseEntity.ok(
+                    inventoryUsageService.getAllUsage());
+        }
+
+        return ResponseEntity.ok(
+                inventoryUsageService.getAllUsage()
+                        .stream()
+                        .filter(usage -> accessService.hasSiteAccess(
+                                currentUser,
+                                usage.getSiteCode()))
+                        .toList());
+    }
+
+    @PutMapping("/usage-history/{usageId}/verify")
+    public ResponseEntity<InventoryUsage> verifyUsage(
+            @PathVariable Long usageId,
+            HttpServletRequest request) {
+
+        User currentUser = accessService.resolveUser(request);
+
+        validateManagePermission(currentUser);
+
+        InventoryUsage usage =
+                inventoryUsageService.getUsageById(usageId);
+
+        if (!accessService.hasElevatedAccess(currentUser)
+                && !accessService.isGlobalSupervisor(currentUser)
+                && !accessService.isSP002(currentUser)) {
+
+            accessService.validateSiteAccess(
+                    currentUser,
+                    usage.getSiteCode());
+        }
+
+        return ResponseEntity.ok(
+                inventoryUsageService.verifyUsage(
+                        usageId,
+                        currentUser));
     }
 
     @GetMapping("/{id}")
