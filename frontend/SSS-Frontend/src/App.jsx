@@ -24,6 +24,7 @@ import AddTask from "./Pages/AddTask/AddTask";
 import Notifications from "./Pages/Notifications/Notifications";
 import UpdatedChecklist from "./Pages/UpdatedChecklist/UpdatedChecklist";
 import Inventory from "./Pages/Inventory/Inventory";
+import ClientManagement from "./Pages/ClientManagement/ClientManagement";
 
 function App() {
   return (
@@ -51,6 +52,7 @@ function App() {
       <Route path="/calendar" element={<Calendar />} />
       <Route path="/projects" element={<Projects />} />
       <Route path="/inventory" element={<Inventory />} />
+      <Route path="/clients" element={<ClientManagement />} />
       <Route path="/team" element={<Team />} />
       <Route path="/team/:teamId" element={<TeamDetails />} />
 

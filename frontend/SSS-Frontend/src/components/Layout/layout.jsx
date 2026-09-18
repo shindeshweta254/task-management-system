@@ -196,6 +196,12 @@ function Layout({ title, children }) {
       icon: <FaBoxes />
     },
 
+    {
+      label: "Client Management",
+      path: "/clients",
+      icon: <FaUsers />
+    },
+
 
     {
       label: "Team",
@@ -343,6 +349,7 @@ function Layout({ title, children }) {
           "/calendar",
           "/projects",
           "/inventory",
+          "/clients",
           "/profile",
           "/logout"
         ].includes(item.path);
