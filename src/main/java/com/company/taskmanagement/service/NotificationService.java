@@ -137,5 +137,38 @@ public class NotificationService {
         List<Notification> existing = notificationRepository.findByUserIdAndTaskIdAndType(userId, taskId, type);
         return existing != null && !existing.isEmpty();
     }
-}
 
+    public Notification createLowStockNotification(
+            Long userId,
+            String itemName,
+            String siteCode,
+            Double currentStock,
+            Double minimumStock,
+            String unit) {
+
+        Notification notification = new Notification();
+        notification.setUserId(userId);
+        notification.setTitle("Low Stock Alert");
+        notification.setMessage(
+                itemName + " stock is low at " + siteCode
+                        + ". Current: " + currentStock + " " + unit
+                        + ", Minimum: " + minimumStock + " " + unit);
+        notification.setType("INVENTORY_LOW_STOCK");
+        notification.setTaskId(null);
+        notification.setRead(false);
+        notification.setCreatedAt(LocalDateTime.now());
+
+        Notification saved = notificationRepository.save(notification);
+
+        firebasePushService.sendToUser(
+                userId,
+                saved.getTitle(),
+                saved.getMessage(),
+                saved.getType(),
+                null
+        );
+
+        return saved;
+    }
+
+}
