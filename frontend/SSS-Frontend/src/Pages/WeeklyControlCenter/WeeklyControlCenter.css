@@ -1,0 +1,191 @@
+.wcc-page {
+  width: 100%;
+  padding: 4px 0 30px;
+}
+
+.wcc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.wcc-header h2 {
+  margin: 0 0 6px;
+  font-size: 26px;
+  color: #1f2937;
+}
+
+.wcc-header p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.wcc-refresh-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 11px 18px;
+  font-weight: 700;
+  cursor: pointer;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.wcc-refresh-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.wcc-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 16px;
+  padding: 18px;
+  margin-bottom: 22px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+}
+
+.wcc-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.wcc-filters input,
+.wcc-filters select {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid #d1d5db;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #111827;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.wcc-filters input:focus,
+.wcc-filters select:focus {
+  border-color: #2563eb;
+}
+
+.wcc-section {
+  margin-bottom: 22px;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+}
+
+.wcc-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.wcc-section-heading h3 {
+  margin: 0 0 4px;
+  color: #1f2937;
+  font-size: 18px;
+}
+
+.wcc-section-heading p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.wcc-site-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.wcc-card-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 14px;
+}
+
+.wcc-card {
+  min-height: 105px;
+  padding: 17px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f9fafb;
+}
+
+.wcc-card span {
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.wcc-card strong {
+  color: #111827;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.wcc-error {
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.wcc-loading {
+  padding: 35px 20px;
+  text-align: center;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  color: #6b7280;
+}
+
+@media (max-width: 1000px) {
+  .wcc-card-grid {
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .wcc-header,
+  .wcc-section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .wcc-refresh-btn {
+    width: 100%;
+  }
+
+  .wcc-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .wcc-card-grid {
+    grid-template-columns: 1fr;
+  }
+}

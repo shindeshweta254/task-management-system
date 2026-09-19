@@ -202,6 +202,12 @@ function Layout({ title, children }) {
       icon: <FaUsers />
     },
 
+    {
+      label: "Weekly Control Center",
+      path: "/weekly-control-center",
+      icon: <FaChartBar />
+    },
+
 
     {
       label: "Team",
@@ -350,6 +356,7 @@ function Layout({ title, children }) {
           "/projects",
           "/inventory",
           "/clients",
+          "/weekly-control-center",
           "/profile",
           "/logout"
         ].includes(item.path);
