@@ -207,6 +207,12 @@ function Layout({ title, children }) {
       path: "/weekly-control-center",
       icon: <FaChartBar />
     },
+    {
+      label: "Incident / Complaint",
+      path: "/incidents",
+      icon: <FaClipboardCheck />
+    },
+
 
 
     {
@@ -357,6 +363,7 @@ function Layout({ title, children }) {
           "/inventory",
           "/clients",
           "/weekly-control-center",
+          "/incidents",
           "/profile",
           "/logout"
         ].includes(item.path);
@@ -378,6 +385,7 @@ function Layout({ title, children }) {
           "/calendar",
           "/reports",
           "/inventory",
+          "/incidents",
           "/notifications",
           "/profile",
           "/logout"
