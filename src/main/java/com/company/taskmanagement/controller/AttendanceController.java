@@ -471,7 +471,7 @@ User currentUser = accessService.resolveUser(request);
         }
 
         @PostMapping("/supervisor/profile-photo/{employeeId}")
-        public com.company.taskmanagement.entity.EmployeeFaceProfile saveEmployeeProfilePhoto(
+        public com.company.taskmanagement.dto.EmployeeFaceProfileDTO saveEmployeeProfilePhoto(
                         @PathVariable("employeeId") Long employeeId,
                         @RequestParam("photo") MultipartFile photo,
                         HttpServletRequest request) throws Exception {
@@ -496,35 +496,42 @@ User currentUser = accessService.resolveUser(request);
                                 "profile_" + employeeId
                 );
 
-                return employeePhotoProfileService.saveProfilePhoto(
-                                supervisor,
-                                employeeId,
-                                savedPath
+                return com.company.taskmanagement.dto.EmployeeFaceProfileDTO.fromEntity(
+                                employeePhotoProfileService.saveProfilePhoto(
+                                                supervisor,
+                                                employeeId,
+                                                savedPath
+                                )
                 );
         }
 
 
         @GetMapping("/supervisor/profile-photo/{employeeId}")
-        public com.company.taskmanagement.entity.EmployeeFaceProfile getEmployeeProfilePhoto(
+        public com.company.taskmanagement.dto.EmployeeFaceProfileDTO getEmployeeProfilePhoto(
                         @PathVariable("employeeId") Long employeeId,
                         HttpServletRequest request) {
 
                 User currentUser = accessService.resolveUser(request);
 
-                return employeePhotoProfileService.getProfile(
-                                currentUser,
-                                employeeId
+                return com.company.taskmanagement.dto.EmployeeFaceProfileDTO.fromEntity(
+                                employeePhotoProfileService.getProfile(
+                                                currentUser,
+                                                employeeId
+                                )
                 );
         }
 
         @GetMapping("/supervisor/profile-photos")
-        public java.util.List<com.company.taskmanagement.entity.EmployeeFaceProfile>
+        public java.util.List<com.company.taskmanagement.dto.EmployeeFaceProfileDTO>
         getRegisteredEmployeeProfiles(HttpServletRequest request) {
 
                 User currentUser = accessService.resolveUser(request);
 
                 return employeePhotoProfileService
-                                .getRegisteredProfiles(currentUser);
+                                .getRegisteredProfiles(currentUser)
+                                .stream()
+                                .map(com.company.taskmanagement.dto.EmployeeFaceProfileDTO::fromEntity)
+                                .toList();
         }
 
 
