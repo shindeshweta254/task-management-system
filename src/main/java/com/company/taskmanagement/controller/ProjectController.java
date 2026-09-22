@@ -65,7 +65,7 @@ public class ProjectController {
 
         User currentUser = accessService.resolveUser(request);
         Project project = projectService.getProjectById(id);
-        if (project.getSiteName() != null) {
+        if (!accessService.hasElevatedAccess(currentUser) && project.getSiteName() != null) {
             accessService.validateSiteAccess(currentUser, project.getSiteName());
         }
         return project;
