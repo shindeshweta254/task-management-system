@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,6 +23,8 @@ import com.company.taskmanagement.dto.JwtResponse;
 import com.company.taskmanagement.dto.LoginRequest;
 import com.company.taskmanagement.dto.UserDTO;
 import com.company.taskmanagement.entity.User;
+import com.company.taskmanagement.entity.Role;
+import com.company.taskmanagement.repository.RoleRepository;
 import com.company.taskmanagement.security.JwtUtil;
 import com.company.taskmanagement.service.AccessService;
 import com.company.taskmanagement.service.UserService;
@@ -35,6 +38,9 @@ public class UserController {
 
 	@Autowired
 	private UserService userService;
+
+        @Autowired
+        private RoleRepository roleRepository;
 
 @Autowired
 	private AccessService accessService;
@@ -260,6 +266,98 @@ public UserDTO getEmployeeProfile(
 	    return userService.getSupervisorEmployees(userId);
 
 	}
+        // ===== Site Management: Supervisor Management =====
+
+        @PostMapping("/site-management/supervisors")
+        public UserDTO addSiteManagementSupervisor(
+                        @RequestBody User newSupervisor,
+                        HttpServletRequest request) {
+
+                User currentUser = accessService.resolveUser(request);
+
+                if (!accessService.isDirector(currentUser) && !accessService.isSP001(currentUser)) {
+                        throw new com.company.taskmanagement.exception.ForbiddenException(
+                                        "Only Director or SP001 can add supervisors");
+                }
+
+                if (newSupervisor.getEmployeeId() == null ||
+                                newSupervisor.getEmployeeId().trim().isEmpty()) {
+                        throw new IllegalArgumentException("Employee ID is required");
+                }
+
+                if (newSupervisor.getName() == null ||
+                                newSupervisor.getName().trim().isEmpty()) {
+                        throw new IllegalArgumentException("Supervisor name is required");
+                }
+
+                User existingUser = userService.findUserByEmployeeId(
+                                newSupervisor.getEmployeeId().trim());
+
+                if (existingUser != null) {
+                        throw new IllegalArgumentException(
+                                        "Employee ID already exists: " +
+                                                        newSupervisor.getEmployeeId().trim());
+                }
+
+                Role supervisorRole = roleRepository.findByRoleName("SUPERVISOR");
+
+                if (supervisorRole == null) {
+                        throw new IllegalStateException("SUPERVISOR role not found");
+                }
+
+                newSupervisor.setId(null);
+                newSupervisor.setEmployeeId(
+                                newSupervisor.getEmployeeId().trim().toUpperCase());
+                newSupervisor.setName(newSupervisor.getName().trim());
+                newSupervisor.setRole(supervisorRole);
+                newSupervisor.setStatus("ACTIVE");
+
+                if (newSupervisor.getSiteCode() != null) {
+                        newSupervisor.setSiteCode(newSupervisor.getSiteCode().trim());
+                }
+
+                User saved = userService.saveUser(newSupervisor);
+                return UserDTO.fromUser(saved);
+        }
+
+        @PatchMapping("/site-management/supervisors/{id}/deactivate")
+        public UserDTO deactivateSiteManagementSupervisor(
+                        @PathVariable Long id,
+                        HttpServletRequest request) {
+
+                User currentUser = accessService.resolveUser(request);
+
+                if (!accessService.isDirector(currentUser) && !accessService.isSP001(currentUser)) {
+                        throw new com.company.taskmanagement.exception.ForbiddenException(
+                                        "Only Director or SP001 can deactivate supervisors");
+                }
+
+                User supervisor = userService.getUserById(id);
+
+                if (supervisor == null) {
+                        throw new IllegalArgumentException("Supervisor not found");
+                }
+
+                if (supervisor.getRole() == null ||
+                                !"SUPERVISOR".equalsIgnoreCase(supervisor.getRole().getRoleName())) {
+                        throw new IllegalArgumentException("Selected user is not a supervisor");
+                }
+
+                String employeeId = supervisor.getEmployeeId() == null
+                                ? ""
+                                : supervisor.getEmployeeId().trim().toUpperCase();
+
+                if ("SP001".equals(employeeId) || "SP002".equals(employeeId)) {
+                        throw new IllegalArgumentException(
+                                        "SP001 and SP002 cannot be deactivated");
+                }
+
+                supervisor.setStatus("INACTIVE");
+
+                User saved = userService.saveUser(supervisor);
+                return UserDTO.fromUser(saved);
+        }
+
 	@PostMapping("/reset-password/{userId}")
 	public String resetPassword(@PathVariable Long userId) {
 

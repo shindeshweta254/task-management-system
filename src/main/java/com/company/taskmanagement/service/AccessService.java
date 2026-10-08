@@ -181,7 +181,12 @@ public class AccessService {
         if (permitted.contains("ALL")) {
             return true;
         }
-        return permitted.contains(targetSite.trim().toUpperCase());
+        String normalizedTarget = targetSite.trim().toUpperCase()
+                .replaceAll("[\\s_-]+", "");
+
+        return permitted.stream()
+                .map(site -> site.trim().toUpperCase().replaceAll("[\\s_-]+", ""))
+                .anyMatch(site -> site.equals(normalizedTarget));
     }
 
     /**
@@ -291,7 +296,7 @@ public class AccessService {
             Set<String> targetSites = getPermittedSites(targetUser);
             Set<String> currentSites = getPermittedSites(currentUser);
             for (String site : targetSites) {
-                if (currentSites.contains("ALL") || currentSites.contains(site.toUpperCase())) {
+                if (currentSites.contains("ALL") || currentSites.stream().anyMatch(currentSite -> currentSite.replaceAll("[\\s_-]+", "").equalsIgnoreCase(site.replaceAll("[\\s_-]+", "")))) {
                     return;
                 }
             }
@@ -360,7 +365,7 @@ public class AccessService {
                 Set<String> targetSites = getPermittedSites(assignedTo);
                 Set<String> currentSites = getPermittedSites(currentUser);
                 for (String site : targetSites) {
-                    if (currentSites.contains("ALL") || currentSites.contains(site.toUpperCase())) {
+                    if (currentSites.contains("ALL") || currentSites.stream().anyMatch(currentSite -> currentSite.replaceAll("[\\s_-]+", "").equalsIgnoreCase(site.replaceAll("[\\s_-]+", "")))) {
                         return;
                     }
                 }

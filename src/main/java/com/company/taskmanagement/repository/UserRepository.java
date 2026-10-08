@@ -11,6 +11,8 @@ public interface UserRepository
 
 	List<User> findByEmployeeId(String employeeId);
 
+        List<User> findByEmailIgnoreCase(String email);
+
 	long countByRoleRoleName(String string);
 
 	List<User> findBySiteCode(String siteCode);

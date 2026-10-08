@@ -11,6 +11,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.company.taskmanagement.dto.UserDTO;
@@ -27,6 +28,9 @@ public class UserService {
 
     @Autowired
     private RoleRepository roleRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
 
     // =========================================================
@@ -53,14 +57,22 @@ public class UserService {
 
             user.setRole(role);
         }
+        // Encode only plain-text passwords.
+        // Already BCrypt passwords are kept unchanged.
+        String password = user.getPassword();
 
-        /*
-         * PASSWORD SECURITY REMOVED
-         *
-         * Password ko encode ya verify nahi kiya jayega.
-         */
+        if (password != null && !password.isBlank()) {
 
-        return userRepository.save(user);
+            boolean alreadyBcrypt =
+                    password.startsWith("$2a$")
+                    || password.startsWith("$2b$")
+                    || password.startsWith("$2y$");
+
+            if (!alreadyBcrypt) {
+                user.setPassword(passwordEncoder.encode(password));
+            }
+        }
+return userRepository.save(user);
     }
 
 
@@ -444,13 +456,26 @@ public class UserService {
 
     public List<User> getUsersBySiteCode(String siteCode) {
 
-        return userRepository.findBySiteCode(siteCode)
-        .stream()
-        .filter(user ->
-                user.getStatus() != null &&
-                "ACTIVE".equalsIgnoreCase(user.getStatus())
-        )
-        .collect(java.util.stream.Collectors.toList());
+        if (siteCode == null || siteCode.isBlank()) {
+            return java.util.Collections.emptyList();
+        }
+
+        String normalizedSite = siteCode.trim().toUpperCase()
+                .replaceAll("[\\s_-]+", "");
+
+        return userRepository.findAll()
+                .stream()
+                .filter(user -> user.getSiteCode() != null)
+                .filter(user ->
+                        user.getSiteCode().trim().toUpperCase()
+                                .replaceAll("[\\s_-]+", "")
+                                .equals(normalizedSite)
+                )
+                .filter(user ->
+                        user.getStatus() != null &&
+                        "ACTIVE".equalsIgnoreCase(user.getStatus())
+                )
+                .collect(java.util.stream.Collectors.toList());
     }
 
 
@@ -534,48 +559,53 @@ public class UserService {
             String email,
             String password) {
 
-        System.out.println("========== LOGIN DEBUG ==========");
-        System.out.println("Employee ID: [" + employeeId + "]");
-        System.out.println("Email: [" + email + "]");
-
         if (employeeId == null || employeeId.trim().isEmpty()) {
             throw new RuntimeException("Employee ID is required");
         }
 
-        employeeId = employeeId.trim();
+        if (email == null || email.trim().isEmpty()) {
+            throw new RuntimeException("Email is required");
+        }
+
+        if (password == null || password.isEmpty()) {
+            throw new RuntimeException("Password is required");
+        }
 
         List<User> users =
-                userRepository.findByEmployeeId(employeeId);
+                userRepository.findByEmployeeId(employeeId.trim());
 
-        System.out.println("Users found: " + users.size());
-
-        if (users.isEmpty()) {
-            throw new RuntimeException("Invalid Employee ID");
+        if (users.size() != 1) {
+            throw new RuntimeException(
+                    "Invalid Employee ID, Email or Password"
+            );
         }
 
         User user = users.get(0);
 
-        System.out.println(
-                "DB Employee ID: [" +
-                user.getEmployeeId() + "]"
-        );
+        if (user.getEmail() == null
+                || !user.getEmail().trim()
+                        .equalsIgnoreCase(email.trim())) {
 
-        System.out.println(
-                "DB Email: [" +
-                user.getEmail() + "]"
-        );
+            throw new RuntimeException(
+                    "Invalid Employee ID, Email or Password"
+            );
+        }
 
-        System.out.println(
-                "DB Status: [" +
-                user.getStatus() + "]"
-        );
+        boolean passwordMatches =
+                user.getPassword() != null
+                && !user.getPassword().isBlank()
+                && passwordEncoder.matches(password, user.getPassword());
 
-        System.out.println(
-                "DB Role: " +
-                (user.getRole() != null
-                    ? user.getRole().getRoleName()
-                    : "NULL")
-        );
+        System.out.println("LOGIN DEBUG - employeeId=" + user.getEmployeeId()
+                + ", emailMatches=" + user.getEmail().trim().equalsIgnoreCase(email.trim())
+                + ", passwordMatches=" + passwordMatches);
+
+        if (!passwordMatches) {
+
+            throw new RuntimeException(
+                    "Invalid Employee ID, Email or Password"
+            );
+        }
 
         if (user.getStatus() != null
                 && !"ACTIVE".equalsIgnoreCase(
@@ -586,14 +616,6 @@ public class UserService {
                     "Please contact Administrator."
             );
         }
-
-        System.out.println(
-                "========== LOGIN SUCCESS =========="
-        );
-
-        System.out.println(
-                "Password authentication: DISABLED"
-        );
 
         return UserDTO.fromUser(user);
     }

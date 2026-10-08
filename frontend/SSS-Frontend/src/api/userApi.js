@@ -73,3 +73,21 @@ export async function updateEmployee(userId, employeeData) {
   });
 }
 
+// ========== SITE MANAGEMENT - SUPERVISOR APIS ==========
+
+export async function addSupervisor(supervisorData) {
+  return apiFetch(`${API_BASE_URL}/api/users/site-management/supervisors`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(supervisorData),
+  });
+}
+
+export async function deactivateSupervisor(userId) {
+  return apiFetch(
+    `${API_BASE_URL}/api/users/site-management/supervisors/${userId}/deactivate`,
+    {
+      method: "PATCH",
+    },
+  );
+}

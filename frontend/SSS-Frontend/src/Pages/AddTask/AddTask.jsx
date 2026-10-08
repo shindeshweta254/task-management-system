@@ -1,14 +1,16 @@
 import Layout from "../../components/Layout/Layout";
 import "./AddTask.css";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { createTask } from "../../api/createTaskApi";
 import { useCreateTask } from "../../hooks/useCreateTask";
 import { getUserFromStorage } from "../../utils/userStorage";
+import { getActiveSites } from "../../api/siteApi";
 
 function AddTask() {
   const navigate = useNavigate();
+  const [activeSites, setActiveSites] = useState([]);
 
   const user = getUserFromStorage("user");
 
@@ -29,19 +31,83 @@ function AddTask() {
         )
       : employees;
 
-    const reviewerEmployees = isEmployee
-      ? employees.filter((emp) =>
-          ["CP001", "CP002", "CP003", "SP002"].includes(
-            String(emp.employeeId || "").toUpperCase()
-          )
-        )
-      : employees;
+    const reviewerEmployees = employees.filter((emp) => {
+      const name = String(emp?.name || "").trim().toLowerCase();
+
+      return [
+        "ananta vathore",
+        "krushna vathore",
+        "manisha vathore",
+      ].includes(name);
+    });
+
+    const allowedEmployeeSites = activeSites.map((site) =>
+      String(site?.siteCode || "").trim().toUpperCase()
+    );
 
 
+    const groupedAssignEmployees = assignToEmployees
+      .filter((emp) => {
+        const roleId = Number(emp?.role?.id || emp?.roleId || emp?.role?.roleId);
+        const roleName = String(
+          emp?.role?.roleName || emp?.roleName || emp?.role || ""
+        ).toUpperCase();
+
+        const isRealEmployee =
+          roleId === 3 ||
+          roleName === "EMPLOYEE";
+
+        const isActive =
+          String(emp?.status || "ACTIVE").toUpperCase() === "ACTIVE";
+
+        return isRealEmployee && isActive && emp?.name && emp?.employeeId;
+      })
+      .reduce((groups, emp) => {
+        const siteCode = String(emp?.siteCode || "").trim().toUpperCase();
+        const department = String(emp?.department || "").trim().toUpperCase();
+
+        let groupName = "";
+
+        if (allowedEmployeeSites.includes(siteCode)) {
+          groupName = siteCode;
+        } else if (!siteCode && department === "OFFICE STAFF") {
+          groupName = "OFFICE STAFF";
+        } else {
+          return groups;
+        }
+
+        if (!groups[groupName]) {
+          groups[groupName] = [];
+        }
+
+        groups[groupName].push(emp);
+        return groups;
+      }, {});
   // Load employees after component mount
   useEffect(() => {
     init();
   }, [init]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadSites = async () => {
+      try {
+        const data = await getActiveSites();
+        if (mounted) {
+          setActiveSites(Array.isArray(data) ? data : []);
+        }
+      } catch (error) {
+        console.error("[AddTask] Failed to load active sites:", error);
+      }
+    };
+
+    loadSites();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
 
   const handleSubmit = async (e) => {
@@ -81,7 +147,7 @@ function AddTask() {
     try {
       await createTask(requestBody);
 
-      setMessage("Task Created Successfully ✅");
+      setMessage("Task Created Successfully âœ…");
 
       setTimeout(() => {
         navigate("/task");
@@ -89,7 +155,7 @@ function AddTask() {
 
     } catch (error) {
       console.error(error);
-      setMessage("Backend server not connected ❌");
+      setMessage("Backend server not connected âŒ");
     }
   };
 
@@ -167,16 +233,25 @@ function AddTask() {
                   </option>
 
 
-                  {assignToEmployees.map((emp) => (
-
-                    <option
-                      key={emp.id}
-                      value={emp.id}
-                    >
-                      {emp.name} - {emp.employeeId}
-                    </option>
-
-                  ))}
+                  {Object.entries(groupedAssignEmployees)
+  .sort(([a], [b]) => {
+    if (a === "OFFICE STAFF") return -1;
+    if (b === "OFFICE STAFF") return 1;
+    return a.localeCompare(b);
+  })
+  .map(([groupName, groupEmployees]) => (
+    <optgroup key={groupName} label={groupName}>
+      {groupEmployees
+        .sort((a, b) =>
+          String(a?.name || "").localeCompare(String(b?.name || ""))
+        )
+        .map((emp) => (
+          <option key={emp.id} value={emp.id}>
+            {emp.name} - {emp.employeeId}
+          </option>
+        ))}
+    </optgroup>
+  ))}
 
 
                 </select>

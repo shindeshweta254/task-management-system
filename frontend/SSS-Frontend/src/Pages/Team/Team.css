@@ -683,3 +683,24 @@
     font-size: 22px;
   }
 }
+
+/* Add Employee - Site dropdown */
+.team-add-form-grid select {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #dbe2ef;
+  border-radius: 10px;
+  font-size: 14px;
+  background: #ffffff;
+  color: #111827;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.team-add-form-grid label {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}

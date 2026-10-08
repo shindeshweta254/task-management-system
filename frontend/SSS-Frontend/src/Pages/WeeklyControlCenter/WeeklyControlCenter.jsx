@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Layout from "../../components/Layout/Layout";
 import { fetchWeeklyControlCenter } from "../../api/weeklyControlCenterApi";
 import { fetchAllUsers } from "../../api/userApi";
+import { getActiveSites } from "../../api/siteApi";
 
 import "./WeeklyControlCenter.css";
 
@@ -41,27 +42,17 @@ function WeeklyControlCenter() {
 
   const [summary, setSummary] = useState(null);
   const [users, setUsers] = useState([]);
+  const [activeSites, setActiveSites] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const siteOptions = useMemo(() => {
-    const sites = new Set();
-
-    users.forEach((user) => {
-      String(user?.siteCode || "")
-        .split(",")
-        .map((value) => value.trim())
-        .filter(
-          (value) =>
-            value &&
-            value.toUpperCase() !== "ALL"
-        )
-        .forEach((value) => sites.add(value));
-    });
-
-    return [...sites].sort((a, b) => a.localeCompare(b));
-  }, [users]);
+    return activeSites
+      .map((site) => String(site?.siteCode || "").trim())
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
+  }, [activeSites]);
 
   const loadUsers = useCallback(async () => {
     try {
@@ -71,6 +62,32 @@ function WeeklyControlCenter() {
       console.error("Unable to load site options:", err);
       setUsers([]);
     }
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadActiveSites = async () => {
+      try {
+        const data = await getActiveSites();
+
+        if (mounted) {
+          setActiveSites(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        console.error("[WeeklyControlCenter] Failed to load active sites:", err);
+
+        if (mounted) {
+          setActiveSites([]);
+        }
+      }
+    };
+
+    loadActiveSites();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const loadSummary = useCallback(async () => {

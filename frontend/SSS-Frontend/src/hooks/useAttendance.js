@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Geolocation } from "@capacitor/geolocation";
 import { Capacitor } from "@capacitor/core";
+import { API_BASE_URL } from "../api";
 import { computeSessionsSummary, normalizeAttendanceRecord, upsertSessionForSameDay } from "../utils/attendanceUtils";
 import {
   checkIn as apiCheckIn,
@@ -130,7 +131,7 @@ async function reverseGeocode(latitude, longitude) {
     const tokenType = localStorage.getItem("tokenType") || "Bearer";
 
     const response = await fetch(
-      `https://task-management-system-production-7694.up.railway.app/api/location/reverse?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}`,
+      `${API_BASE_URL}/api/location/reverse?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}`,
       {
         method: "GET",
         headers: token

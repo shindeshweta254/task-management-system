@@ -15,6 +15,7 @@ import Calendar from "./Pages/Calender/Calendar";
 
 import Projects from "./Pages/Project/project";
 import Team from "./Pages/Team/team";
+import SiteManagement from "./Pages/SiteManagement/SiteManagement";
 import TeamDetails from "./Pages/Team/TeamDetails";
 
 import Reports from "./Pages/Reports/reports";
@@ -57,6 +58,7 @@ function App() {
       <Route path="/clients" element={<ClientManagement />} />
       <Route path="/weekly-control-center" element={<WeeklyControlCenter />} />
       <Route path="/incidents" element={<IncidentManagement />} />
+      <Route path="/site-management" element={<SiteManagement />} />
       <Route path="/team" element={<Team />} />
       <Route path="/team/:teamId" element={<TeamDetails />} />
 

@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   FaUsers,
@@ -26,6 +26,7 @@ import {
 
 import { deleteAttendanceByMonth } from "../../api/attendanceApi";
 import { getAuthHeaders, apiFetch } from "../../api/index";
+import { getActiveSites } from "../../api/siteApi";
 
 const API_BASE_URL = "https://task-management-system-production-7694.up.railway.app";
 
@@ -76,6 +77,8 @@ function DirectorDashboard() {
   const [employees, setEmployees] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [attendance, setAttendance] = useState([]);
+  const [attendanceSiteFilter, setAttendanceSiteFilter] = useState("ALL");
+  const [activeSites, setActiveSites] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState("");
@@ -93,13 +96,27 @@ function DirectorDashboard() {
   });
 
   const siteOptions = useMemo(() => {
-    return [...new Set(
-      employees
-        .flatMap((emp) => String(emp?.siteCode || "").split(","))
-        .map((site) => site.trim())
-        .filter((site) => site && site.toUpperCase() !== "ALL")
-    )].sort();
-  }, [employees]);
+    return activeSites.map((site) => site.siteCode);
+  }, [activeSites]);
+
+  const normalizeAttendanceSite = (value) =>
+    String(value || "").trim().toUpperCase().replace(/[\s_-]+/g, "");
+
+  const filteredAttendance = useMemo(() => {
+    if (attendanceSiteFilter === "ALL") {
+      return attendance;
+    }
+
+    if (attendanceSiteFilter === "OFFICE") {
+      return attendance.filter((item) => !String(item?.site || "").trim());
+    }
+
+    const selectedSite = normalizeAttendanceSite(attendanceSiteFilter);
+
+    return attendance.filter(
+      (item) => normalizeAttendanceSite(item?.site) === selectedSite
+    );
+  }, [attendance, attendanceSiteFilter]);
 
   const upcomingBirthdays = useMemo(() => {
     const today = new Date();
@@ -317,6 +334,28 @@ const fetchAllAttendanceSafe = async () => {
     loadDashboardData();
   }, [loadDashboardData]);
 
+  useEffect(() => {
+    let mounted = true;
+
+    const loadActiveSites = async () => {
+      try {
+        const data = await getActiveSites();
+
+        if (mounted) {
+          setActiveSites(Array.isArray(data) ? data : []);
+        }
+      } catch (error) {
+        console.error("[DirectorDashboard] Failed to load active sites:", error);
+      }
+    };
+
+    loadActiveSites();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const handleAddEmployee = async (event) => {
     event.preventDefault();
     setEmployeeMessage("Saving employee...");
@@ -368,6 +407,51 @@ const fetchAllAttendanceSafe = async () => {
     }
   };
 
+  const handleUpdateEmployee = async (employeeId, updatedData) => {
+    try {
+      setEmployeeMessage("Updating employee...");
+      await apiFetch(`${API_BASE_URL}/api/users/${employeeId}`, {
+        method: "PUT",
+        headers: {
+          ...getAuthHeaders(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: updatedData.name?.trim() || "",
+          email: updatedData.email?.trim() || "",
+          contactNo: updatedData.contactNo?.trim() || "",
+          department: updatedData.department?.trim() || "",
+          designation: updatedData.designation?.trim() || "",
+          shift: updatedData.shift?.trim() || "",
+          siteCode: updatedData.siteCode?.trim() || "",
+          status: updatedData.status || "ACTIVE",
+        }),
+      });
+      setEmployeeMessage("Employee updated successfully");
+      await loadDashboardData();
+    } catch (error) {
+      console.error("Update employee error:", error);
+      setEmployeeMessage(error?.message || "Employee update nahi hua");
+      throw error;
+    }
+  };
+
+  const handleDeleteEmployee = async (employee) => {
+    if (!window.confirm(`Delete ${employee?.name || "this employee"}?`)) return;
+
+    try {
+      setEmployeeMessage("Deleting employee...");
+      await apiFetch(`${API_BASE_URL}/api/users/resign/${employee.id}`, {
+        method: "PUT",
+        headers: { ...getAuthHeaders() },
+      });
+      setEmployeeMessage("Employee deleted successfully");
+      await loadDashboardData();
+    } catch (error) {
+      console.error("Delete employee error:", error);
+      setEmployeeMessage(error?.message || "Employee delete nahi hua");
+    }
+  };
   const loadExcelHistories = async () => {
     try {
       const userId = user?.id || user?.userId;
@@ -525,7 +609,7 @@ const directorTabs = [
 
             {upcomingBirthdays.length > 0 && (
               <section className="director-birthday-alert">
-                <h3>ðŸŽ‚ Upcoming Birthdays</h3>
+                <h3>Ã°Å¸Å½â€š Upcoming Birthdays</h3>
 
                 {upcomingBirthdays.map((emp) => (
                   <div
@@ -534,8 +618,8 @@ const directorTabs = [
                   >
                     <strong>
                       {emp.daysLeft === 0
-                        ? `ðŸŽ‰ Happy Birthday ${emp.name}!`
-                        : `ðŸŽˆ ${emp.name}`}
+                        ? `Ã°Å¸Å½â€° Happy Birthday ${emp.name}!`
+                        : `Ã°Å¸Å½Ë† ${emp.name}`}
                     </strong>
 
                     <span>
@@ -544,8 +628,8 @@ const directorTabs = [
                         : emp.daysLeft === 1
                         ? "Tomorrow"
                         : `In ${emp.daysLeft} days`}
-                      {" â€¢ "} DOB: {emp.dateOfBirth}
-                      {emp.siteCode ? ` â€¢ Site: ${emp.siteCode}` : ""}
+                      {" Ã¢â‚¬Â¢ "} DOB: {emp.dateOfBirth}
+                      {emp.siteCode ? ` Ã¢â‚¬Â¢ Site: ${emp.siteCode}` : ""}
                     </span>
                   </div>
                 ))}
@@ -611,7 +695,7 @@ const directorTabs = [
                 <p>{employees.length} employees found</p>
               </div>
             </div>
-            <EmployeeTable employees={employees} />
+            <EmployeeTable employees={employees} activeSites={activeSites} onUpdate={handleUpdateEmployee} onDelete={handleDeleteEmployee} />
           </section>
         )}
 
@@ -635,7 +719,25 @@ const directorTabs = [
             <div className="director-card-heading">
               <div>
                 <h2>All Attendance</h2>
-                <p>{attendance.length} records found</p>
+                <p>{filteredAttendance.length} records found</p>
+
+                <label style={{ display: "block", marginTop: "10px" }}>
+                  <span style={{ marginRight: "8px", fontWeight: 600 }}>
+                    Site / Office:
+                  </span>
+                  <select
+                    value={attendanceSiteFilter}
+                    onChange={(e) => setAttendanceSiteFilter(e.target.value)}
+                  >
+                    <option value="ALL">All</option>
+                    <option value="OFFICE">Office</option>
+                    {activeSites.map((site) => (
+                      <option key={site.siteCode} value={site.siteCode}>
+                        {site.siteName || site.siteCode}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               </div>
               <button
                 type="button"
@@ -654,7 +756,7 @@ const directorTabs = [
               <p className="director-message">{clearMessage}</p>
             )}
 
-            <AttendanceTable attendance={attendance} />
+            <AttendanceTable attendance={filteredAttendance} />
 
             {clearDataOpen && (
               <div
@@ -963,7 +1065,97 @@ function StatsCard({ type, icon, value, label }) {
   );
 }
 
-function EmployeeTable({ employees }) {
+function EmployeeTable({ employees, activeSites, onUpdate, onDelete }) {
+  const [editingId, setEditingId] = useState(null);
+  const [editData, setEditData] = useState({});
+  const [saving, setSaving] = useState(false);
+
+  const siteMap = Object.fromEntries(
+    activeSites.map((site) => [
+      String(site?.siteCode || "").trim().toUpperCase(),
+      String(site?.siteName || site?.siteCode || "").trim(),
+    ])
+  );
+
+  const employeeGroupOrder = [
+    "OFFICE STAFF",
+    ...activeSites.map((site) =>
+      String(site?.siteName || site?.siteCode || "").trim()
+    ),
+  ];
+
+  const getEmployeeGroup = (emp) => {
+    const siteCode = String(emp?.siteCode || "").trim().toUpperCase();
+    const department = String(emp?.department || "").trim().toUpperCase();
+
+    if (!siteCode && department === "OFFICE STAFF") {
+      return "OFFICE STAFF";
+    }
+
+    return siteMap[siteCode] || "";
+  };
+
+  const activeEmployees = employees
+    .filter((emp) => {
+      const roleId = Number(
+        emp?.role?.id || emp?.roleId || emp?.role?.roleId
+      );
+
+      const roleName = String(
+        emp?.role?.roleName || emp?.roleName || emp?.role || ""
+      ).toUpperCase();
+
+      const isEmployee =
+        roleId === 3 ||
+        roleName === "EMPLOYEE";
+
+      const isActive =
+        String(emp?.status || "ACTIVE").toUpperCase() === "ACTIVE";
+
+      return (
+        isEmployee &&
+        isActive &&
+        emp?.name &&
+        emp?.employeeId &&
+        getEmployeeGroup(emp)
+      );
+    })
+    .sort((a, b) => {
+      const groupA = getEmployeeGroup(a);
+      const groupB = getEmployeeGroup(b);
+
+      const groupDifference =
+        employeeGroupOrder.indexOf(groupA) -
+        employeeGroupOrder.indexOf(groupB);
+
+      if (groupDifference !== 0) return groupDifference;
+
+      return String(a?.name || "").localeCompare(
+        String(b?.name || "")
+      );
+    });
+
+  const startEdit = (emp) => {
+    setEditingId(emp.id);
+    setEditData({
+      name: emp?.name || "",
+      email: emp?.email || "",
+      department: emp?.department || "",
+      status: emp?.status || "ACTIVE",
+    });
+  };
+
+  const saveEdit = async () => {
+    try {
+      setSaving(true);
+      await onUpdate(editingId, editData);
+      setEditingId(null);
+      setEditData({});
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="director-table-wrapper">
       <table className="director-table">
@@ -974,24 +1166,82 @@ function EmployeeTable({ employees }) {
             <th>Email</th>
             <th>Department</th>
             <th>Role</th>
+              <th>Site / Office</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          {employees.map((emp, idx) => (
-            <tr key={emp?.id || idx}>
-              <td>{emp?.name || "-"}</td>
-              <td>{emp?.employeeId || "-"}</td>
-              <td>{emp?.email || "-"}</td>
-              <td>{emp?.department || "-"}</td>
-              <td>{emp?.role?.roleName || emp?.role || "-"}</td>
-            </tr>
-          ))}
+          {employeeGroupOrder.flatMap((groupName) => {
+            const groupEmployees = activeEmployees.filter(
+              (emp) => getEmployeeGroup(emp) === groupName
+            );
+
+            if (groupEmployees.length === 0) return [];
+
+            return [
+              <tr key={`group-${groupName}`} className="employee-group-row">
+                <td colSpan="6">
+                  <strong>{groupName}</strong>
+                  <span className="employee-group-count">
+                    {groupEmployees.length} Employees
+                  </span>
+                </td>
+              </tr>,
+
+              ...groupEmployees.map((emp, idx) => {
+            const isEditing = editingId === emp.id;
+
+            return (
+              <tr key={emp?.id || idx}>
+                <td>
+                  {isEditing ? (
+                    <input value={editData.name} onChange={(e) => setEditData({ ...editData, name: e.target.value })} />
+                  ) : emp?.name || "-"}
+                </td>
+
+                <td>{emp?.employeeId || "-"}</td>
+
+                <td>
+                  {isEditing ? (
+                    <input type="email" value={editData.email} onChange={(e) => setEditData({ ...editData, email: e.target.value })} />
+                  ) : emp?.email || "-"}
+                </td>
+
+                <td>
+                  {isEditing ? (
+                    <input value={editData.department} onChange={(e) => setEditData({ ...editData, department: e.target.value })} />
+                  ) : emp?.department || "-"}
+                </td>
+
+                <td>{emp?.role?.roleName || emp?.role || "-"}</td>
+
+                <td>
+                  {isEditing ? (
+                    <>
+                      <button type="button" className="employee-action-btn employee-save-btn" onClick={saveEdit} disabled={saving}>
+                        {saving ? "Saving..." : "Save"}
+                      </button>
+                      <button type="button" className="employee-action-btn employee-cancel-btn" disabled={saving} onClick={() => { setEditingId(null); setEditData({}); }}>
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="employee-actions"><button type="button" className="employee-action-btn employee-update-btn" onClick={() => startEdit(emp)}>Update</button>
+                      <button type="button" className="employee-action-btn employee-delete-btn" onClick={() => onDelete(emp)}>Delete</button></div>
+                    </>
+                  )}
+                </td>
+              </tr>
+            );
+              }),
+            ];
+          })}
         </tbody>
       </table>
     </div>
   );
 }
-
 function TaskTable({ tasks }) {
   return (
     <div className="director-table-wrapper">
@@ -1127,6 +1377,7 @@ const getLocationText = (item) => {
               <th>Employee Name</th>
               <th>Employee ID</th>
               <th>Role</th>
+              <th>Site / Office</th>
               <th>Date</th>
               <th>Check-in</th>
               <th>Check-out</th>
@@ -1140,7 +1391,7 @@ const getLocationText = (item) => {
           <tbody>
 {attendance.length === 0 ? (
               <tr>
-                <td colSpan={11} className="director-empty-cell">
+                <td colSpan={12} className="director-empty-cell">
                   No attendance records found
                 </td>
               </tr>
@@ -1151,6 +1402,7 @@ const getLocationText = (item) => {
                     <td>{item.employeeName || "-"}</td>
                     <td>{item.employeeId || "-"}</td>
                     <td>{item.roleName || "-"}</td>
+                    <td>{String(item.site || "").trim() || "Office"}</td>
                     <td>{item.date ? String(item.date).substring(0, 10) : "-"}</td>
                     <td>{formatTime(item.checkInTime)}</td>
                     <td>{formatTime(item.checkOutTime)}</td>

@@ -54,7 +54,7 @@ public class User {
         @Column(name = "fcm_token", length = 1000)
         private String fcmToken;
 
-	@Column(name = "site_code", length = 50)
+	@Column(name = "site_code", length = 500)
 	private String siteCode;
 
 	@ManyToOne

@@ -16,6 +16,7 @@ import {
   normalizeText,
   readableError,
 } from "./teamUtils";
+import { getActiveSites } from "../../api/siteApi";
 import "./Team.css";
 
 const EMPLOYEE_ROLE_ID = 3; // EMPLOYEE role id in DB
@@ -32,6 +33,7 @@ function Team() {
   }, []);
 
   const [users, setUsers] = useState([]);
+  const [activeSites, setActiveSites] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -57,6 +59,7 @@ function Team() {
     name: "",
     employeeId: "",
     email: "",
+    password: "",
     contactNo: "",
     dateOfBirth: "",
     dateOfJoining: "",
@@ -76,12 +79,30 @@ function Team() {
   const isSupervisor = roleName === "SUPERVISOR";
   const siteCode = user?.siteCode || "";
 
+  const isSP001 = String(user?.employeeId || "").trim().toUpperCase() === "SP001";
+
   const supervisorSiteOptions = useMemo(() => {
-    return String(siteCode || "")
+    const activeSiteCodes = activeSites
+      .map((site) => String(site?.siteCode || "").trim())
+      .filter(Boolean);
+
+    if (isDirector || isSP001) {
+      return activeSiteCodes;
+    }
+
+    const assignedSites = String(siteCode || "")
       .split(",")
       .map((site) => site.trim())
       .filter(Boolean);
-  }, [siteCode]);
+
+    const activeSiteSet = new Set(
+      activeSiteCodes.map((site) => site.toUpperCase().replace(/[\s_-]+/g, ""))
+    );
+
+    return assignedSites.filter((site) =>
+      activeSiteSet.has(site.toUpperCase().replace(/[\s_-]+/g, ""))
+    );
+  }, [activeSites, isDirector, isSP001, siteCode]);
 
 
 
@@ -113,6 +134,28 @@ function Team() {
   useEffect(() => {
     loadTeams();
   }, [loadTeams]);  // ========== GROUPING FOR DIRECTOR VIEW ==========
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadActiveSites = async () => {
+      try {
+        const data = await getActiveSites();
+        if (mounted) {
+          setActiveSites(Array.isArray(data) ? data : []);
+        }
+      } catch (error) {
+        console.error("[Team] Failed to load active sites:", error);
+      }
+    };
+
+    loadActiveSites();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   // Show only real sites.
   // Multi-site supervisors are attached to each permitted site.
   // ALL / blank site codes are not shown as separate site cards.
@@ -259,7 +302,7 @@ function Team() {
       const payload = {
         name: newEmployee.name.trim(),
         employeeId: empId,
-        email: newEmployee.email.trim() || `${empId}@sss.com`,
+        email: newEmployee.email.trim(),
         contactNo: newEmployee.contactNo.trim() || null,
         dateOfBirth: newEmployee.dateOfBirth || null,
         dateOfJoining: newEmployee.dateOfJoining || null,
@@ -267,7 +310,7 @@ function Team() {
         designation: newEmployee.designation.trim(),
         shift: newEmployee.shift.trim(),
         siteCode: newEmployee.siteCode || siteCode,
-        password: `${empId}@123`,
+        password: newEmployee.password,
         status: "ACTIVE",
         role: { id: EMPLOYEE_ROLE_ID, roleName: "EMPLOYEE" },
       };
@@ -279,6 +322,7 @@ function Team() {
         name: "",
         employeeId: "",
         email: "",
+    password: "",
         contactNo: "",
         dateOfBirth: "",
         dateOfJoining: "",
@@ -568,7 +612,7 @@ function Team() {
                   className="team-birthday-card"
                   key={`birthday-${employee.id || employee.employeeId}`}
                 >
-                  <div className="team-birthday-icon">🎂</div>
+                  <div className="team-birthday-icon">Ã°Å¸Å½â€š</div>
 
                   <div>
                     <strong>
@@ -579,11 +623,11 @@ function Team() {
 
                     <p>
                       {employee.daysLeft === 0
-                        ? "Birthday Today 🎉"
+                        ? "Birthday Today Ã°Å¸Å½â€°"
                         : employee.daysLeft === 1
                         ? "Birthday Tomorrow"
                         : `Birthday in ${employee.daysLeft} days`}
-                      {" • "}
+                      {" Ã¢â‚¬Â¢ "}
                       {employee.dateOfBirth}
                     </p>
                   </div>
@@ -640,9 +684,18 @@ function Team() {
                   onChange={(e) => setNewEmployee({ ...newEmployee, name: e.target.value })}
                 />
                 <input
-                  placeholder="Email"
+                  required
+                  type="email"
+                  placeholder="Email *"
                   value={newEmployee.email}
                   onChange={(e) => setNewEmployee({ ...newEmployee, email: e.target.value })}
+                />
+                <input
+                  required
+                  type="password"
+                  placeholder="Password *"
+                  value={newEmployee.password}
+                  onChange={(e) => setNewEmployee({ ...newEmployee, password: e.target.value })}
                 />
                 <input
                   placeholder="Mobile Number"

@@ -121,6 +121,10 @@ function Layout({ title, children }) {
     role === "SUPERVISOR";
 
 
+  const isSP001 =
+    String(user?.employeeId || "").trim().toUpperCase() === "SP001";
+
+
 
   const isAdmin =
     role === "OWNER/ADMIN";
@@ -214,6 +218,12 @@ function Layout({ title, children }) {
     },
 
 
+
+    {
+      label: "Site Management",
+      path: "/site-management",
+      icon: <FaProjectDiagram />
+    },
 
     {
       label: "Team",
@@ -351,6 +361,10 @@ function Layout({ title, children }) {
 
 
       if(isSupervisor){
+
+        if(item.path === "/site-management"){
+          return isSP001;
+        }
 
         return [
           "/task",
