@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.company.taskmanagement.dto.UserDTO;
 import com.company.taskmanagement.entity.Role;
 import com.company.taskmanagement.entity.User;
+import com.company.taskmanagement.exception.UnauthorizedException;
 import com.company.taskmanagement.repository.RoleRepository;
 import com.company.taskmanagement.repository.UserRepository;
 
@@ -575,9 +576,7 @@ return userRepository.save(user);
                 userRepository.findByEmployeeId(employeeId.trim());
 
         if (users.size() != 1) {
-            throw new RuntimeException(
-                    "Invalid Employee ID, Email or Password"
-            );
+            throw new UnauthorizedException("Invalid Employee ID, Email or Password");
         }
 
         User user = users.get(0);
@@ -586,9 +585,7 @@ return userRepository.save(user);
                 || !user.getEmail().trim()
                         .equalsIgnoreCase(email.trim())) {
 
-            throw new RuntimeException(
-                    "Invalid Employee ID, Email or Password"
-            );
+            throw new UnauthorizedException("Invalid Employee ID, Email or Password");
         }
 
         boolean passwordMatches =
@@ -602,9 +599,7 @@ return userRepository.save(user);
 
         if (!passwordMatches) {
 
-            throw new RuntimeException(
-                    "Invalid Employee ID, Email or Password"
-            );
+            throw new UnauthorizedException("Invalid Employee ID, Email or Password");
         }
 
         if (user.getStatus() != null
