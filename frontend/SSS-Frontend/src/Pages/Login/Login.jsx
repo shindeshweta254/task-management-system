@@ -73,19 +73,10 @@ function Login() {
       const user =
         loginResponse?.user || loginResponse;
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("tokenType", tokenType);
-      localStorage.setItem(
-        "user",
-        JSON.stringify(user)
-      );
-      localStorage.setItem(
-        "userId",
-        String(user?.id || "")
-      );
-
-      // Android phone ka FCM token logged-in user ke DB record me save karo.
-      await saveStoredFcmTokenAfterLogin();
+      if (!token || !user?.id) {
+        setMessage("Login response is incomplete. Please try again.");
+        return;
+      }
 
       const roleName = String(
         user?.roleName ||
@@ -103,6 +94,20 @@ function Login() {
         );
         return;
       }
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("tokenType", tokenType);
+      localStorage.setItem(
+        "user",
+        JSON.stringify(user)
+      );
+      localStorage.setItem(
+        "userId",
+        String(user?.id || "")
+      );
+
+      // Save Android FCM token after successful login.
+      await saveStoredFcmTokenAfterLogin();
 
       setMessage("Login Successful");
 
@@ -143,7 +148,7 @@ function Login() {
 
       setMessage(
         isNetworkError ? `Network Error: ${errorMessage}`
-          : errorMessage || "Login failed ÃƒÂ¢Ã‚ÂÃ…â€™"
+          : errorMessage || "Login failed"
       );
     } finally {
       setIsSubmitting(false);

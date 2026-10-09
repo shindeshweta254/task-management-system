@@ -89,51 +89,30 @@ public class TasController {
     public List<Task> getTasksByEmployee(
             @PathVariable("userId") Long userId,
             HttpServletRequest request
-    ){
+    ) {
+        User currentUser = accessService.resolveUser(request);
 
-        // 1. Prefer the authenticated JWT user from the SecurityContext.
-        User authenticatedUser =
-                resolveUserFromSecurityContext();
-
-        if (authenticatedUser != null) {
-
-            // An authenticated employee may only view their OWN tasks.
-            if (authenticatedUser.getId().equals(userId)) {
-                return taskService
-                        .getTasksByEmployee(userId);
-            }
-
-            // Supervisors / managers / elevated roles may view site employees' tasks.
-            if (accessService.isDirector(authenticatedUser)
-                    || accessService.isSP001(authenticatedUser)
-                    || accessService.isSP002(authenticatedUser)
-                    || accessService.isAdmin(authenticatedUser)
-                    || accessService.isSupervisor(authenticatedUser)
-                    || accessService.isManager(authenticatedUser)
-                    || accessService.hasElevatedAccess(authenticatedUser)
-                    || accessService.isGlobalSupervisor(authenticatedUser)) {
-
-                return taskService
-                        .getTasksByEmployee(userId);
-            }
-
-            throw new com.company.taskmanagement.exception.ForbiddenException(
-                    "Access denied to tasks of employee: " + userId);
-        }
-
-        // 2. Backward-compatible fallback: X-User-Id header.
-        accessService
-                .resolveAndValidateTargetUser(
-                        request,
-                        userId
+        User targetUser = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new com.company.taskmanagement.exception.ForbiddenException(
+                                "Target employee not found"
+                        )
                 );
 
+        accessService.validateTargetEmployee(currentUser, targetUser);
 
-        return taskService
-                .getTasksByEmployee(userId);
-
+        return taskService.getTasksByEmployee(userId)
+                .stream()
+                .filter(task -> {
+                    try {
+                        accessService.validateTaskAccess(currentUser, task);
+                        return true;
+                    } catch (com.company.taskmanagement.exception.ForbiddenException ex) {
+                        return false;
+                    }
+                })
+                .collect(Collectors.toList());
     }
-
     /**
      * Resolve the current logged-in user from the JWT SecurityContext.
      * Returns null when no authenticated user is present.

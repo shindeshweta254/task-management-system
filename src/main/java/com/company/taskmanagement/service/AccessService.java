@@ -39,7 +39,7 @@ public class AccessService {
     private static final String SP001 = "SP001";
     private static final String SP002 = "SP002";
 
-    // Global supervisors Ã¢â‚¬â€œ these supervisors see ALL sites.
+    // Global supervisors ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ these supervisors see ALL sites.
     // Add their employee IDs here (case-insensitive).
     private static final Set<String> GLOBAL_SUPERVISOR_EMPLOYEE_IDS = Set.of(
         "SP003"  // Replace with actual global supervisor employee IDs
@@ -67,36 +67,14 @@ public class AccessService {
      * Throws if the user cannot be resolved or is not active.
      */
     public User resolveUser(HttpServletRequest request) {
-
-        // 1. Prefer the JWT-authenticated principal from the SecurityContext.
         User authUser = resolveUserFromSecurityContext();
-        if (authUser != null) {
-            return authUser;
+
+        if (authUser == null) {
+            throw new UnauthorizedException("Valid JWT authentication required");
         }
 
-        // 2. Backward-compatible fallback: X-User-Id header.
-        String userIdStr = request.getHeader(USER_ID_HEADER);
-        if (userIdStr == null || userIdStr.isBlank()) {
-            throw new UnauthorizedException("Missing X-User-Id header");
-        }
-
-        Long userId;
-        try {
-            userId = Long.parseLong(userIdStr.trim());
-        } catch (NumberFormatException e) {
-            throw new UnauthorizedException("Invalid X-User-Id: must be a number");
-        }
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UnauthorizedException("User not found for ID: " + userId));
-
-        if (!"ACTIVE".equalsIgnoreCase(user.getStatus())) {
-            throw new UnauthorizedException("User account is not active");
-        }
-
-        return user;
+        return authUser;
     }
-
     /**
      * Resolve the currently authenticated (JWT) user from the SecurityContext.
      * Returns null when there is no authenticated principal.
@@ -290,6 +268,11 @@ public class AccessService {
         }
 
         // Check if current user has access to the target user's site
+        // Only Supervisor/Manager can access another employee by site.
+        if (!isSupervisor(currentUser) && !isManager(currentUser)) {
+            throw new ForbiddenException("Access denied to employee: " + targetUser.getName());
+        }
+
         String targetSiteCode = targetUser.getSiteCode();
         if (targetSiteCode != null && !targetSiteCode.isBlank()) {
             // Check if any of the target user's sites overlap with current user's permitted sites
@@ -546,5 +529,6 @@ public class AccessService {
                 .collect(Collectors.toList());
     }
 }
+
 
 

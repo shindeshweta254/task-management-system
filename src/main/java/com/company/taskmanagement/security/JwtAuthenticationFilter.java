@@ -46,7 +46,6 @@ protected void doFilterInternal(
     String path = request.getServletPath();
     System.out.println("========== JWT FILTER ==========");
     System.out.println("REQUEST PATH: " + path);
-    System.out.println("AUTH HEADER: " + request.getHeader("Authorization"));
 
     // LOGIN / AUTH endpoints are completely public.
     // Do not check JWT or X-User-Id here.
@@ -87,59 +86,8 @@ protected void doFilterInternal(
                     .getContext()
                     .setAuthentication(authentication);
 
-        } else {
-
-            // Backward-compatible X-User-Id authentication
-            String userIdStr = request.getHeader("X-User-Id");
-
-            if (StringUtils.hasText(userIdStr)) {
-
-                try {
-
-                    Long userId =
-                            Long.parseLong(userIdStr.trim());
-
-                    User user =
-                            userRepository.findById(userId)
-                                    .orElse(null);
-
-                    if (user != null
-                            && "ACTIVE".equalsIgnoreCase(
-                                    user.getStatus())) {
-
-                        String role =
-                                user.getRole() != null
-                                        ? user.getRole().getRoleName()
-                                        : "USER";
-
-                        UsernamePasswordAuthenticationToken auth =
-                                new UsernamePasswordAuthenticationToken(
-                                        user.getEmployeeId(),
-                                        null,
-                                        Collections.singletonList(
-                                                new SimpleGrantedAuthority(
-                                                        "ROLE_" + role
-                                                )
-                                        )
-                                );
-
-                        auth.setDetails(
-                                new WebAuthenticationDetailsSource()
-                                        .buildDetails(request)
-                        );
-
-                        SecurityContextHolder
-                                .getContext()
-                                .setAuthentication(auth);
-                    }
-
-                } catch (NumberFormatException ignored) {
-                    // Ignore invalid X-User-Id
-                }
-            }
         }
     }
-
     filterChain.doFilter(request, response);
 }
      

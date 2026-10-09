@@ -51,9 +51,20 @@ private PasswordEncoder passwordEncoder;
 	private JwtUtil jwtUtil;
 
 	@PostMapping
-	public User saveUser(@RequestBody User user) {
-		return userService.saveUser(user);
-	}
+        public User saveUser(
+                @RequestBody User user,
+                HttpServletRequest request) {
+
+                User currentUser = accessService.resolveUser(request);
+
+                if (!accessService.isDirector(currentUser)
+                        && !accessService.isAdmin(currentUser)) {
+                        throw new com.company.taskmanagement.exception.ForbiddenException(
+                                "Only Director or Admin can create users");
+                }
+
+                return userService.saveUser(user);
+        }
 
 	@GetMapping
 	public List<UserDTO> getAllUsers(HttpServletRequest request) {
@@ -125,7 +136,13 @@ public List<UserDTO> getEmployeeTaskAssignees(HttpServletRequest request) {
 			@RequestParam("file") MultipartFile file,
 			HttpServletRequest request) {
 
-		accessService.resolveUser(request);
+		User currentUser = accessService.resolveUser(request);
+
+                if (!accessService.isDirector(currentUser)
+                        && !accessService.isAdmin(currentUser)) {
+                        throw new com.company.taskmanagement.exception.ForbiddenException(
+                                "Only Director or Admin can import staff");
+                }
 
 		if (file == null || file.isEmpty()) {
 			return ResponseEntity.badRequest()
@@ -254,18 +271,41 @@ public UserDTO getEmployeeProfile(
 		}
 
 		// Force EMPLOYEE role for supervisor-added users
-		User saved = userService.saveUser(newUser);
+		if (!accessService.hasElevatedAccess(currentUser)) {
+                  if (newUser.getSiteCode() == null || newUser.getSiteCode().isBlank()) {
+                          throw new com.company.taskmanagement.exception.ForbiddenException(
+                                  "Site code is required");
+                  }
+
+                  com.company.taskmanagement.entity.Role employeeRole =
+                          roleRepository.findByRoleName("EMPLOYEE");
+
+                  if (employeeRole == null) {
+                          throw new IllegalStateException("EMPLOYEE role not found");
+                  }
+
+                  newUser.setRole(employeeRole);
+          }
+
+          User saved = userService.saveUser(newUser);
 		return UserDTO.fromUser(saved);
 	}
 	
 	@GetMapping("/supervisor/employees")
-	public List<User> getSupervisorEmployees(
-	        @RequestHeader("X-User-Id") Long userId
-	){
+        public List<UserDTO> getSupervisorEmployees(HttpServletRequest request) {
 
-	    return userService.getSupervisorEmployees(userId);
+            User currentUser = accessService.resolveUser(request);
 
-	}
+            if (!accessService.isSupervisor(currentUser)) {
+                throw new com.company.taskmanagement.exception.ForbiddenException(
+                        "Only supervisors can view their team");
+            }
+
+            return userService.getSupervisorEmployees(currentUser.getId())
+                    .stream()
+                    .map(UserDTO::fromUser)
+                    .collect(Collectors.toList());
+        }
         // ===== Site Management: Supervisor Management =====
 
         @PostMapping("/site-management/supervisors")

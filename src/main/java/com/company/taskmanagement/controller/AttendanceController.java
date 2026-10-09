@@ -200,8 +200,6 @@ User currentUser = accessService.resolveUser(request);
 			@RequestBody java.util.Map<String, String> body,
 			HttpServletRequest request) {
 
-		System.out.println("STATUS API HEADER = "
-				+ request.getHeader("X-User-Id"));
 
 		User currentUser = accessService.resolveUser(request);
 
@@ -556,6 +554,7 @@ User currentUser = accessService.resolveUser(request);
                 return response;
         }
 }
+
 
 
 
