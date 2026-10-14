@@ -39,7 +39,7 @@ public class AccessService {
     private static final String SP001 = "SP001";
     private static final String SP002 = "SP002";
 
-    // Global supervisors ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ these supervisors see ALL sites.
+    // Global supervisors ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ these supervisors see ALL sites.
     // Add their employee IDs here (case-insensitive).
     private static final Set<String> GLOBAL_SUPERVISOR_EMPLOYEE_IDS = Set.of(
         "SP003"  // Replace with actual global supervisor employee IDs
@@ -262,14 +262,11 @@ public class AccessService {
             return;
         }
 
-        // SP002 can access anyone (operational only)
-        if (isSP002(currentUser)) {
-            return;
-        }
+        // SP002 must follow assigned-site employee validation
 
         // Check if current user has access to the target user's site
         // Only Supervisor/Manager can access another employee by site.
-        if (!isSupervisor(currentUser) && !isManager(currentUser)) {
+        if (!isSupervisor(currentUser) && !isManager(currentUser) && !isSP002(currentUser)) {
             throw new ForbiddenException("Access denied to employee: " + targetUser.getName());
         }
 
@@ -336,13 +333,10 @@ public class AccessService {
             return;
         }
 
-        // SP002 can access any task (operational)
-        if (isSP002(currentUser)) {
-            return;
-        }
+        // SP002 follows assigned-site task validation below
 
         // Supervisor/Manager can access tasks assigned to employees in their sites
-        if (assignedTo != null && (isSupervisor(currentUser) || isManager(currentUser))) {
+        if (assignedTo != null && (isSupervisor(currentUser) || isManager(currentUser) || isSP002(currentUser))) {
             String assignedSite = assignedTo.getSiteCode();
             if (assignedSite != null && !assignedSite.isBlank()) {
                 Set<String> targetSites = getPermittedSites(assignedTo);
@@ -399,9 +393,18 @@ public class AccessService {
             return allUsers;
         }
 
-        // SP002 -> ALL employees
+        // SP002 -> Only employees from assigned site
         if (isSP002(currentUser)) {
-            return allUsers;
+            Set<String> allowedSites = getPermittedSites(currentUser);
+
+            return allUsers.stream()
+                    .filter(u -> u.getSiteCode() != null && !u.getSiteCode().isBlank())
+                    .filter(u -> {
+                        Set<String> employeeSites = getPermittedSites(u);
+                        return employeeSites.stream()
+                                .anyMatch(site -> allowedSites.contains(site.toUpperCase()));
+                    })
+                    .collect(Collectors.toList());
         }
 
         // Normal Employee -> only users from employee's own site
@@ -495,10 +498,7 @@ public class AccessService {
         if (hasElevatedAccess(currentUser) || isGlobalSupervisor(currentUser)) {
             return allTasks;
         }
-        // SP002 sees all operational
-        if (isSP002(currentUser)) {
-            return allTasks;
-        }
+        // SP002 follows assigned-site task filtering below
         // Filter by tasks assigned to the user or users in their permitted sites
         Set<String> permittedSites = getPermittedSites(currentUser);
         if (permittedSites.contains("ALL")) {

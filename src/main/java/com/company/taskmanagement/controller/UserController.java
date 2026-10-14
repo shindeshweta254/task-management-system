@@ -226,8 +226,18 @@ public List<UserDTO> getEmployeeTaskAssignees(HttpServletRequest request) {
 
 @GetMapping("/site/{siteCode}")
 public List<UserDTO> getUsersBySiteCode(
-        @PathVariable("siteCode") String siteCode
+        @PathVariable("siteCode") String siteCode,
+        HttpServletRequest request
 ) {
+    User currentUser = accessService.resolveUser(request);
+
+    if (!accessService.isDirector(currentUser)
+            && !accessService.isAdmin(currentUser)
+            && !accessService.isSP001(currentUser)
+            && !accessService.isGlobalSupervisor(currentUser)) {
+        accessService.validateSiteAccess(currentUser, siteCode);
+    }
+
     List<User> siteUsers = userService.getUsersBySiteCode(siteCode);
 
     return siteUsers.stream()

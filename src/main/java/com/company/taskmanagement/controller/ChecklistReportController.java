@@ -171,4 +171,24 @@ User currentUser = accessService.resolveUser(request);
         // Return minimal info so the audit modal opens cleanly.
         return Collections.emptyList();
     }
+
+    private List<Map<String, Object>> filterChecklistByAccess(
+            User currentUser, List<Map<String, Object>> submissions) {
+
+        if (accessService.isDirector(currentUser)
+                || accessService.isAdmin(currentUser)
+                || accessService.isSP001(currentUser)
+                || accessService.isGlobalSupervisor(currentUser)) {
+            return submissions;
+        }
+
+        return submissions.stream()
+                .filter(entry -> {
+                    Object site = entry.get("siteCode");
+                    return site != null
+                            && accessService.hasSiteAccess(currentUser, site.toString());
+                })
+                .toList();
+    }
 }
+
