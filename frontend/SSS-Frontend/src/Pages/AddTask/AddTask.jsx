@@ -1,4 +1,4 @@
-import Layout from "../../components/Layout/Layout";
+﻿import Layout from "../../components/Layout/Layout";
 import "./AddTask.css";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -31,16 +31,11 @@ function AddTask() {
         )
       : employees;
 
-    const reviewerEmployees = employees.filter((emp) => {
-      const name = String(emp?.name || "").trim().toLowerCase();
-
-      return [
-        "ananta vathore",
-        "krushna vathore",
-        "manisha vathore",
-      ].includes(name);
-    });
-
+    const reviewerEmployees = [
+      { id: 48, name: "Ananta Vathore", employeeId: "CP001" },
+      { id: 49, name: "Manisha Vathore", employeeId: "CP002" },
+      { id: 50, name: "Krushna Vathore", employeeId: "CP003" },
+    ];
     const allowedEmployeeSites = activeSites.map((site) =>
       String(site?.siteCode || "").trim().toUpperCase()
     );
@@ -48,38 +43,14 @@ function AddTask() {
 
     const groupedAssignEmployees = assignToEmployees
       .filter((emp) => {
-        const roleId = Number(emp?.role?.id || emp?.roleId || emp?.role?.roleId);
-        const roleName = String(
-          emp?.role?.roleName || emp?.roleName || emp?.role || ""
-        ).toUpperCase();
-
-        const isRealEmployee =
-          roleId === 3 ||
-          roleName === "EMPLOYEE";
-
-        const isActive =
-          String(emp?.status || "ACTIVE").toUpperCase() === "ACTIVE";
-
-        return isRealEmployee && isActive && emp?.name && emp?.employeeId;
+        const status = String(emp?.status || "ACTIVE").toUpperCase();
+        return emp?.id != null && emp?.name && status === "ACTIVE";
       })
       .reduce((groups, emp) => {
-        const siteCode = String(emp?.siteCode || "").trim().toUpperCase();
-        const department = String(emp?.department || "").trim().toUpperCase();
+        const siteCode = String(emp?.siteCode || "").trim();
+        const groupName = siteCode || "OTHER EMPLOYEES";
 
-        let groupName = "";
-
-        if (allowedEmployeeSites.includes(siteCode)) {
-          groupName = siteCode;
-        } else if (!siteCode && department === "OFFICE STAFF") {
-          groupName = "OFFICE STAFF";
-        } else {
-          return groups;
-        }
-
-        if (!groups[groupName]) {
-          groups[groupName] = [];
-        }
-
+        if (!groups[groupName]) groups[groupName] = [];
         groups[groupName].push(emp);
         return groups;
       }, {});
@@ -147,7 +118,7 @@ function AddTask() {
     try {
       await createTask(requestBody);
 
-      setMessage("Task Created Successfully âœ…");
+      setMessage("Task Created Successfully Ã¢Å“â€¦");
 
       setTimeout(() => {
         navigate("/task");
@@ -155,7 +126,7 @@ function AddTask() {
 
     } catch (error) {
       console.error(error);
-      setMessage("Backend server not connected âŒ");
+      setMessage("Backend server not connected Ã¢ÂÅ’");
     }
   };
 
@@ -455,3 +426,5 @@ function AddTask() {
 
 
 export default AddTask;
+
+
