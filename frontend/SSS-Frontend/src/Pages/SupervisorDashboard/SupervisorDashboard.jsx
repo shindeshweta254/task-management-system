@@ -1,3 +1,4 @@
+import { DashboardAppModules } from "../../components/Layout/Layout";
 import Layout from "../../components/Layout/Layout";
 import "./SupervisorDashboard.css";
 import { useEffect, useState } from "react";
@@ -86,9 +87,7 @@ function SupervisorDashboard() {
 
       const fetchUsers = async () => {
         try {
-          const url = siteCode
-            ? `https://task-management-system-production-7694.up.railway.app/api/users/site/${encodeURIComponent(siteCode)}`
-            : "https://task-management-system-production-7694.up.railway.app/api/users";
+          const url = "https://task-management-system-production-7694.up.railway.app/api/users/supervisor/employees";
           const res = await fetch(url, { headers });
           if (!res.ok) return [];
           const data = await res.json();
@@ -164,10 +163,12 @@ function SupervisorDashboard() {
         <img src="/logo.png" alt="logo" className="sv-hero-logo" />
       </section>
 
+      <DashboardAppModules />
+
       {/* Birthday Notifications */}
       {birthdayEmployees.length > 0 && (
         <section className="sv-birthday-alert">
-          <h3>🎂 Upcoming Birthdays</h3>
+          <h3>ðŸŽ‚ Upcoming Birthdays</h3>
 
           {birthdayEmployees.map((emp) => (
             <div
@@ -176,8 +177,8 @@ function SupervisorDashboard() {
             >
               <strong>
                 {emp.daysLeft === 0
-                  ? `🎉 Happy Birthday ${emp.name}!`
-                  : `🎈 ${emp.name}`}
+                  ? `ðŸŽ‰ Happy Birthday ${emp.name}!`
+                  : `ðŸŽˆ ${emp.name}`}
               </strong>
 
               <span>
@@ -186,7 +187,7 @@ function SupervisorDashboard() {
                   : emp.daysLeft === 1
                   ? "Tomorrow"
                   : `In ${emp.daysLeft} days`}
-                {" • "} DOB: {emp.dateOfBirth}
+                {" â€¢ "} DOB: {emp.dateOfBirth}
               </span>
             </div>
           ))}

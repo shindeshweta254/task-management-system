@@ -19,6 +19,7 @@ import com.company.taskmanagement.entity.Role;
 import com.company.taskmanagement.entity.User;
 import com.company.taskmanagement.exception.UnauthorizedException;
 import com.company.taskmanagement.repository.RoleRepository;
+import com.company.taskmanagement.repository.SiteRepository;
 import com.company.taskmanagement.repository.UserRepository;
 
 @Service
@@ -29,6 +30,12 @@ public class UserService {
 
     @Autowired
     private RoleRepository roleRepository;
+
+    @Autowired
+    private SiteRepository siteRepository;
+
+    @Autowired
+    private AccessService accessService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -486,61 +493,44 @@ return userRepository.save(user);
 
     public List<User> getSupervisorEmployees(Long userId) {
 
-        User supervisor =
-                userRepository.findById(userId)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Supervisor not found"
-                                )
-                        );
+        User supervisor = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new RuntimeException("Supervisor not found"));
 
-        String siteCode = supervisor.getSiteCode();
+        String siteCode = String.join(",",
+                accessService.getPermittedSites(supervisor));
 
-
-        if (siteCode == null
-                || siteCode.trim().isEmpty()) {
-
-            throw new RuntimeException(
-                    "Supervisor site code missing"
-            );
+        if (siteCode == null || siteCode.isBlank()) {
+            throw new RuntimeException("Supervisor site code missing");
         }
-
 
         if ("ALL".equalsIgnoreCase(siteCode.trim())) {
-
-            return userRepository.findAll();
-        }
-
-
-        if (siteCode.contains(",")) {
-
-            List<String> sites =
-                    Arrays.stream(
-                            siteCode.split(",")
-                    )
-                    .map(String::trim)
-                    .filter(site -> !site.isEmpty())
-                    .toList();
-
             return userRepository.findAll()
                     .stream()
-                    .filter(user ->
-                            user.getSiteCode() != null
-                            && sites.stream().anyMatch(site ->
-                                    site.equalsIgnoreCase(
-                                            user.getSiteCode().trim()
-                                    )
-                            )
-                    )
-                    .toList();
+                    .filter(user -> "ACTIVE".equalsIgnoreCase(user.getStatus()))
+                    .collect(java.util.stream.Collectors.toList());
         }
 
+        java.util.Set<String> assignedSites =
+                Arrays.stream(siteCode.split(","))
+                        .map(String::trim)
+                        .filter(site -> !site.isEmpty())
+                        .map(site -> site.toUpperCase()
+                                .replaceAll("[\\s_-]+", ""))
+                        .collect(java.util.stream.Collectors.toSet());
 
-        return userRepository.findBySiteCode(
-                siteCode.trim()
-        );
+        return userRepository.findAll()
+                .stream()
+                .filter(user -> user.getSiteCode() != null)
+                .filter(user -> "ACTIVE".equalsIgnoreCase(user.getStatus()))
+                .filter(user ->
+                        Arrays.stream(user.getSiteCode().split(","))
+                                .map(String::trim)
+                                .map(site -> site.toUpperCase()
+                                        .replaceAll("[\\s_-]+", ""))
+                                .anyMatch(assignedSites::contains))
+                .collect(java.util.stream.Collectors.toList());
     }
-
 
     // =========================================================
     // LOGIN
@@ -581,10 +571,62 @@ return userRepository.save(user);
 
         User user = users.get(0);
 
-        if (user.getEmail() == null
-                || !user.getEmail().trim()
-                        .equalsIgnoreCase(email.trim())) {
+        if (user.getStatus() != null
+                && !"ACTIVE".equalsIgnoreCase(user.getStatus().trim())) {
+            throw new UnauthorizedException("Invalid Employee ID, Email or Password");
+        }
 
+        String roleName = user.getRole() != null
+                && user.getRole().getRoleName() != null
+                ? user.getRole().getRoleName().trim().toUpperCase()
+                : "";
+
+        boolean siteLoginRequired =
+                "SUPERVISOR".equals(roleName)
+                || "EMPLOYEE".equals(roleName);
+
+        boolean emailMatches;
+
+        if (siteLoginRequired) {
+            String loginEmployeeId = user.getEmployeeId() == null
+                    ? ""
+                    : user.getEmployeeId().trim().toUpperCase();
+
+            if ("SP001".equals(loginEmployeeId)) {
+                emailMatches = siteRepository.findByActiveTrueOrderBySiteNameAsc()
+                        .stream()
+                        .anyMatch(site ->
+                                site.getSiteEmail() != null
+                                && !site.getSiteEmail().isBlank()
+                                && site.getSiteEmail().trim()
+                                        .equalsIgnoreCase(email.trim()));
+            } else {
+                String assignedSites = String.join(",",
+                        accessService.getPermittedSites(user));
+
+                emailMatches = assignedSites != null
+                    && !assignedSites.isBlank()
+                    && Arrays.stream(assignedSites.split(","))
+                        .map(String::trim)
+                        .filter(siteCode -> !siteCode.isBlank())
+                        .map(siteRepository::findBySiteCodeIgnoreCase)
+                        .filter(java.util.Optional::isPresent)
+                        .map(java.util.Optional::get)
+                        .anyMatch(site ->
+                                Boolean.TRUE.equals(site.getActive())
+                                && site.getSiteEmail() != null
+                                && !site.getSiteEmail().isBlank()
+                                && site.getSiteEmail().trim()
+                                        .equalsIgnoreCase(email.trim())
+                        );
+            }
+        } else {
+            emailMatches = user.getEmail() != null
+                    && user.getEmail().trim()
+                            .equalsIgnoreCase(email.trim());
+        }
+
+        if (!emailMatches) {
             throw new UnauthorizedException("Invalid Employee ID, Email or Password");
         }
 
@@ -593,23 +635,8 @@ return userRepository.save(user);
                 && !user.getPassword().isBlank()
                 && passwordEncoder.matches(password, user.getPassword());
 
-        System.out.println("LOGIN DEBUG - employeeId=" + user.getEmployeeId()
-                + ", emailMatches=" + user.getEmail().trim().equalsIgnoreCase(email.trim())
-                + ", passwordMatches=" + passwordMatches);
-
         if (!passwordMatches) {
-
             throw new UnauthorizedException("Invalid Employee ID, Email or Password");
-        }
-
-        if (user.getStatus() != null
-                && !"ACTIVE".equalsIgnoreCase(
-                        user.getStatus().trim())) {
-
-            throw new RuntimeException(
-                    "Your account is not active. " +
-                    "Please contact Administrator."
-            );
         }
 
         return UserDTO.fromUser(user);

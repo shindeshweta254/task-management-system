@@ -1,3 +1,4 @@
+import { DashboardAppModules } from "../../components/Layout/Layout";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -184,7 +185,8 @@ function Dashboard() {
               />
             </section>
 
-            <section className="director-stats-grid">
+            <DashboardAppModules />
+          <section className="director-stats-grid">
               <div className="director-stat-card tasks">
                 <div className="director-stat-icon"><FaTasks /></div>
                 <div>

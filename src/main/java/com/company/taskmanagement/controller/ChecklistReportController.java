@@ -30,6 +30,79 @@ import jakarta.servlet.http.HttpServletRequest;
 @RequestMapping("/api/checklist-report")
 public class ChecklistReportController {
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.company.taskmanagement.repository.UserRepository checklistUsers;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.company.taskmanagement.service.NotificationService checklistNotifications;
+
+    private void notifyChecklistSubmission(
+            User submitter,
+            List<Map<String, Object>> saved) {
+
+        if (saved == null || saved.isEmpty()) return;
+
+        java.util.Set<String> sites = new java.util.HashSet<>();
+
+        for (Map<String, Object> row : saved) {
+            Object site = row.get("siteCode");
+            if (site != null) {
+                sites.add(site.toString().trim());
+            }
+        }
+
+        java.util.Set<Long> recipients = new java.util.HashSet<>();
+        recipients.add(submitter.getId());
+
+        for (User user : checklistUsers.findAll()) {
+
+            if (user.getRole() == null) continue;
+
+            boolean director = accessService.isDirector(user);
+            boolean supervisor = accessService.isSupervisor(user);
+            boolean allowed = accessService.isGlobalSupervisor(user);
+
+            for (String site : sites) {
+                if (!site.isEmpty() && accessService.hasSiteAccess(user, site)) {
+                    allowed = true;
+                    break;
+                }
+            }
+
+            if (director || (supervisor && allowed)) {
+                recipients.add(user.getId());
+            }
+        }
+
+        String name = submitter.getName() == null
+                ? "Employee" : submitter.getName();
+
+        for (Long id : recipients) {
+            try {
+                boolean self = id.equals(submitter.getId());
+
+                String title = self
+                    ? "Checklist Submitted Successfully"
+                    : "New Checklist Submitted";
+
+                String message = self
+                    ? "Your checklist was submitted successfully."
+                    : name + " submitted a checklist.";
+
+                com.company.taskmanagement.entity.Notification notification =
+                    new com.company.taskmanagement.entity.Notification(
+                        id, title, message, "CHECKLIST_SUBMITTED", null
+                    );
+
+                checklistNotifications.createNotification(notification);
+
+            } catch (Exception e) {
+                System.err.println("Checklist alert error: " + e.getMessage());
+            }
+        }
+    }
+
+
     @Autowired
     private AccessService accessService;
 
@@ -106,6 +179,7 @@ User currentUser = accessService.resolveUser(request);
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> entries = (List<Map<String, Object>>) body;
             List<Map<String, Object>> saved = checklistReportService.batchSave(entries, currentUser);
+            notifyChecklistSubmission(currentUser, saved);
             response.put("success", true);
             response.put("saved", saved.size());
             response.put("entries", saved);
@@ -191,4 +265,3 @@ User currentUser = accessService.resolveUser(request);
                 .toList();
     }
 }
-

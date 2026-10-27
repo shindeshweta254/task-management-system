@@ -3,11 +3,13 @@ package com.company.taskmanagement.security;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Profile;
 
 import com.company.taskmanagement.entity.User;
 import com.company.taskmanagement.repository.UserRepository;
 
 @Component
+@Profile("password-migration")
 public class PasswordMigration implements CommandLineRunner {
 
     private final UserRepository userRepository;

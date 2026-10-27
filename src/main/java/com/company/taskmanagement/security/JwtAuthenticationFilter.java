@@ -70,6 +70,14 @@ protected void doFilterInternal(
             UserDetails userDetails =
                     customUserDetailsService.loadUserByUsername(username);
 
+            if (!userDetails.isEnabled()) {
+                response.sendError(
+                        HttpServletResponse.SC_UNAUTHORIZED,
+                        "Account is not active"
+                );
+                return;
+            }
+
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                             userDetails,
@@ -105,5 +113,3 @@ protected void doFilterInternal(
         return null;
     }
 }
-
-

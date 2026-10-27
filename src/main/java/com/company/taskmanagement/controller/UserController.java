@@ -25,6 +25,7 @@ import com.company.taskmanagement.dto.UserDTO;
 import com.company.taskmanagement.entity.User;
 import com.company.taskmanagement.entity.Role;
 import com.company.taskmanagement.repository.RoleRepository;
+import com.company.taskmanagement.repository.SiteRepository;
 import com.company.taskmanagement.security.JwtUtil;
 import com.company.taskmanagement.service.AccessService;
 import com.company.taskmanagement.service.UserService;
@@ -41,6 +42,9 @@ public class UserController {
 
         @Autowired
         private RoleRepository roleRepository;
+
+        @Autowired
+        private SiteRepository siteRepository;
 
 @Autowired
 	private AccessService accessService;
@@ -198,7 +202,37 @@ public List<UserDTO> getEmployeeTaskAssignees(HttpServletRequest request) {
                 }
 
                 if (user.getSiteCode() != null) {
-                        existing.setSiteCode(user.getSiteCode().trim());
+                        User actor = accessService.resolveUser(request);
+                        if (!accessService.isDirector(actor) && !accessService.isAdmin(actor)) {
+                                throw new com.company.taskmanagement.exception.ForbiddenException("Only Director or Admin can change site assignment");
+                        }
+                        String newSiteCode = user.getSiteCode().trim().toUpperCase(java.util.Locale.ROOT);
+
+                        if (newSiteCode.isEmpty()) {
+                                throw new IllegalArgumentException("Site code cannot be empty");
+                        }
+
+                        if ("SP002".equalsIgnoreCase(existing.getEmployeeId())
+                                        && "ALL".equals(newSiteCode)) {
+                                throw new IllegalArgumentException("SP002 must be assigned to a specific active site");
+                        }
+
+                        if (!"ALL".equals(newSiteCode)) {
+                                com.company.taskmanagement.entity.Site targetSite =
+                                                siteRepository.findBySiteCodeIgnoreCase(newSiteCode)
+                                                                .orElseThrow(() -> new IllegalArgumentException("Invalid site code"));
+
+                                if (!Boolean.TRUE.equals(targetSite.getActive())) {
+                                        throw new IllegalArgumentException("Cannot assign an inactive site");
+                                }
+
+                                if (targetSite.getSiteEmail() == null
+                                                || targetSite.getSiteEmail().isBlank()) {
+                                        throw new IllegalArgumentException("Assigned site must have an email");
+                                }
+                        }
+
+                        existing.setSiteCode(newSiteCode);
                 }
 
                 if (user.getStatus() != null) {
@@ -218,7 +252,13 @@ public List<UserDTO> getEmployeeTaskAssignees(HttpServletRequest request) {
 @GetMapping("/my-site-team")
 	public List<UserDTO> getMySiteTeam(HttpServletRequest request) {
 		User currentUser = accessService.resolveUser(request);
-		List<User> siteUsers = userService.getUsersBySiteCode(currentUser.getSiteCode());
+		List<User> siteUsers;
+
+if (accessService.isSupervisor(currentUser)) {
+    siteUsers = userService.getSupervisorEmployees(currentUser.getId());
+} else {
+    siteUsers = userService.getUsersBySiteCode(currentUser.getSiteCode());
+}
 		return siteUsers.stream()
 				.map(UserDTO::fromUser)
 				.collect(Collectors.toList());
@@ -422,4 +462,3 @@ public UserDTO getEmployeeProfile(
 	    return "Password reset successful";
 	}
 }
-

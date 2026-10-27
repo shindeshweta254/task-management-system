@@ -42,7 +42,7 @@ public class AccessService {
     // Global supervisors ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ these supervisors see ALL sites.
     // Add their employee IDs here (case-insensitive).
     private static final Set<String> GLOBAL_SUPERVISOR_EMPLOYEE_IDS = Set.of(
-        "SP003"  // Replace with actual global supervisor employee IDs
+        "SP001"  // Authorized global supervisor
     );
 
     // Known role IDs from database
@@ -132,6 +132,24 @@ public class AccessService {
      * "ALL" means all sites.
      */
     public Set<String> getPermittedSites(User user) {
+
+        // SP002: legacy ALL means DUVILLE only, never global access.
+        // Explicit site assignments are used dynamically.
+        if (isSP002(user)) {
+            String assigned = user.getSiteCode();
+
+            if (assigned == null || assigned.isBlank()
+                    || "ALL".equalsIgnoreCase(assigned.trim())) {
+                return Collections.singleton("DUVILLE_ESTATES_PRIVATE_LIMITED");
+            }
+
+            return Arrays.stream(assigned.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .filter(s -> !"ALL".equalsIgnoreCase(s))
+                    .map(String::toUpperCase)
+                    .collect(Collectors.toSet());
+        }
         String siteCode = user.getSiteCode();
         if (siteCode == null || siteCode.isBlank()) {
             return Collections.emptySet();
@@ -211,23 +229,28 @@ public class AccessService {
     }
 
     public boolean isDirector(User user) {
-        return user.getRole() != null && user.getRole().getId() == ROLE_DIRECTOR;
+        return user != null && user.getRole() != null
+                && "DIRECTOR".equalsIgnoreCase(user.getRole().getRoleName());
     }
 
     public boolean isAdmin(User user) {
-        return user.getRole() != null && user.getRole().getId() == ROLE_ADMIN;
+        return user != null && user.getRole() != null
+                && "ADMIN".equalsIgnoreCase(user.getRole().getRoleName());
     }
 
     public boolean isSupervisor(User user) {
-        return user.getRole() != null && user.getRole().getId() == ROLE_SUPERVISOR;
+        return user != null && user.getRole() != null
+                && "SUPERVISOR".equalsIgnoreCase(user.getRole().getRoleName());
     }
 
     public boolean isEmployee(User user) {
-        return user.getRole() != null && user.getRole().getId() == ROLE_EMPLOYEE;
+        return user != null && user.getRole() != null
+                && "EMPLOYEE".equalsIgnoreCase(user.getRole().getRoleName());
     }
 
     public boolean isManager(User user) {
-        return user.getRole() != null && user.getRole().getId() == ROLE_MANAGER;
+        return user != null && user.getRole() != null
+                && "MANAGER".equalsIgnoreCase(user.getRole().getRoleName());
     }
 
     /**
@@ -529,6 +552,3 @@ public class AccessService {
                 .collect(Collectors.toList());
     }
 }
-
-
-

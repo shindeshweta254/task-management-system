@@ -17,6 +17,9 @@ public class Site {
     @Column(name = "site_name", nullable = false, length = 255)
     private String siteName;
 
+    @Column(name = "site_email", length = 255)
+    private String siteEmail;
+
     @Column(nullable = false)
     private Boolean active = true;
 
@@ -65,6 +68,13 @@ public class Site {
         this.siteName = siteName;
     }
 
+    public String getSiteEmail() {
+        return siteEmail;
+    }
+
+    public void setSiteEmail(String siteEmail) {
+        this.siteEmail = siteEmail;
+    }
     public Boolean getActive() {
         return active;
     }

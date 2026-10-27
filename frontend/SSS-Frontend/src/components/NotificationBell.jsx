@@ -73,7 +73,29 @@ function NotificationBell() {
         }
         if (list !== null) {
           console.log("Setting notifications count:", list.length);
-          setNotifications(list);
+          let prefs = {};
+try {
+  prefs = JSON.parse(localStorage.getItem("sss_notification_prefs") || "{}") || {};
+} catch {
+  prefs = {};
+}
+
+const legacyTaskAlerts = localStorage.getItem("sss_task_alerts") !== "false";
+
+const visible = list.filter(n => {
+  const type = String(n.type || "");
+  const enabled = prefs[type];
+
+  if (typeof enabled === "boolean") return enabled;
+  if (type.startsWith("TASK_")) return legacyTaskAlerts;
+
+  return true;
+});
+
+setNotifications(visible);
+setUnreadCount(
+  visible.filter(n => n.read === false || n.isRead === false).length
+);
         }
       } else {
         console.log("Failed to fetch notifications list, status:", listResponse.status);
@@ -95,10 +117,11 @@ function NotificationBell() {
       fetchNotifications();
     };
     window.addEventListener("notificationRefresh", handleRefresh);
+    window.addEventListener("sss-notification-preferences-change", handleRefresh);
 
     return () => {
       clearInterval(interval);
-      window.removeEventListener("notificationRefresh", handleRefresh);
+      window.removeEventListener("notificationRefresh", handleRefresh); window.removeEventListener("sss-notification-preferences-change", handleRefresh);
     };
   }, [fetchNotifications]);
 
@@ -228,4 +251,3 @@ function NotificationBell() {
 }
 
 export default NotificationBell;
-

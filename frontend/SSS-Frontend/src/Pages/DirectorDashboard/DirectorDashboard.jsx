@@ -1,3 +1,4 @@
+import { DashboardAppModules } from "../../components/Layout/Layout";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -607,9 +608,10 @@ const directorTabs = [
               />
             </section>
 
-            {upcomingBirthdays.length > 0 && (
+            <DashboardAppModules />
+          {upcomingBirthdays.length > 0 && (
               <section className="director-birthday-alert">
-                <h3>Ã°Å¸Å½â€š Upcoming Birthdays</h3>
+                <h3>ÃƒÂ°Ã…Â¸Ã…Â½Ã¢â‚¬Å¡ Upcoming Birthdays</h3>
 
                 {upcomingBirthdays.map((emp) => (
                   <div
@@ -618,8 +620,8 @@ const directorTabs = [
                   >
                     <strong>
                       {emp.daysLeft === 0
-                        ? `Ã°Å¸Å½â€° Happy Birthday ${emp.name}!`
-                        : `Ã°Å¸Å½Ë† ${emp.name}`}
+                        ? `ÃƒÂ°Ã…Â¸Ã…Â½Ã¢â‚¬Â° Happy Birthday ${emp.name}!`
+                        : `ÃƒÂ°Ã…Â¸Ã…Â½Ã‹â€  ${emp.name}`}
                     </strong>
 
                     <span>
@@ -628,8 +630,8 @@ const directorTabs = [
                         : emp.daysLeft === 1
                         ? "Tomorrow"
                         : `In ${emp.daysLeft} days`}
-                      {" Ã¢â‚¬Â¢ "} DOB: {emp.dateOfBirth}
-                      {emp.siteCode ? ` Ã¢â‚¬Â¢ Site: ${emp.siteCode}` : ""}
+                      {" ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ "} DOB: {emp.dateOfBirth}
+                      {emp.siteCode ? ` ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Site: ${emp.siteCode}` : ""}
                     </span>
                   </div>
                 ))}
@@ -1436,10 +1438,3 @@ const getLocationText = (item) => {
 }
 
 export default DirectorDashboard;
-
-
-
-
-
-
-

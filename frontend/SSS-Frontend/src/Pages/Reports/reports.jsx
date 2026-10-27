@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Layout from "../../components/Layout/Layout";
 import { t } from "../../i18n/translator";
 import axiosClient from "../../api/axiosClient";
@@ -27,7 +27,7 @@ function Reports() {
   const userId = user?.id || user?.userId || null;
   const roleName = user?.role?.roleName || "EMPLOYEE";
 
-  const [activeTab, setActiveTab] = useState("submit");
+  const [activeTab, setActiveTab] = useState((roleName === "DIRECTOR" || roleName === "Director" || roleName === "Owner/Admin") ? "list" : "upload");
   const [siteName, setSiteName] = useState("");
   const [selectedWorkerId, setSelectedWorkerId] = useState("");
   const [myWorkProofs, setMyWorkProofs] = useState([]);
@@ -162,7 +162,7 @@ function Reports() {
             <button type="button" className={`reports-tab-btn ${activeTab === "upload" ? "active" : ""}`} onClick={() => setActiveTab("upload")}>Upload Proof</button>
           )}
           <button type="button" className={`reports-tab-btn ${activeTab === "list" ? "active" : ""}`} onClick={() => setActiveTab("list")}>
-            {t("reports.viewSubmissions") || "View Submissions"}
+            {isOwner ? "All Reports" : (t("reports.viewSubmissions") || "View Submissions")}
           </button>
         </div>
 
@@ -213,7 +213,7 @@ function Reports() {
 
         {activeTab === "list" && (
           <div className="page-card">
-            <h2>{isOwner ? "Owner Dashboard - Reports" : "My Daily Submissions"}</h2>
+            <h2>{isOwner ? "All Reports" : "My Daily Submissions"}</h2>
             <table className="reports-table">
               <thead>
                 <tr>
@@ -269,4 +269,3 @@ function Reports() {
 }
 
 export default Reports;
-

@@ -37,6 +37,7 @@ public class SiteService {
 
         site.setSiteCode(siteCode);
         site.setSiteName(siteName);
+        site.setSiteEmail(normalizeSiteEmail(site.getSiteEmail()));
 
         if (site.getActive() == null) {
             site.setActive(true);
@@ -57,6 +58,10 @@ public class SiteService {
             existing.setActive(request.getActive());
         }
 
+        if (request.getSiteEmail() != null) {
+            existing.setSiteEmail(normalizeSiteEmail(request.getSiteEmail()));
+        }
+
         return siteRepository.save(existing);
     }
 
@@ -66,6 +71,20 @@ public class SiteService {
         return siteRepository.save(site);
     }
 
+    private String normalizeSiteEmail(String email) {
+        if (email == null || email.isBlank()) {
+            return null;
+        }
+
+        String normalized = email.trim().toLowerCase(java.util.Locale.ROOT);
+
+        if (normalized.length() > 255 ||
+                !normalized.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+            throw new IllegalArgumentException("Invalid site email address");
+        }
+
+        return normalized;
+    }
     private String normalizeSiteCode(String siteCode) {
         if (siteCode == null || siteCode.isBlank()) {
             throw new RuntimeException("Site code is required");

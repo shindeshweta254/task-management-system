@@ -1,3 +1,4 @@
+import Settings from "./Pages/Settings/Settings";
 import { Routes, Route } from "react-router-dom";
 
 import Splash from "./Pages/Splash/Splash";
@@ -67,6 +68,7 @@ function App() {
       <Route path="/add-task" element={<AddTask />} />
       <Route path="/notifications" element={<Notifications />} />
       <Route path="/profile" element={<Profile />} />
+      <Route path="/settings" element={<Settings />} />
     </Routes>
   );
 }

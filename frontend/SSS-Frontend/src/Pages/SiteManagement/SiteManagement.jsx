@@ -4,9 +4,9 @@ import Layout from "../../components/Layout/Layout";
 import {
   createSite,
   getAllSites,
+  updateSite,
   updateSiteStatus,
-} from "../../api/siteApi";
-import { fetchAllUsers } from "../../api/directorDashboardApi";
+} from "../../api/siteApi";import { fetchAllUsers } from "../../api/directorDashboardApi";
 import {
   updateEmployee,
   addSupervisor,
@@ -38,6 +38,7 @@ function SiteManagement() {
   const [sites, setSites] = useState([]);
   const [siteName, setSiteName] = useState("");
   const [siteCode, setSiteCode] = useState("");
+  const [siteEmail, setSiteEmail] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -197,11 +198,27 @@ function SiteManagement() {
       setError("");
       setMessage("");
 
-      const isAllSiteSupervisor =
-        ["SP001", "SP002"].includes(
-          String(supervisor.employeeId || "").trim().toUpperCase()
-        ) ||
-        String(supervisor.siteCode || "").trim().toUpperCase() === "ALL";
+      const supervisorEmployeeId = String(supervisor.employeeId || "")
+          .trim()
+          .toUpperCase();
+
+        const isAllSiteSupervisor = supervisorEmployeeId === "SP001";
+
+        if (supervisorEmployeeId === "SP002") {
+          const duvilleSite = sites.find(
+            (site) =>
+              String(site.siteCode || "")
+                .replace(/[\s_-]+/g, "")
+                .toUpperCase() === "DUVILLEESTATESPRIVATELIMITED"
+          );
+
+          if (!duvilleSite || duvilleSite.active !== true) {
+            setError("Active DUVILLE site not found.");
+            return;
+          }
+
+          selectedSupervisorSites.splice(0, selectedSupervisorSites.length, duvilleSite.siteCode);
+        }
 
       const siteCodeValue = isAllSiteSupervisor
         ? "ALL"
@@ -359,11 +376,13 @@ function SiteManagement() {
       await createSite({
         siteName: cleanName,
         siteCode: cleanCode,
+        siteEmail: siteEmail.trim(),
         active: true,
       });
 
       setSiteName("");
       setSiteCode("");
+      setSiteEmail("");
       setMessage("Site added successfully.");
 
       await loadSites();
@@ -374,7 +393,42 @@ function SiteManagement() {
       setSaving(false);
     }
   };
+  const handleEditSiteEmail = async (site) => {
+    const enteredEmail = window.prompt(
+      `Registered email for ${site.siteName}:`,
+      site.siteEmail || ""
+    );
 
+    if (enteredEmail === null) return;
+
+    const cleanEmail = enteredEmail.trim();
+
+    if (
+      cleanEmail &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)
+    ) {
+      setError("Please enter a valid site email.");
+      return;
+    }
+
+    try {
+      setError("");
+      setMessage("");
+
+      await updateSite(site.id, {
+        siteEmail: cleanEmail,
+      });
+
+      await loadSites();
+
+      setMessage(
+        `Registered email updated for ${site.siteName}.`
+      );
+    } catch (err) {
+      console.error("Site email update failed:", err);
+      setError(err?.message || "Unable to update site email.");
+    }
+  };
   const handleStatusChange = async (site) => {
     try {
       setError("");
@@ -467,6 +521,18 @@ function SiteManagement() {
               </small>
             </div>
 
+            <div className="site-form-group">
+              <label htmlFor="siteEmail">Site Registered Email</label>
+              <input
+                id="siteEmail"
+                type="email"
+                value={siteEmail}
+                onChange={(event) => setSiteEmail(event.target.value)}
+                placeholder="Enter site registered email"
+                disabled={saving}
+              />
+            </div>
+
             <button
               className="site-add-button"
               type="submit"
@@ -511,7 +577,7 @@ function SiteManagement() {
                     : "Select Supervisor"}
                 </span>
 
-                <span>{supervisorDropdownOpen ? "▲" : "▼"}</span>
+                <span>{supervisorDropdownOpen ? "â–²" : "â–¼"}</span>
               </button>
 
               {supervisorDropdownOpen && (
@@ -585,7 +651,7 @@ function SiteManagement() {
                               {String(deactivatingSupervisorId) ===
                               String(supervisor.id)
                                 ? "..."
-                                : "🗑"}
+                                : "ðŸ—‘"}
                             </button>
                           )}
                         </div>
@@ -610,7 +676,7 @@ function SiteManagement() {
                     onClick={() => setShowAddSupervisor(false)}
                     disabled={addingSupervisor}
                   >
-                    ×
+                    Ã—
                   </button>
                 </div>
 
@@ -761,6 +827,7 @@ function SiteManagement() {
                     <th>S.No.</th>
                     <th>Site Name</th>
                     <th>Site Code</th>
+<th>Registered Email</th>
                     <th>Status</th>
                     <th>Action</th>
                   </tr>
@@ -774,6 +841,7 @@ function SiteManagement() {
                       <td>
                         <span className="site-code">{site.siteCode}</span>
                       </td>
+<td>{site.siteEmail || "Not set"}</td>
                       <td>
                         <span
                           className={
@@ -787,6 +855,12 @@ function SiteManagement() {
                       </td>
                       <td>
                         <button
+  type="button"
+  className="site-status-button"
+  onClick={() => handleEditSiteEmail(site)}
+>
+  Edit Email
+</button><button
                           type="button"
                           className={
                             site.active

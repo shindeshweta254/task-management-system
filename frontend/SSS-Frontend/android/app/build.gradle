@@ -3,9 +3,9 @@ apply plugin: 'com.android.application'
 android {
     signingConfigs {
         release {
-            storeFile file("sss-fms-release-key.jks")
+            storeFile file("sss-fms-final-release.jks")
             storePassword System.getenv("SSS_KEYSTORE_PASSWORD")
-            keyAlias "sss-fms-key"
+            keyAlias "sss-fms-final-key"
             keyPassword System.getenv("SSS_KEY_PASSWORD")
         }
     }
@@ -61,5 +61,3 @@ try {
 } catch(Exception e) {
     logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
 }
-
-

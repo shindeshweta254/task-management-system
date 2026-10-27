@@ -994,3 +994,53 @@
   }
 }
 
+
+/* Employee Action Buttons */
+.employee-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.employee-action-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+  white-space: nowrap;
+}
+
+.employee-update-btn {
+  background: #2563eb;
+  color: #fff;
+}
+
+.employee-delete-btn {
+  background: #dc2626;
+  color: #fff;
+}
+
+.employee-save-btn {
+  background: #16a34a;
+  color: #fff;
+}
+
+.employee-cancel-btn {
+  background: #64748b;
+  color: #fff;
+}
+
+.employee-action-btn:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.employee-action-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}

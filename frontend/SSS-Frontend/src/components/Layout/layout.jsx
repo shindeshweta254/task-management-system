@@ -1,5 +1,6 @@
+import { createPortal } from "react-dom";
 import { NavLink, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import "./Layout.css";
 
 import LanguageSelector from "../LanguageSelector";
@@ -23,17 +24,25 @@ import {
   FaPlus,
   FaClipboardCheck,
   FaBoxes,
+  FaCog,
 } from "react-icons/fa";
 
 
+const AppModulesContext = createContext(null);
+
+export function DashboardAppModules() {
+  const modules = useContext(AppModulesContext);
+  return modules;
+}
 function Layout({ title, children }) {
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem("sss_dark_mode") === "true");
 
+  useEffect(() => { const syncTheme = () => setDarkMode(localStorage.getItem("sss_dark_mode") === "true"); window.addEventListener("sss-theme-change", syncTheme); return () => window.removeEventListener("sss-theme-change", syncTheme); }, []);
   const navigate = useNavigate();
 
 
@@ -52,10 +61,12 @@ function Layout({ title, children }) {
 
   useEffect(() => {
 
+    document.body.classList.toggle("dark-theme", darkMode);
     document.documentElement.classList.toggle(
       "dark-theme",
       darkMode
     );
+    localStorage.setItem("sss_dark_mode", String(darkMode));
 
   }, [darkMode]);
 
@@ -259,6 +270,11 @@ function Layout({ title, children }) {
       icon: <FaUser />
     },
     {
+      label: "Settings",
+      path: "/settings",
+      icon: <FaCog />
+    },
+    {
       label: "Logout",
       path: "/logout",
       icon: <FaUser />
@@ -379,6 +395,7 @@ function Layout({ title, children }) {
           "/weekly-control-center",
           "/incidents",
           "/profile",
+          "/settings",
           "/logout"
         ].includes(item.path);
 
@@ -402,6 +419,7 @@ function Layout({ title, children }) {
           "/incidents",
           "/notifications",
           "/profile",
+          "/settings",
           "/logout"
         ].includes(item.path);
 
@@ -861,9 +879,74 @@ function Layout({ title, children }) {
 
           </div>
 
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="header-logout-btn"
+            title="Logout"
+            style={{
+              position: "absolute",
+              top: "12px",
+              right: "12px",
+              padding: "9px 14px",
+              borderRadius: "10px",
+              border: "1px solid #e5e7eb",
+              background: "#fff",
+              color: "#dc2626",
+              fontWeight: 600,
+              cursor: "pointer",
+              zIndex: 20
+            }}
+          >
+            Logout
+          </button>
         </header>
 
-        {children}
+        <AppModulesContext.Provider value={
+          <section className="app-module-section">
+            <h2>Quick Access</h2>
+            <div className="app-module-grid">
+              {filteredNavItems
+                .filter((item) => item.label !== "Dashboard" && item.label !== "Logout")
+                .map((item, index) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    className="app-module-item"
+                  >
+                    <span className={`app-module-circle app-module-color-${index % 8}`}>
+                      {item.icon}
+                    </span>
+                    <span className="app-module-label">{item.label}</span>
+                  </NavLink>
+                ))}
+            </div>
+          </section>
+        }>
+          {children}
+        </AppModulesContext.Provider>
+
+        <nav className="mobile-bottom-nav" aria-label="Mobile navigation">
+          {filteredNavItems
+            .filter((item) =>
+              ["Dashboard", taskLabel, "Attendance"].includes(item.label)
+            )
+            .map((item) => (
+              <NavLink key={item.path} to={item.path} end>
+                {item.icon}
+                <span>{item.label === taskLabel ? "Tasks" : item.label === "Dashboard" ? "Home" : item.label}</span>
+              </NavLink>
+            ))}
+
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            aria-label="More navigation options"
+          >
+            <FaBars />
+            <span>More</span>
+          </button>
+        </nav>
 
 
 
@@ -880,4 +963,3 @@ function Layout({ title, children }) {
 
 
 export default Layout;
-
